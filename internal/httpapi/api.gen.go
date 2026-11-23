@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -18,27 +19,273 @@ import (
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
+	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
 // ServerUrlApi defines the Server URL for /api
 const ServerUrlApi = "/api"
 
+// Defines values for AdminJobState.
+const (
+	AdminJobStateAvailable AdminJobState = "available"
+	AdminJobStateCancelled AdminJobState = "cancelled"
+	AdminJobStateCompleted AdminJobState = "completed"
+	AdminJobStateDiscarded AdminJobState = "discarded"
+	AdminJobStatePending   AdminJobState = "pending"
+	AdminJobStateRetryable AdminJobState = "retryable"
+	AdminJobStateRunning   AdminJobState = "running"
+	AdminJobStateScheduled AdminJobState = "scheduled"
+)
+
+// Valid indicates whether the value is a known member of the AdminJobState enum.
+func (e AdminJobState) Valid() bool {
+	switch e {
+	case AdminJobStateAvailable:
+		return true
+	case AdminJobStateCancelled:
+		return true
+	case AdminJobStateCompleted:
+		return true
+	case AdminJobStateDiscarded:
+		return true
+	case AdminJobStatePending:
+		return true
+	case AdminJobStateRetryable:
+		return true
+	case AdminJobStateRunning:
+		return true
+	case AdminJobStateScheduled:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminLogLevel.
+const (
+	AdminLogLevelDebug AdminLogLevel = "debug"
+	AdminLogLevelError AdminLogLevel = "error"
+	AdminLogLevelInfo  AdminLogLevel = "info"
+	AdminLogLevelWarn  AdminLogLevel = "warn"
+)
+
+// Valid indicates whether the value is a known member of the AdminLogLevel enum.
+func (e AdminLogLevel) Valid() bool {
+	switch e {
+	case AdminLogLevelDebug:
+		return true
+	case AdminLogLevelError:
+		return true
+	case AdminLogLevelInfo:
+		return true
+	case AdminLogLevelWarn:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminSettingScope.
+const (
+	AdminSettingScopeHousehold AdminSettingScope = "household"
+	AdminSettingScopeSystem    AdminSettingScope = "system"
+)
+
+// Valid indicates whether the value is a known member of the AdminSettingScope enum.
+func (e AdminSettingScope) Valid() bool {
+	switch e {
+	case AdminSettingScopeHousehold:
+		return true
+	case AdminSettingScopeSystem:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AdminSettingKind.
+const (
+	AdminSettingKindBool   AdminSettingKind = "bool"
+	AdminSettingKindInt    AdminSettingKind = "int"
+	AdminSettingKindJson   AdminSettingKind = "json"
+	AdminSettingKindString AdminSettingKind = "string"
+)
+
+// Valid indicates whether the value is a known member of the AdminSettingKind enum.
+func (e AdminSettingKind) Valid() bool {
+	switch e {
+	case AdminSettingKindBool:
+		return true
+	case AdminSettingKindInt:
+		return true
+	case AdminSettingKindJson:
+		return true
+	case AdminSettingKindString:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for HealthStatus.
 const (
-	Degraded HealthStatus = "degraded"
-	Ok       HealthStatus = "ok"
+	HealthStatusDegraded HealthStatus = "degraded"
+	HealthStatusOk       HealthStatus = "ok"
 )
 
 // Valid indicates whether the value is a known member of the HealthStatus enum.
 func (e HealthStatus) Valid() bool {
 	switch e {
-	case Degraded:
+	case HealthStatusDegraded:
 		return true
-	case Ok:
+	case HealthStatusOk:
 		return true
 	default:
 		return false
 	}
+}
+
+// AdminDatabaseStatus defines model for AdminDatabaseStatus.
+type AdminDatabaseStatus struct {
+	AppTarget    *int64  `json:"appTarget,omitempty"`
+	AppVersion   *int64  `json:"appVersion,omitempty"`
+	LatencyMs    float32 `json:"latencyMs"`
+	Reachable    bool    `json:"reachable"`
+	RiverTarget  *int    `json:"riverTarget,omitempty"`
+	RiverVersion *int    `json:"riverVersion,omitempty"`
+
+	// SchemaCurrent False while migrations are pending.
+	SchemaCurrent bool   `json:"schemaCurrent"`
+	SizeBytes     *int64 `json:"sizeBytes,omitempty"`
+}
+
+// AdminJob defines model for AdminJob.
+type AdminJob struct {
+	// Args The job's arguments as stored.
+	Args        interface{}     `json:"args"`
+	Attempt     int             `json:"attempt"`
+	AttemptedAt *time.Time      `json:"attemptedAt,omitempty"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	Errors      []AdminJobError `json:"errors"`
+	FinalizedAt *time.Time      `json:"finalizedAt,omitempty"`
+	Id          int64           `json:"id"`
+	Kind        string          `json:"kind"`
+	MaxAttempts int             `json:"maxAttempts"`
+	Priority    int             `json:"priority"`
+	Queue       string          `json:"queue"`
+	ScheduledAt time.Time       `json:"scheduledAt"`
+	State       AdminJobState   `json:"state"`
+	Tags        []string        `json:"tags"`
+}
+
+// AdminJobError defines model for AdminJobError.
+type AdminJobError struct {
+	At      time.Time `json:"at"`
+	Attempt int       `json:"attempt"`
+	Error   string    `json:"error"`
+}
+
+// AdminJobPage defines model for AdminJobPage.
+type AdminJobPage struct {
+	Items      []AdminJob `json:"items"`
+	NextCursor *string    `json:"nextCursor,omitempty"`
+}
+
+// AdminJobState defines model for AdminJobState.
+type AdminJobState string
+
+// AdminLLMToday defines model for AdminLLMToday.
+type AdminLLMToday struct {
+	Available  bool   `json:"available"`
+	RequestCap *int64 `json:"requestCap,omitempty"`
+	Requests   int64  `json:"requests"`
+	Tokens     int64  `json:"tokens"`
+}
+
+// AdminLogEntry defines model for AdminLogEntry.
+type AdminLogEntry struct {
+	Attrs     map[string]interface{} `json:"attrs"`
+	Id        int64                  `json:"id"`
+	Level     AdminLogLevel          `json:"level"`
+	Msg       string                 `json:"msg"`
+	RequestId *string                `json:"requestId,omitempty"`
+	Time      time.Time              `json:"time"`
+	UserId    *openapi_types.UUID    `json:"userId,omitempty"`
+}
+
+// AdminLogLevel defines model for AdminLogLevel.
+type AdminLogLevel string
+
+// AdminLogPage defines model for AdminLogPage.
+type AdminLogPage struct {
+	Items      []AdminLogEntry `json:"items"`
+	NextCursor *string         `json:"nextCursor,omitempty"`
+}
+
+// AdminOverview defines model for AdminOverview.
+type AdminOverview struct {
+	BuiltAt   string              `json:"builtAt"`
+	Commit    string              `json:"commit"`
+	Database  AdminDatabaseStatus `json:"database"`
+	Errors24h *int64              `json:"errors24h,omitempty"`
+
+	// Jobs Job count per River state; absent when unavailable.
+	Jobs *map[string]int64 `json:"jobs,omitempty"`
+	Llm  *AdminLLMToday    `json:"llm,omitempty"`
+
+	// LogSink Lines this process wrote to the System logs table, and dropped under load.
+	LogSink *struct {
+		Dropped int64 `json:"dropped"`
+		Written int64 `json:"written"`
+	} `json:"logSink,omitempty"`
+	StartedAt     time.Time `json:"startedAt"`
+	UptimeSeconds int64     `json:"uptimeSeconds"`
+
+	// Version Release tag (r<n>) or "dev".
+	Version     string `json:"version"`
+	Warnings24h *int64 `json:"warnings24h,omitempty"`
+}
+
+// AdminSetting defines model for AdminSetting.
+type AdminSetting struct {
+	// Default Value used while none is stored (absent for secrets).
+	Default     interface{} `json:"default,omitempty"`
+	Description string      `json:"description"`
+
+	// IsSet A value is stored; otherwise the default applies.
+	IsSet bool             `json:"isSet"`
+	Key   string           `json:"key"`
+	Kind  AdminSettingKind `json:"kind"`
+
+	// Options When present, the only accepted values.
+	Options *[]interface{}    `json:"options,omitempty"`
+	Scope   AdminSettingScope `json:"scope"`
+
+	// Secret Write-only; value and default are never returned.
+	Secret    bool                `json:"secret"`
+	UpdatedAt *time.Time          `json:"updatedAt,omitempty"`
+	UpdatedBy *openapi_types.UUID `json:"updatedBy,omitempty"`
+
+	// Value Effective value (absent for secrets).
+	Value interface{} `json:"value,omitempty"`
+}
+
+// AdminSettingScope defines model for AdminSetting.Scope.
+type AdminSettingScope string
+
+// AdminSettingKind defines model for AdminSettingKind.
+type AdminSettingKind string
+
+// AdminSettingList defines model for AdminSettingList.
+type AdminSettingList struct {
+	Items []AdminSetting `json:"items"`
+}
+
+// AdminSettingUpdate defines model for AdminSettingUpdate.
+type AdminSettingUpdate struct {
+	// Value New value, of the setting's kind.
+	Value interface{} `json:"value"`
 }
 
 // Health defines model for Health.
@@ -87,11 +334,79 @@ type Problem struct {
 	Type string `json:"type"`
 }
 
+// AdminCursor defines model for AdminCursor.
+type AdminCursor = string
+
+// AdminJobID defines model for AdminJobID.
+type AdminJobID = int64
+
+// AdminLimit defines model for AdminLimit.
+type AdminLimit = int
+
+// ListAdminJobsParams defines parameters for ListAdminJobs.
+type ListAdminJobsParams struct {
+	// State Comma-separated states.
+	State *[]AdminJobState `form:"state,omitempty" json:"state,omitempty"`
+
+	// Kind Comma-separated job kinds.
+	Kind *[]string `form:"kind,omitempty" json:"kind,omitempty"`
+
+	// Cursor Opaque cursor from the previous page's `nextCursor`.
+	Cursor *AdminCursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit  *AdminLimit  `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// ListAdminLogsParams defines parameters for ListAdminLogs.
+type ListAdminLogsParams struct {
+	// Level Minimum level.
+	Level *AdminLogLevel `form:"level,omitempty" json:"level,omitempty"`
+
+	// Q Case-insensitive text in the message or attributes.
+	Q         *string    `form:"q,omitempty" json:"q,omitempty"`
+	RequestId *string    `form:"requestId,omitempty" json:"requestId,omitempty"`
+	Since     *time.Time `form:"since,omitempty" json:"since,omitempty"`
+	Until     *time.Time `form:"until,omitempty" json:"until,omitempty"`
+
+	// After Only lines with a larger id (live tail).
+	After *int64 `form:"after,omitempty" json:"after,omitempty"`
+
+	// Cursor Opaque cursor from the previous page's `nextCursor`.
+	Cursor *AdminCursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit  *AdminLimit  `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// PutAdminSettingJSONRequestBody defines body for PutAdminSetting for application/json ContentType.
+type PutAdminSettingJSONRequestBody = AdminSettingUpdate
+
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
 	// Liveness and readiness of the server and its database
 	// (GET /health)
 	GetHealth(w http.ResponseWriter, r *http.Request)
+	// Background jobs, newest first
+	// (GET /v1/admin/jobs)
+	ListAdminJobs(w http.ResponseWriter, r *http.Request, params ListAdminJobsParams)
+	// Cancel a job
+	// (POST /v1/admin/jobs/{id}/cancel)
+	CancelAdminJob(w http.ResponseWriter, r *http.Request, id AdminJobID)
+	// Run a job again now
+	// (POST /v1/admin/jobs/{id}/retry)
+	RetryAdminJob(w http.ResponseWriter, r *http.Request, id AdminJobID)
+	// Application log lines, newest first
+	// (GET /v1/admin/logs)
+	ListAdminLogs(w http.ResponseWriter, r *http.Request, params ListAdminLogsParams)
+	// System state at a glance
+	// (GET /v1/admin/overview)
+	GetAdminOverview(w http.ResponseWriter, r *http.Request)
+	// Every runtime setting and feature flag
+	// (GET /v1/admin/settings)
+	ListAdminSettings(w http.ResponseWriter, r *http.Request)
+	// Reset a setting to its default
+	// (DELETE /v1/admin/settings/{key})
+	ResetAdminSetting(w http.ResponseWriter, r *http.Request, key string)
+	// Change a setting
+	// (PUT /v1/admin/settings/{key})
+	PutAdminSetting(w http.ResponseWriter, r *http.Request, key string)
 	// Build and contract versions, and the server clock
 	// (GET /v1/meta)
 	GetMeta(w http.ResponseWriter, r *http.Request)
@@ -104,6 +419,54 @@ type Unimplemented struct{}
 // Liveness and readiness of the server and its database
 // (GET /health)
 func (_ Unimplemented) GetHealth(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Background jobs, newest first
+// (GET /v1/admin/jobs)
+func (_ Unimplemented) ListAdminJobs(w http.ResponseWriter, r *http.Request, params ListAdminJobsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Cancel a job
+// (POST /v1/admin/jobs/{id}/cancel)
+func (_ Unimplemented) CancelAdminJob(w http.ResponseWriter, r *http.Request, id AdminJobID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Run a job again now
+// (POST /v1/admin/jobs/{id}/retry)
+func (_ Unimplemented) RetryAdminJob(w http.ResponseWriter, r *http.Request, id AdminJobID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Application log lines, newest first
+// (GET /v1/admin/logs)
+func (_ Unimplemented) ListAdminLogs(w http.ResponseWriter, r *http.Request, params ListAdminLogsParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// System state at a glance
+// (GET /v1/admin/overview)
+func (_ Unimplemented) GetAdminOverview(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Every runtime setting and feature flag
+// (GET /v1/admin/settings)
+func (_ Unimplemented) ListAdminSettings(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Reset a setting to its default
+// (DELETE /v1/admin/settings/{key})
+func (_ Unimplemented) ResetAdminSetting(w http.ResponseWriter, r *http.Request, key string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Change a setting
+// (PUT /v1/admin/settings/{key})
+func (_ Unimplemented) PutAdminSetting(w http.ResponseWriter, r *http.Request, key string) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -127,6 +490,334 @@ func (siw *ServerInterfaceWrapper) GetHealth(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetHealth(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAdminJobs operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminJobs(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminJobsParams
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", false, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "kind" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", false, false, "kind", r.URL.Query(), &params.Kind, runtime.BindQueryParameterOptions{Type: "array", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "kind"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "kind", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAdminJobs(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CancelAdminJob operation middleware
+func (siw *ServerInterfaceWrapper) CancelAdminJob(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id AdminJobID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelAdminJob(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RetryAdminJob operation middleware
+func (siw *ServerInterfaceWrapper) RetryAdminJob(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id AdminJobID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RetryAdminJob(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAdminLogs operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminLogs(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAdminLogsParams
+
+	// ------------- Optional query parameter "level" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "level", r.URL.Query(), &params.Level, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "level"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "level", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "requestId" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "requestId", r.URL.Query(), &params.RequestId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "requestId"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "requestId", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "since" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "since", r.URL.Query(), &params.Since, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "since"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "since", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "until" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "until", r.URL.Query(), &params.Until, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "until"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "until", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "after" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "after", r.URL.Query(), &params.After, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "after"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "after", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAdminLogs(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAdminOverview operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminOverview(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAdminOverview(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAdminSettings operation middleware
+func (siw *ServerInterfaceWrapper) ListAdminSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAdminSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ResetAdminSetting operation middleware
+func (siw *ServerInterfaceWrapper) ResetAdminSetting(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "key" -------------
+	var key string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "key", chi.URLParam(r, "key"), &key, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "key", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ResetAdminSetting(w, r, key)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutAdminSetting operation middleware
+func (siw *ServerInterfaceWrapper) PutAdminSetting(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "key" -------------
+	var key string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "key", chi.URLParam(r, "key"), &key, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "key", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutAdminSetting(w, r, key)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -267,6 +958,30 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Get(options.BaseURL+"/health", wrapper.GetHealth)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/admin/jobs", wrapper.ListAdminJobs)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/admin/jobs/{id}/cancel", wrapper.CancelAdminJob)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/admin/jobs/{id}/retry", wrapper.RetryAdminJob)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/admin/logs", wrapper.ListAdminLogs)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/admin/overview", wrapper.GetAdminOverview)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/admin/settings", wrapper.ListAdminSettings)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/v1/admin/settings/{key}", wrapper.ResetAdminSetting)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/v1/admin/settings/{key}", wrapper.PutAdminSetting)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/v1/meta", wrapper.GetMeta)
 	})
 
@@ -306,6 +1021,317 @@ func (response GetHealth503JSONResponse) VisitGetHealthResponse(w http.ResponseW
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(503)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAdminJobsRequestObject struct {
+	Params ListAdminJobsParams
+}
+
+type ListAdminJobsResponseObject interface {
+	VisitListAdminJobsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminJobs200JSONResponse AdminJobPage
+
+func (response ListAdminJobs200JSONResponse) VisitListAdminJobsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAdminJobsdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response ListAdminJobsdefaultApplicationProblemPlusJSONResponse) VisitListAdminJobsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CancelAdminJobRequestObject struct {
+	Id AdminJobID `json:"id"`
+}
+
+type CancelAdminJobResponseObject interface {
+	VisitCancelAdminJobResponse(w http.ResponseWriter) error
+}
+
+type CancelAdminJob200JSONResponse AdminJob
+
+func (response CancelAdminJob200JSONResponse) VisitCancelAdminJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CancelAdminJobdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response CancelAdminJobdefaultApplicationProblemPlusJSONResponse) VisitCancelAdminJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RetryAdminJobRequestObject struct {
+	Id AdminJobID `json:"id"`
+}
+
+type RetryAdminJobResponseObject interface {
+	VisitRetryAdminJobResponse(w http.ResponseWriter) error
+}
+
+type RetryAdminJob200JSONResponse AdminJob
+
+func (response RetryAdminJob200JSONResponse) VisitRetryAdminJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RetryAdminJobdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response RetryAdminJobdefaultApplicationProblemPlusJSONResponse) VisitRetryAdminJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAdminLogsRequestObject struct {
+	Params ListAdminLogsParams
+}
+
+type ListAdminLogsResponseObject interface {
+	VisitListAdminLogsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminLogs200JSONResponse AdminLogPage
+
+func (response ListAdminLogs200JSONResponse) VisitListAdminLogsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAdminLogsdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response ListAdminLogsdefaultApplicationProblemPlusJSONResponse) VisitListAdminLogsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetAdminOverviewRequestObject struct {
+}
+
+type GetAdminOverviewResponseObject interface {
+	VisitGetAdminOverviewResponse(w http.ResponseWriter) error
+}
+
+type GetAdminOverview200JSONResponse AdminOverview
+
+func (response GetAdminOverview200JSONResponse) VisitGetAdminOverviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetAdminOverviewdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response GetAdminOverviewdefaultApplicationProblemPlusJSONResponse) VisitGetAdminOverviewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAdminSettingsRequestObject struct {
+}
+
+type ListAdminSettingsResponseObject interface {
+	VisitListAdminSettingsResponse(w http.ResponseWriter) error
+}
+
+type ListAdminSettings200JSONResponse AdminSettingList
+
+func (response ListAdminSettings200JSONResponse) VisitListAdminSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAdminSettingsdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response ListAdminSettingsdefaultApplicationProblemPlusJSONResponse) VisitListAdminSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResetAdminSettingRequestObject struct {
+	Key string `json:"key"`
+}
+
+type ResetAdminSettingResponseObject interface {
+	VisitResetAdminSettingResponse(w http.ResponseWriter) error
+}
+
+type ResetAdminSetting200JSONResponse AdminSetting
+
+func (response ResetAdminSetting200JSONResponse) VisitResetAdminSettingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResetAdminSettingdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response ResetAdminSettingdefaultApplicationProblemPlusJSONResponse) VisitResetAdminSettingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutAdminSettingRequestObject struct {
+	Key  string `json:"key"`
+	Body *PutAdminSettingJSONRequestBody
+}
+
+type PutAdminSettingResponseObject interface {
+	VisitPutAdminSettingResponse(w http.ResponseWriter) error
+}
+
+type PutAdminSetting200JSONResponse AdminSetting
+
+func (response PutAdminSetting200JSONResponse) VisitPutAdminSettingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutAdminSettingdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response PutAdminSettingdefaultApplicationProblemPlusJSONResponse) VisitPutAdminSettingResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
 	_, err := buf.WriteTo(w)
 	return err
 }
@@ -353,6 +1379,30 @@ type StrictServerInterface interface {
 	// Liveness and readiness of the server and its database
 	// (GET /health)
 	GetHealth(ctx context.Context, request GetHealthRequestObject) (GetHealthResponseObject, error)
+	// Background jobs, newest first
+	// (GET /v1/admin/jobs)
+	ListAdminJobs(ctx context.Context, request ListAdminJobsRequestObject) (ListAdminJobsResponseObject, error)
+	// Cancel a job
+	// (POST /v1/admin/jobs/{id}/cancel)
+	CancelAdminJob(ctx context.Context, request CancelAdminJobRequestObject) (CancelAdminJobResponseObject, error)
+	// Run a job again now
+	// (POST /v1/admin/jobs/{id}/retry)
+	RetryAdminJob(ctx context.Context, request RetryAdminJobRequestObject) (RetryAdminJobResponseObject, error)
+	// Application log lines, newest first
+	// (GET /v1/admin/logs)
+	ListAdminLogs(ctx context.Context, request ListAdminLogsRequestObject) (ListAdminLogsResponseObject, error)
+	// System state at a glance
+	// (GET /v1/admin/overview)
+	GetAdminOverview(ctx context.Context, request GetAdminOverviewRequestObject) (GetAdminOverviewResponseObject, error)
+	// Every runtime setting and feature flag
+	// (GET /v1/admin/settings)
+	ListAdminSettings(ctx context.Context, request ListAdminSettingsRequestObject) (ListAdminSettingsResponseObject, error)
+	// Reset a setting to its default
+	// (DELETE /v1/admin/settings/{key})
+	ResetAdminSetting(ctx context.Context, request ResetAdminSettingRequestObject) (ResetAdminSettingResponseObject, error)
+	// Change a setting
+	// (PUT /v1/admin/settings/{key})
+	PutAdminSetting(ctx context.Context, request PutAdminSettingRequestObject) (PutAdminSettingResponseObject, error)
 	// Build and contract versions, and the server clock
 	// (GET /v1/meta)
 	GetMeta(ctx context.Context, request GetMetaRequestObject) (GetMetaResponseObject, error)
@@ -411,6 +1461,217 @@ func (sh *strictHandler) GetHealth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ListAdminJobs operation middleware
+func (sh *strictHandler) ListAdminJobs(w http.ResponseWriter, r *http.Request, params ListAdminJobsParams) {
+	var request ListAdminJobsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminJobs(ctx, request.(ListAdminJobsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminJobs")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAdminJobsResponseObject); ok {
+		if err := validResponse.VisitListAdminJobsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CancelAdminJob operation middleware
+func (sh *strictHandler) CancelAdminJob(w http.ResponseWriter, r *http.Request, id AdminJobID) {
+	var request CancelAdminJobRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CancelAdminJob(ctx, request.(CancelAdminJobRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CancelAdminJob")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CancelAdminJobResponseObject); ok {
+		if err := validResponse.VisitCancelAdminJobResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RetryAdminJob operation middleware
+func (sh *strictHandler) RetryAdminJob(w http.ResponseWriter, r *http.Request, id AdminJobID) {
+	var request RetryAdminJobRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RetryAdminJob(ctx, request.(RetryAdminJobRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RetryAdminJob")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RetryAdminJobResponseObject); ok {
+		if err := validResponse.VisitRetryAdminJobResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminLogs operation middleware
+func (sh *strictHandler) ListAdminLogs(w http.ResponseWriter, r *http.Request, params ListAdminLogsParams) {
+	var request ListAdminLogsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminLogs(ctx, request.(ListAdminLogsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminLogs")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAdminLogsResponseObject); ok {
+		if err := validResponse.VisitListAdminLogsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminOverview operation middleware
+func (sh *strictHandler) GetAdminOverview(w http.ResponseWriter, r *http.Request) {
+	var request GetAdminOverviewRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminOverview(ctx, request.(GetAdminOverviewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminOverview")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetAdminOverviewResponseObject); ok {
+		if err := validResponse.VisitGetAdminOverviewResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAdminSettings operation middleware
+func (sh *strictHandler) ListAdminSettings(w http.ResponseWriter, r *http.Request) {
+	var request ListAdminSettingsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAdminSettings(ctx, request.(ListAdminSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAdminSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAdminSettingsResponseObject); ok {
+		if err := validResponse.VisitListAdminSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ResetAdminSetting operation middleware
+func (sh *strictHandler) ResetAdminSetting(w http.ResponseWriter, r *http.Request, key string) {
+	var request ResetAdminSettingRequestObject
+
+	request.Key = key
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ResetAdminSetting(ctx, request.(ResetAdminSettingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResetAdminSetting")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ResetAdminSettingResponseObject); ok {
+		if err := validResponse.VisitResetAdminSettingResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutAdminSetting operation middleware
+func (sh *strictHandler) PutAdminSetting(w http.ResponseWriter, r *http.Request, key string) {
+	var request PutAdminSettingRequestObject
+
+	request.Key = key
+
+	var body PutAdminSettingJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutAdminSetting(ctx, request.(PutAdminSettingRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutAdminSetting")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutAdminSettingResponseObject); ok {
+		if err := validResponse.VisitPutAdminSettingResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetMeta operation middleware
 func (sh *strictHandler) GetMeta(w http.ResponseWriter, r *http.Request) {
 	var request GetMetaRequestObject
@@ -440,28 +1701,64 @@ func (sh *strictHandler) GetMeta(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
+	"4c3t7ubufwIAAP//",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

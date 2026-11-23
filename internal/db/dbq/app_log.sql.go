@@ -10,6 +10,26 @@ import (
 	"time"
 )
 
+const countAppLogProblemsSince = `-- name: CountAppLogProblemsSince :one
+SELECT
+    count(*) FILTER (WHERE level >= 8)::bigint AS errors,
+    count(*) FILTER (WHERE level >= 4 AND level < 8)::bigint AS warnings
+FROM app_log
+WHERE time >= $1::timestamptz AND level >= 4
+`
+
+type CountAppLogProblemsSinceRow struct {
+	Errors   int64
+	Warnings int64
+}
+
+func (q *Queries) CountAppLogProblemsSince(ctx context.Context, since time.Time) (CountAppLogProblemsSinceRow, error) {
+	row := q.db.QueryRow(ctx, countAppLogProblemsSince, since)
+	var i CountAppLogProblemsSinceRow
+	err := row.Scan(&i.Errors, &i.Warnings)
+	return i, err
+}
+
 const deleteAppLogBefore = `-- name: DeleteAppLogBefore :execrows
 DELETE FROM app_log
 WHERE id IN (
@@ -32,4 +52,71 @@ func (q *Queries) DeleteAppLogBefore(ctx context.Context, arg DeleteAppLogBefore
 		return 0, err
 	}
 	return result.RowsAffected(), nil
+}
+
+const listAppLog = `-- name: ListAppLog :many
+SELECT id, time, level, msg, attrs, request_id, user_id
+FROM app_log
+WHERE level >= $1::smallint
+  AND ($2::bigint IS NULL OR id < $2::bigint)
+  AND ($3::bigint IS NULL OR id > $3::bigint)
+  AND ($4::timestamptz IS NULL OR time >= $4::timestamptz)
+  AND ($5::timestamptz IS NULL OR time < $5::timestamptz)
+  AND ($6::text IS NULL OR request_id = $6::text)
+  AND ($7::text IS NULL
+       OR msg ILIKE $7::text
+       OR attrs::text ILIKE $7::text)
+ORDER BY id DESC
+LIMIT $8::int
+`
+
+type ListAppLogParams struct {
+	MinLevel  int16
+	BeforeID  *int64
+	AfterID   *int64
+	Since     *time.Time
+	Until     *time.Time
+	RequestID *string
+	Pattern   *string
+	RowLimit  int32
+}
+
+// Newest first. before_id pages back (keyset), after_id fetches what arrived
+// since the newest line the client has (live tail). pattern is an ILIKE
+// pattern matched against the message and the attributes.
+func (q *Queries) ListAppLog(ctx context.Context, arg ListAppLogParams) ([]AppLog, error) {
+	rows, err := q.db.Query(ctx, listAppLog,
+		arg.MinLevel,
+		arg.BeforeID,
+		arg.AfterID,
+		arg.Since,
+		arg.Until,
+		arg.RequestID,
+		arg.Pattern,
+		arg.RowLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AppLog
+	for rows.Next() {
+		var i AppLog
+		if err := rows.Scan(
+			&i.ID,
+			&i.Time,
+			&i.Level,
+			&i.Msg,
+			&i.Attrs,
+			&i.RequestID,
+			&i.UserID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }

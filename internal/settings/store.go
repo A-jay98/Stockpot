@@ -207,40 +207,112 @@ func (s *Store) decodeRow(ctx context.Context, key string, value, secret []byte)
 // this process's cache (others follow via NOTIFY), so a concurrent newer
 // write is never masked by this one. actor is the admin making the change.
 func (s *Store) Set(ctx context.Context, key string, raw json.RawMessage, actor *uuid.UUID) error {
+	return s.inTx(ctx, key, func(tx pgx.Tx) error {
+		_, err := s.SetTx(ctx, tx, key, raw, actor)
+		return err
+	})
+}
+
+// Reset deletes the stored value, so the default applies again.
+func (s *Store) Reset(ctx context.Context, key string) error {
+	return s.inTx(ctx, key, func(tx pgx.Tx) error {
+		_, err := s.ResetTx(ctx, tx, key)
+		return err
+	})
+}
+
+func (s *Store) inTx(ctx context.Context, key string, fn func(pgx.Tx) error) error {
+	if err := pgx.BeginFunc(ctx, s.pool, fn); err != nil {
+		return err
+	}
+	return s.Refresh(ctx, key)
+}
+
+// Change is what a write did to a stored value, for the audit trail. Secret
+// values never appear: Before and After are nil for them, and WasSet/IsSet
+// still say whether a value was stored.
+type Change struct {
+	Key           string
+	Secret        bool
+	WasSet, IsSet bool
+	Before, After any // nil when unset (the default applies) or secret
+}
+
+// SetTx validates and stores a value inside tx, so the caller can record the
+// change (audit) in the same transaction. The cache is not updated: call
+// Refresh after the commit.
+func (s *Store) SetTx(ctx context.Context, tx pgx.Tx, key string, raw json.RawMessage, actor *uuid.UUID) (Change, error) {
 	def, ok := Lookup(key)
 	if !ok {
-		return fmt.Errorf("%w: %s", ErrUnknownKey, key)
+		return Change{}, fmt.Errorf("%w: %s", ErrUnknownKey, key)
 	}
 	v, err := def.decode(raw)
 	if err != nil {
-		return &ValidationError{Key: key, Err: err}
+		return Change{}, &ValidationError{Key: key, Err: err}
 	}
 	canonical, err := json.Marshal(v)
 	if err != nil {
-		return err
+		return Change{}, err
+	}
+	ch, err := s.before(ctx, tx, def)
+	if err != nil {
+		return Change{}, err
 	}
 	p := dbq.UpsertSystemSettingParams{Key: key, UpdatedBy: actor}
 	if def.Secret {
 		p.Secret = s.box.Seal(canonical, []byte(key))
 	} else {
 		p.Value = canonical
+		ch.After = v
 	}
-	if err := s.q.UpsertSystemSetting(ctx, p); err != nil {
-		return fmt.Errorf("store setting %s: %w", key, err)
+	if err := s.q.WithTx(tx).UpsertSystemSetting(ctx, p); err != nil {
+		return Change{}, fmt.Errorf("store setting %s: %w", key, err)
 	}
-	return s.reload(ctx, key)
+	ch.IsSet = true
+	return ch, nil
 }
 
-// Reset deletes the stored value, so the default applies again.
-func (s *Store) Reset(ctx context.Context, key string) error {
-	if _, ok := Lookup(key); !ok {
-		return fmt.Errorf("%w: %s", ErrUnknownKey, key)
+// ResetTx deletes the stored value inside tx (see SetTx).
+func (s *Store) ResetTx(ctx context.Context, tx pgx.Tx, key string) (Change, error) {
+	def, ok := Lookup(key)
+	if !ok {
+		return Change{}, fmt.Errorf("%w: %s", ErrUnknownKey, key)
 	}
-	if err := s.q.DeleteSystemSetting(ctx, key); err != nil {
-		return fmt.Errorf("reset setting %s: %w", key, err)
+	ch, err := s.before(ctx, tx, def)
+	if err != nil {
+		return Change{}, err
 	}
-	return s.reload(ctx, key)
+	if err := s.q.WithTx(tx).DeleteSystemSetting(ctx, key); err != nil {
+		return Change{}, fmt.Errorf("reset setting %s: %w", key, err)
+	}
+	return ch, nil
 }
+
+// before locks key's row and describes what it currently holds.
+func (s *Store) before(ctx context.Context, tx pgx.Tx, def *Definition) (Change, error) {
+	ch := Change{Key: def.Key, Secret: def.Secret}
+	r, err := s.q.WithTx(tx).LockSystemSetting(ctx, def.Key)
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+		return ch, nil
+	case err != nil:
+		return Change{}, fmt.Errorf("read setting %s: %w", def.Key, err)
+	}
+	ch.WasSet = true
+	if !def.Secret && r.Value != nil {
+		// A row that no longer decodes is still worth showing as it was.
+		if v, err := def.decode(r.Value); err == nil {
+			ch.Before = v
+		} else {
+			ch.Before = json.RawMessage(r.Value)
+		}
+	}
+	return ch, nil
+}
+
+// Refresh re-reads key into this process's cache. Call it after committing
+// a SetTx or ResetTx; other processes follow via NOTIFY.
+func (s *Store) Refresh(ctx context.Context, key string) error { return s.reload(ctx, key) }
 
 // SetValue stores a typed value for setting (for code and tests; the admin
 // API goes through Set with JSON).
@@ -297,17 +369,32 @@ func (s *Store) List() []View {
 	defs := Definitions()
 	out := make([]View, 0, len(defs))
 	for _, d := range defs {
-		v, set := s.values[d.Key]
-		if !set {
-			v = d.Default
-		}
-		if d.Secret {
-			v = nil
-		}
-		m := s.meta[d.Key]
-		out = append(out, View{Definition: d, Value: v, IsSet: set, UpdatedAt: m.UpdatedAt, UpdatedBy: m.UpdatedBy})
+		out = append(out, s.view(d))
 	}
 	return out
+}
+
+// View returns one setting with its effective value.
+func (s *Store) View(key string) (View, bool) {
+	d, ok := Lookup(key)
+	if !ok {
+		return View{}, false
+	}
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.view(d), true
+}
+
+func (s *Store) view(d *Definition) View {
+	v, set := s.values[d.Key]
+	if !set {
+		v = d.Default
+	}
+	if d.Secret {
+		v = nil
+	}
+	m := s.meta[d.Key]
+	return View{Definition: d, Value: v, IsSet: set, UpdatedAt: m.UpdatedAt, UpdatedBy: m.UpdatedBy}
 }
 
 // ValidationError is a value the setting rejects; the API maps it to 422.

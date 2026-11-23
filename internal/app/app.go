@@ -13,6 +13,7 @@ import (
 
 	"golang.org/x/sync/errgroup"
 
+	"github.com/a-jay98/stockpot/internal/admin"
 	"github.com/a-jay98/stockpot/internal/blob"
 	"github.com/a-jay98/stockpot/internal/buildinfo"
 	"github.com/a-jay98/stockpot/internal/config"
@@ -40,6 +41,7 @@ func Migrate(ctx context.Context, cfg config.Config) error {
 // Serve runs the server until ctx ends, then shuts down in order: stop
 // accepting requests, drain jobs, flush logs, close the database.
 func Serve(ctx context.Context, cfg config.Config) error {
+	startedAt := time.Now()
 	level := new(slog.LevelVar)
 	level.Set(cfg.LogLevel)
 	slog.SetDefault(logging.New(os.Stdout, level, nil))
@@ -95,8 +97,20 @@ func Serve(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
+	adminSvc := admin.New(admin.Deps{
+		Pool:      pool,
+		Settings:  store,
+		Jobs:      jobClient,
+		Schema:    schema,
+		LogSink:   sink,
+		StartedAt: startedAt,
+	})
+
 	handler, err := httpapi.NewHandler(
-		httpapi.NewServer(map[string]httpapi.Pinger{"database": pool, "schema": schema}),
+		httpapi.NewServer(httpapi.Deps{
+			Checks: map[string]httpapi.Pinger{"database": pool, "schema": schema},
+			Admin:  adminSvc,
+		}),
 		httpapi.Options{PublicURL: cfg.PublicURL},
 	)
 	if err != nil {

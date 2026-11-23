@@ -7,3 +7,7 @@ generate:
   strict-server: true
   embedded-spec: true
   server-urls: true
+compatibility:
+  # Enum constants are package-level; prefix them with their type
+  # (HealthStatusOk, AdminLogLevelError) so areas can't collide.
+  always-prefix-enum-values: true

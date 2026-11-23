@@ -141,6 +141,33 @@ func (c *SchemaCheck) Ping(ctx context.Context) error {
 	return nil
 }
 
+// Versions are the schema versions the database has and this binary carries.
+type Versions struct {
+	App, AppTarget     int64 // goose
+	River, RiverTarget int   // River's job-queue schema
+}
+
+// Versions reads the applied migration versions.
+func (c *SchemaCheck) Versions(ctx context.Context) (Versions, error) {
+	var v Versions
+	cur, target, err := c.goose.GetVersions(ctx)
+	if err != nil {
+		return v, fmt.Errorf("schema version: %w", err)
+	}
+	v.App, v.AppTarget = cur, target
+	existing, err := c.river.ExistingVersions(ctx)
+	if err != nil {
+		return v, fmt.Errorf("river schema version: %w", err)
+	}
+	if n := len(existing); n > 0 {
+		v.River = existing[n-1].Version
+	}
+	if all := c.river.AllVersions(); len(all) > 0 {
+		v.RiverTarget = all[len(all)-1].Version
+	}
+	return v, nil
+}
+
 func newGoose(sqlDB *sql.DB) (*goose.Provider, error) {
 	dir, err := fs.Sub(migrations, "migrations")
 	if err != nil {

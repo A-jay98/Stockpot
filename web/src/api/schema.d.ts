@@ -47,6 +47,146 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** System state at a glance */
+        get: operations["getAdminOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Application log lines, newest first
+         * @description Keyset-paginated: pass `cursor` from the previous page for older
+         *     lines. For a live tail, poll with `after` set to the newest id the
+         *     client holds; if that answer has a `nextCursor`, more lines arrived
+         *     than fit and the client should reload.
+         */
+        get: operations["listAdminLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Background jobs, newest first */
+        get: operations["listAdminJobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/jobs/{id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run a job again now
+         * @description Makes a finished, failed or scheduled job available immediately. A running job is unchanged.
+         */
+        post: operations["retryAdminJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/jobs/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel a job
+         * @description A running job is asked to stop; a pending one never runs.
+         */
+        post: operations["cancelAdminJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every runtime setting and feature flag
+         * @description Secret values are never returned; `isSet` says whether one is stored.
+         */
+        get: operations["listAdminSettings"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/settings/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change a setting
+         * @description Validated against the setting's type and rules (422 with `code` invalid_value otherwise). Applies live in every process. Audited.
+         */
+        put: operations["putAdminSetting"];
+        post?: never;
+        /** Reset a setting to its default */
+        delete: operations["resetAdminSetting"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -103,6 +243,141 @@ export interface components {
              */
             code: string;
         };
+        AdminOverview: {
+            /** @description Release tag (r<n>) or "dev". */
+            version: string;
+            commit: string;
+            builtAt: string;
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: int64 */
+            uptimeSeconds: number;
+            database: components["schemas"]["AdminDatabaseStatus"];
+            /** @description Job count per River state; absent when unavailable. */
+            jobs?: {
+                [key: string]: number;
+            };
+            /** Format: int64 */
+            errors24h?: number;
+            /** Format: int64 */
+            warnings24h?: number;
+            /** @description Lines this process wrote to the System logs table, and dropped under load. */
+            logSink?: {
+                /** Format: int64 */
+                written: number;
+                /** Format: int64 */
+                dropped: number;
+            };
+            llm?: components["schemas"]["AdminLLMToday"];
+        };
+        AdminDatabaseStatus: {
+            reachable: boolean;
+            latencyMs: number;
+            /** Format: int64 */
+            sizeBytes?: number;
+            /** @description False while migrations are pending. */
+            schemaCurrent: boolean;
+            /** Format: int64 */
+            appVersion?: number;
+            /** Format: int64 */
+            appTarget?: number;
+            riverVersion?: number;
+            riverTarget?: number;
+        };
+        AdminLLMToday: {
+            /** Format: int64 */
+            requests: number;
+            /** Format: int64 */
+            tokens: number;
+            /** Format: int64 */
+            requestCap?: number;
+            available: boolean;
+        };
+        /** @enum {string} */
+        AdminLogLevel: "debug" | "info" | "warn" | "error";
+        AdminLogEntry: {
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            time: string;
+            level: components["schemas"]["AdminLogLevel"];
+            msg: string;
+            attrs: {
+                [key: string]: unknown;
+            };
+            requestId?: string;
+            /** Format: uuid */
+            userId?: string;
+        };
+        AdminLogPage: {
+            items: components["schemas"]["AdminLogEntry"][];
+            nextCursor?: string;
+        };
+        /** @enum {string} */
+        AdminJobState: "available" | "cancelled" | "completed" | "discarded" | "pending" | "retryable" | "running" | "scheduled";
+        AdminJobError: {
+            /** Format: date-time */
+            at: string;
+            attempt: number;
+            error: string;
+        };
+        AdminJob: {
+            /** Format: int64 */
+            id: number;
+            kind: string;
+            state: components["schemas"]["AdminJobState"];
+            queue: string;
+            attempt: number;
+            maxAttempts: number;
+            priority: number;
+            /** @description The job's arguments as stored. */
+            args: unknown;
+            errors: components["schemas"]["AdminJobError"][];
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            scheduledAt: string;
+            /** Format: date-time */
+            attemptedAt?: string;
+            /** Format: date-time */
+            finalizedAt?: string;
+            tags: string[];
+        };
+        AdminJobPage: {
+            items: components["schemas"]["AdminJob"][];
+            nextCursor?: string;
+        };
+        /** @enum {string} */
+        AdminSettingKind: "bool" | "int" | "string" | "json";
+        AdminSetting: {
+            /** @example retention.app_log_days */
+            key: string;
+            kind: components["schemas"]["AdminSettingKind"];
+            /** @enum {string} */
+            scope: "system" | "household";
+            description: string;
+            /** @description Write-only; value and default are never returned. */
+            secret: boolean;
+            /** @description Value used while none is stored (absent for secrets). */
+            default?: unknown;
+            /** @description Effective value (absent for secrets). */
+            value?: unknown;
+            /** @description When present, the only accepted values. */
+            options?: unknown[];
+            /** @description A value is stored; otherwise the default applies. */
+            isSet: boolean;
+            /** Format: date-time */
+            updatedAt?: string;
+            /** Format: uuid */
+            updatedBy?: string;
+        };
+        AdminSettingList: {
+            items: components["schemas"]["AdminSetting"][];
+        };
+        AdminSettingUpdate: {
+            /** @description New value, of the setting's kind. */
+            value: unknown;
+        };
     };
     responses: {
         /** @description Error (RFC 9457 problem document) */
@@ -115,7 +390,12 @@ export interface components {
             };
         };
     };
-    parameters: never;
+    parameters: {
+        /** @description Opaque cursor from the previous page's `nextCursor`. */
+        AdminCursor: string;
+        AdminLimit: number;
+        AdminJobID: number;
+    };
     requestBodies: never;
     headers: never;
     pathItems: never;
@@ -167,6 +447,207 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Meta"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getAdminOverview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Overview */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminOverview"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    listAdminLogs: {
+        parameters: {
+            query?: {
+                /** @description Minimum level. */
+                level?: components["schemas"]["AdminLogLevel"];
+                /** @description Case-insensitive text in the message or attributes. */
+                q?: string;
+                requestId?: string;
+                since?: string;
+                until?: string;
+                /** @description Only lines with a larger id (live tail). */
+                after?: number;
+                /** @description Opaque cursor from the previous page's `nextCursor`. */
+                cursor?: components["parameters"]["AdminCursor"];
+                limit?: components["parameters"]["AdminLimit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of log lines */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminLogPage"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    listAdminJobs: {
+        parameters: {
+            query?: {
+                /** @description Comma-separated states. */
+                state?: components["schemas"]["AdminJobState"][];
+                /** @description Comma-separated job kinds. */
+                kind?: string[];
+                /** @description Opaque cursor from the previous page's `nextCursor`. */
+                cursor?: components["parameters"]["AdminCursor"];
+                limit?: components["parameters"]["AdminLimit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of jobs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminJobPage"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    retryAdminJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AdminJobID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The job after the change */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminJob"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    cancelAdminJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["AdminJobID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The job after the change */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminJob"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    listAdminSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Settings, sorted by key */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSettingList"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    putAdminSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AdminSettingUpdate"];
+            };
+        };
+        responses: {
+            /** @description The setting after the change */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSetting"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    resetAdminSetting: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                key: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The setting after the reset */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminSetting"];
                 };
             };
             default: components["responses"]["Problem"];

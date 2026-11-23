@@ -89,6 +89,36 @@ func (q *Queries) ListSystemSettings(ctx context.Context) ([]ListSystemSettingsR
 	return items, nil
 }
 
+const lockSystemSetting = `-- name: LockSystemSetting :one
+SELECT key, value, secret, updated_at, updated_by
+FROM setting
+WHERE household_id IS NULL AND key = $1
+FOR UPDATE
+`
+
+type LockSystemSettingRow struct {
+	Key       string
+	Value     []byte
+	Secret    []byte
+	UpdatedAt time.Time
+	UpdatedBy *uuid.UUID
+}
+
+// Reads the current row inside a write transaction, so the audit trail's
+// "before" matches what the write replaces.
+func (q *Queries) LockSystemSetting(ctx context.Context, key string) (LockSystemSettingRow, error) {
+	row := q.db.QueryRow(ctx, lockSystemSetting, key)
+	var i LockSystemSettingRow
+	err := row.Scan(
+		&i.Key,
+		&i.Value,
+		&i.Secret,
+		&i.UpdatedAt,
+		&i.UpdatedBy,
+	)
+	return i, err
+}
+
 const upsertSystemSetting = `-- name: UpsertSystemSetting :exec
 INSERT INTO setting (key, value, secret, updated_by)
 VALUES ($1, $2, $3, $4)
