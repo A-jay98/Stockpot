@@ -1,0 +1,49 @@
+# Lint and test. Runs on every PR, and as the first job of every release.
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+
+concurrency:
+  # Newer pushes to a PR cancel older runs; release calls share the caller's group.
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Flake checks (formatting, dev shell)
+        run: nix flake check
+
+      - name: Install web dependencies
+        run: nix develop -c make web-install
+
+      - name: Generated code is current
+        run: |
+          nix develop -c make gen
+          git diff --exit-code
+
+      - name: Go lint
+        run: nix develop -c make lint
+
+      - name: Go tests
+        run: nix develop -c make test
+
+      - name: Web lint, typecheck, tests
+        run: nix develop -c make web-check
+
+      - name: Release build
+        run: nix develop -c make release
+
+      - name: Stop Postgres
+        if: always()
+        run: nix develop -c make db-down
