@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/a-jay98/stockpot/internal/buildinfo"
@@ -16,6 +17,7 @@ type Pinger interface {
 // Server implements StrictServerInterface.
 type Server struct {
 	checks map[string]Pinger
+	now    func() time.Time
 }
 
 var _ StrictServerInterface = (*Server)(nil)
@@ -23,7 +25,7 @@ var _ StrictServerInterface = (*Server)(nil)
 // NewServer returns the API implementation. checks are probed by /api/health,
 // keyed by the name reported to the client.
 func NewServer(checks map[string]Pinger) *Server {
-	return &Server{checks: checks}
+	return &Server{checks: checks, now: time.Now}
 }
 
 // healthTimeout bounds each dependency probe; the deploy step polls often.
@@ -57,3 +59,27 @@ func (s *Server) GetHealth(ctx context.Context, _ GetHealthRequestObject) (GetHe
 	}
 	return GetHealth200JSONResponse(h), nil
 }
+
+// GetMeta reports the contract version, build and server clock.
+func (s *Server) GetMeta(context.Context, GetMetaRequestObject) (GetMetaResponseObject, error) {
+	bi := buildinfo.Get()
+	version, err := contractVersion()
+	if err != nil {
+		return nil, err
+	}
+	return GetMeta200JSONResponse(Meta{
+		Version:    version,
+		Tag:        bi.Version,
+		Commit:     bi.Commit,
+		ServerTime: s.now().UTC(),
+	}), nil
+}
+
+// contractVersion is info.version of the embedded spec, decoded once.
+var contractVersion = sync.OnceValues(func() (string, error) {
+	spec, err := GetSpec()
+	if err != nil {
+		return "", err
+	}
+	return spec.Info.Version, nil
+})

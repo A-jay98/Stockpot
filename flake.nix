@@ -48,6 +48,7 @@
             pkgs.go_1_26
             pkgs.golangci-lint
             pkgs.goose
+            pkgs.sqlc
             pkgs.postgresql_17
             pkgs.nodejs_24
             pkgs.pnpm

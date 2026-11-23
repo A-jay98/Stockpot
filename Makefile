@@ -18,7 +18,8 @@ export GOOSE_DRIVER := postgres
 export GOOSE_MIGRATION_DIR := $(CURDIR)/internal/db/migrations
 export GOOSE_DBSTRING := dbname=$(PGDATABASE)
 
-TEST_DB := stockpot_test
+# Dev-only secret key for encrypted settings (production: systemd credential).
+export STOCKPOT_SECRET_KEY_FILE := $(CURDIR)/.data/secret-key
 
 # $(call ensure-db,name): create the database if it doesn't exist yet.
 ensure-db = psql -d postgres -tAc "SELECT 1 FROM pg_database WHERE datname = '$(1)'" | grep -q 1 || createdb "$(1)"
@@ -46,23 +47,26 @@ db-down: ## Stop Postgres
 psql: ## Open psql on the dev database
 	psql $(ARGS)
 
-migrate: db-up ## Apply pending migrations to the dev database
+migrate: db-up .data/secret-key ## Apply pending migrations to the dev database
 	go run ./cmd/stockpot migrate
+
+.data/secret-key:
+	@mkdir -p .data
+	umask 077 && head -c 32 /dev/urandom | base64 > $@
 
 migration: ## Create a migration file (make migration NAME=add_items)
 	@[ -n "$(NAME)" ] || { echo "usage: make migration NAME=add_items"; exit 1; }
 	goose -s create "$(NAME)" sql
 
-gen: ## Regenerate Go and TypeScript code from api/openapi.yaml
-	go tool oapi-codegen -config oapi-codegen.yaml api/openapi.yaml
+gen: ## Regenerate code: Go server (oapi-codegen), queries (sqlc), TypeScript types
+	go generate ./...
 	cd web && pnpm -s gen
 
 serve: migrate ## Run the API on 127.0.0.1:8080
 	STOCKPOT_LISTEN=127.0.0.1:8080 go run ./cmd/stockpot serve
 
-test: db-up ## Run Go tests (database tests use a scratch stockpot_test database)
-	@$(call ensure-db,$(TEST_DB))
-	STOCKPOT_TEST_DATABASE_URL="dbname=$(TEST_DB)" go test -race ./...
+test: ## Run Go tests (database tests start a throwaway Postgres; see internal/testdb)
+	go test -race ./...
 
 lint: ## Lint Go code
 	golangci-lint run ./...
