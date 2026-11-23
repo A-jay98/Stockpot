@@ -30,6 +30,7 @@ jobs:
       - name: Generated code is current
         run: |
           nix develop -c make gen
+          git add --intent-to-add --all
           git diff --exit-code
 
       - name: Go lint

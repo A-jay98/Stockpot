@@ -1,4 +1,5 @@
-// Package db owns the Postgres schema and connection pool.
+// Package db owns the Postgres schema and connection pool. Queries live in
+// queries/*.sql and are compiled by sqlc into package dbq.
 package db
 
 import (
@@ -14,13 +15,18 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/riverqueue/river/rivermigrate"
 )
 
-// The whole directory, so it embeds even before the first .sql file exists;
-// goose only reads *.sql.
-//
-//go:embed migrations
+//go:generate sqlc generate -f ../../sqlc.yaml
+
+//go:embed migrations/*.sql
 var migrations embed.FS
+
+// migrateLockID is the pg_advisory_lock key that serializes `stockpot
+// migrate` runs (two units, or a deploy racing a manual run).
+const migrateLockID int64 = 0x73746f636b706f74 // "stockpot"
 
 // Open connects a pool and checks the database answers.
 func Open(ctx context.Context, url string) (*pgxpool.Pool, error) {
@@ -35,21 +41,28 @@ func Open(ctx context.Context, url string) (*pgxpool.Pool, error) {
 	return pool, nil
 }
 
-// Migrate applies pending migrations. The binary carries them, so a deployed
-// server needs neither the goose CLI nor a source checkout.
-func Migrate(ctx context.Context, url string) error {
-	cfg, err := pgx.ParseConfig(url)
+// Migrate applies the app's goose migrations, then River's job-queue
+// migrations, holding an advisory lock throughout. The binary carries both,
+// so a deployed server needs neither the goose CLI nor a checkout.
+func Migrate(ctx context.Context, pool *pgxpool.Pool) (err error) {
+	conn, err := pool.Acquire(ctx)
 	if err != nil {
-		return fmt.Errorf("database config: %w", err)
+		return fmt.Errorf("migrate: %w", err)
 	}
-	sqlDB := stdlib.OpenDB(*cfg)
-	defer func() { _ = sqlDB.Close() }()
+	defer conn.Release()
+	if _, err := conn.Exec(ctx, "SELECT pg_advisory_lock($1)", migrateLockID); err != nil {
+		return fmt.Errorf("migrate: take lock: %w", err)
+	}
+	defer func() {
+		// A fresh context: the lock must go even if ctx was cancelled.
+		if _, uerr := conn.Exec(context.WithoutCancel(ctx), "SELECT pg_advisory_unlock($1)", migrateLockID); uerr != nil {
+			err = errors.Join(err, fmt.Errorf("migrate: release lock: %w", uerr))
+		}
+	}()
 
-	provider, err := newProvider(sqlDB)
-	if errors.Is(err, goose.ErrNoMigrations) {
-		slog.InfoContext(ctx, "no migrations to apply")
-		return nil
-	}
+	sqlDB := stdlib.OpenDBFromPool(pool)
+	defer func() { _ = sqlDB.Close() }() // leaves the pool open
+	provider, err := newGoose(sqlDB)
 	if err != nil {
 		return err
 	}
@@ -60,46 +73,75 @@ func Migrate(ctx context.Context, url string) error {
 	for _, r := range results {
 		slog.InfoContext(ctx, "migrated", "version", r.Source.Version, "file", r.Source.Path, "duration", r.Duration)
 	}
-	if len(results) == 0 {
+
+	river, err := newRiverMigrator(pool)
+	if err != nil {
+		return err
+	}
+	rres, err := river.Migrate(ctx, rivermigrate.DirectionUp, nil)
+	if err != nil {
+		return fmt.Errorf("migrate river: %w", err)
+	}
+	for _, v := range rres.Versions {
+		slog.InfoContext(ctx, "migrated river", "version", v.Version, "name", v.Name, "duration", v.Duration)
+	}
+	if len(results) == 0 && len(rres.Versions) == 0 {
 		slog.InfoContext(ctx, "database is up to date")
 	}
 	return nil
 }
 
 // SchemaCheck reports whether the database has every migration this binary
-// carries. Health uses it so a release whose migrations didn't apply rolls back.
+// carries. `serve` refuses to start without it, and /api/health fails, so a
+// release whose migrations didn't apply rolls back.
 type SchemaCheck struct {
-	provider *goose.Provider // nil: the binary has no migrations
+	sqlDB *sql.DB
+	goose *goose.Provider
+	river *rivermigrate.Migrator[pgx.Tx]
 }
 
 // NewSchemaCheck builds a check against the pool's database.
 func NewSchemaCheck(pool *pgxpool.Pool) (*SchemaCheck, error) {
-	provider, err := newProvider(stdlib.OpenDBFromPool(pool))
-	if errors.Is(err, goose.ErrNoMigrations) {
-		return &SchemaCheck{}, nil
-	}
+	sqlDB := stdlib.OpenDBFromPool(pool)
+	g, err := newGoose(sqlDB)
 	if err != nil {
+		_ = sqlDB.Close()
 		return nil, err
 	}
-	return &SchemaCheck{provider: provider}, nil
+	r, err := newRiverMigrator(pool)
+	if err != nil {
+		_ = sqlDB.Close()
+		return nil, err
+	}
+	return &SchemaCheck{sqlDB: sqlDB, goose: g, river: r}, nil
 }
 
-// Ping fails while migrations are pending.
+// Close releases the check's database/sql handle (not the pool).
+func (c *SchemaCheck) Close() error { return c.sqlDB.Close() }
+
+// ErrSchemaBehind means migrations are pending: run `stockpot migrate`.
+var ErrSchemaBehind = errors.New("database schema is behind this binary: run `stockpot migrate`")
+
+// Ping fails with ErrSchemaBehind while any migration is pending.
 func (c *SchemaCheck) Ping(ctx context.Context) error {
-	if c.provider == nil {
-		return nil
-	}
-	pending, err := c.provider.HasPending(ctx)
+	pending, err := c.goose.HasPending(ctx)
 	if err != nil {
 		return fmt.Errorf("schema version: %w", err)
 	}
 	if pending {
-		return errors.New("migrations pending")
+		return ErrSchemaBehind
+	}
+	res, err := c.river.Validate(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("river schema version: %w", err)
+	}
+	if !res.OK {
+		return fmt.Errorf("%w (river: %v)", ErrSchemaBehind, res.Messages)
 	}
 	return nil
 }
 
-func newProvider(sqlDB *sql.DB) (*goose.Provider, error) {
+func newGoose(sqlDB *sql.DB) (*goose.Provider, error) {
 	dir, err := fs.Sub(migrations, "migrations")
 	if err != nil {
 		return nil, err
@@ -109,4 +151,12 @@ func newProvider(sqlDB *sql.DB) (*goose.Provider, error) {
 		return nil, fmt.Errorf("migrations: %w", err)
 	}
 	return provider, nil
+}
+
+func newRiverMigrator(pool *pgxpool.Pool) (*rivermigrate.Migrator[pgx.Tx], error) {
+	m, err := rivermigrate.New(riverpgxv5.New(pool), &rivermigrate.Config{Logger: slog.Default()})
+	if err != nil {
+		return nil, fmt.Errorf("river migrations: %w", err)
+	}
+	return m, nil
 }

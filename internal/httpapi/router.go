@@ -3,55 +3,103 @@
 // cross-cutting middleware every request gets.
 package httpapi
 
+//go:generate go tool oapi-codegen -config oapi-codegen.yaml ../../api/openapi.yaml
+
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/getkin/kin-openapi/routers"
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	nethttpmiddleware "github.com/oapi-codegen/nethttp-middleware"
 )
 
-// maxBodyBytes caps every request body, so a hostile client can't make the
-// server buffer megabytes for the validator.
+// maxBodyBytes caps every request body.
 const maxBodyBytes = 1 << 20
 
-// NewHandler serves the generated routes for si under the spec's server URL
-// (/api), wrapped (outermost first) in request IDs, logging, panic recovery,
-// a body cap and OpenAPI request validation.
-func NewHandler(si StrictServerInterface) (http.Handler, error) {
+// Options are the pluggable parts of the request pipeline. Zero values give
+// the M0 defaults.
+type Options struct {
+	// PublicURL is the app's origin; unsafe requests must come from it.
+	// Default http://localhost:5173 (the Vite dev server).
+	PublicURL *url.URL
+	// AccessLog receives every request. Default: a log line.
+	AccessLog AccessLogger
+	// Session loads the caller's session into reqctx.Info. Default: none.
+	Session func(http.Handler) http.Handler
+	// Authorizer enforces x-roles. Default: PublicOnly.
+	Authorizer Authorizer
+}
+
+// NewHandler serves si under the spec's server URL (/api). Middleware, outermost first:
+// request id → recover → real IP → access log → session → CSRF origin check
+// → authorization (x-roles) → body cap → OpenAPI validation → handler.
+func NewHandler(si StrictServerInterface, opts Options) (http.Handler, error) {
+	if opts.PublicURL == nil {
+		opts.PublicURL = &url.URL{Scheme: "http", Host: "localhost:5173"}
+	}
+	if opts.AccessLog == nil {
+		opts.AccessLog = SlogAccessLogger{}
+	}
+	if opts.Authorizer == nil {
+		opts.Authorizer = PublicOnly{}
+	}
+
 	spec, err := GetSpec()
 	if err != nil {
 		return nil, fmt.Errorf("load openapi spec: %w", err)
 	}
+	roles, err := ParseRoles(spec)
+	if err != nil {
+		return nil, fmt.Errorf("openapi x-roles: %w", err)
+	}
+	authz, err := authorize(spec, roles, opts.Authorizer)
+	if err != nil {
+		return nil, err
+	}
 
 	strict := NewStrictHandlerWithOptions(si, nil, StrictHTTPServerOptions{
-		RequestErrorHandlerFunc: func(w http.ResponseWriter, _ *http.Request, err error) {
-			writeProblem(w, http.StatusBadRequest, err.Error())
+		RequestErrorHandlerFunc: func(w http.ResponseWriter, r *http.Request, err error) {
+			slog.InfoContext(r.Context(), "bad request", "err", err)
+			writeProblem(w, r, http.StatusBadRequest, CodeBadRequest, "")
 		},
 		ResponseErrorHandlerFunc: func(w http.ResponseWriter, r *http.Request, err error) {
 			// The cause goes to the log, never to the client.
 			slog.ErrorContext(r.Context(), "handler failed", "method", r.Method, "path", r.URL.Path, "err", err)
-			writeProblem(w, http.StatusInternalServerError, "internal error")
+			writeProblem(w, r, http.StatusInternalServerError, CodeInternal, "")
 		},
 	})
 
 	r := chi.NewRouter()
+	r.NotFound(func(w http.ResponseWriter, r *http.Request) {
+		writeProblem(w, r, http.StatusNotFound, CodeNotFound, "")
+	})
+	r.MethodNotAllowed(func(w http.ResponseWriter, r *http.Request) {
+		writeProblem(w, r, http.StatusMethodNotAllowed, CodeMethodNotAllowed, "")
+	})
 	r.Use(
-		middleware.RequestID,
-		logRequests,
-		middleware.Recoverer,
+		requestID,
+		recoverPanics,
+		realIP,
+		accessLog(opts.AccessLog),
+	)
+	if opts.Session != nil {
+		r.Use(opts.Session)
+	}
+	r.Use(
+		sameOrigin(opts.PublicURL),
+		authz,
 		limitBody,
 		nethttpmiddleware.OapiRequestValidatorWithOptions(spec, &nethttpmiddleware.Options{
 			// The server URL is relative (/api), so there is no Host to mismatch.
 			SilenceServersWarning: true,
-			// Auth is enforced by operation middleware; the validator checks shape.
+			// Authorization ran above; the validator checks shape only.
 			Options:              openapi3filter.Options{AuthenticationFunc: openapi3filter.NoopAuthenticationFunc},
 			ErrorHandlerWithOpts: rejectRequest,
 		}),
@@ -71,48 +119,26 @@ func NewHTTPServer(h http.Handler) *http.Server {
 	}
 }
 
-func limitBody(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
-		next.ServeHTTP(w, r)
-	})
-}
-
-func logRequests(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
-		next.ServeHTTP(ww, r)
-		slog.LogAttrs(r.Context(), slog.LevelInfo, "request",
-			slog.String("request_id", middleware.GetReqID(r.Context())),
-			slog.String("method", r.Method),
-			slog.String("path", r.URL.Path),
-			slog.Int("status", ww.Status()),
-			slog.Duration("duration", time.Since(start)),
-		)
-	})
-}
-
 // rejectRequest answers a request the OpenAPI validator refused. Its text
-// names schema internals, so the client gets the status text and the detail
-// goes to the log.
+// names schema internals, so the detail goes to the log.
 func rejectRequest(ctx context.Context, err error, w http.ResponseWriter, r *http.Request, opts nethttpmiddleware.ErrorHandlerOpts) {
 	status := opts.StatusCode
 	var tooBig *http.MaxBytesError
-	if errors.As(err, &tooBig) {
+	switch {
+	case errors.As(err, &tooBig):
 		status = http.StatusRequestEntityTooLarge
+	case errors.Is(err, routers.ErrMethodNotAllowed):
+		status = http.StatusMethodNotAllowed
 	}
 	slog.InfoContext(ctx, "request rejected", "method", r.Method, "path", r.URL.Path, "status", status, "err", err)
-	writeProblem(w, status, http.StatusText(status))
-}
-
-// problem is the body of every error the spec doesn't describe itself.
-type problem struct {
-	Error string `json:"error"`
-}
-
-func writeProblem(w http.ResponseWriter, status int, msg string) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(problem{Error: msg})
+	code := CodeBadRequest
+	switch status {
+	case http.StatusNotFound:
+		code = CodeNotFound
+	case http.StatusMethodNotAllowed:
+		code = CodeMethodNotAllowed
+	case http.StatusRequestEntityTooLarge:
+		code = CodeTooLarge
+	}
+	writeProblem(w, r, status, code, "")
 }

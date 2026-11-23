@@ -14,9 +14,31 @@ export interface paths {
         /**
          * Liveness and readiness of the server and its database
          * @description Polled by cardea's deploy step after every release; a non-2xx answer
-         *     rolls the release back.
+         *     rolls the release back. 200 only when the database answers and its
+         *     schema has every migration this build carries.
          */
         get: operations["getHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/meta": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Build and contract versions, and the server clock
+         * @description Lets the PWA show what it is talking to and correct for a skewed
+         *     device clock (offline outbox timestamps).
+         */
+        get: operations["getMeta"];
         put?: never;
         post?: never;
         delete?: never;
@@ -45,8 +67,54 @@ export interface components {
                 [key: string]: string;
             };
         };
+        Meta: {
+            /**
+             * @description Version of this API contract (info.version).
+             * @example 0.1.0
+             */
+            version: string;
+            /**
+             * @description Release tag (r<n>) or "dev".
+             * @example r12
+             */
+            tag: string;
+            commit: string;
+            /** Format: date-time */
+            serverTime: string;
+        };
+        /** @description RFC 9457 problem details. */
+        Problem: {
+            /**
+             * @description Problem type URI; "about:blank" when the status says it all.
+             * @example about:blank
+             */
+            type: string;
+            /** @example Unauthorized */
+            title: string;
+            /** @example 401 */
+            status: number;
+            /** @description Human-readable explanation of this occurrence. */
+            detail?: string;
+            /** @description Request id of this occurrence (also in X-Request-Id). */
+            instance?: string;
+            /**
+             * @description Stable machine-readable error code.
+             * @example unauthenticated
+             */
+            code: string;
+        };
     };
-    responses: never;
+    responses: {
+        /** @description Error (RFC 9457 problem document) */
+        Problem: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/problem+json": components["schemas"]["Problem"];
+            };
+        };
+    };
     parameters: never;
     requestBodies: never;
     headers: never;
@@ -72,7 +140,7 @@ export interface operations {
                     "application/json": components["schemas"]["Health"];
                 };
             };
-            /** @description A dependency is down */
+            /** @description A dependency is down or the schema is behind */
             503: {
                 headers: {
                     [name: string]: unknown;
@@ -81,6 +149,27 @@ export interface operations {
                     "application/json": components["schemas"]["Health"];
                 };
             };
+        };
+    };
+    getMeta: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Server metadata */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Meta"];
+                };
+            };
+            default: components["responses"]["Problem"];
         };
     };
 }
