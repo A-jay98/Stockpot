@@ -1,0 +1,54 @@
+openapi: 3.0.3
+info:
+  title: Stockpot API
+  version: 0.1.0
+  description: |
+    Contract between the Stockpot server and its PWA. Edit this file, then run
+    `make gen` to regenerate the Go server and TypeScript types.
+servers:
+  - url: /api
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Liveness and readiness of the server and its database
+      description: |
+        Polled by cardea's deploy step after every release; a non-2xx answer
+        rolls the release back.
+      tags: [system]
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+        "503":
+          description: A dependency is down
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+components:
+  schemas:
+    Health:
+      type: object
+      required: [status, version, commit, builtAt, checks]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        version:
+          type: string
+          description: Release tag (r<n>) or "dev".
+          example: r12
+        commit:
+          type: string
+        builtAt:
+          type: string
+          description: RFC 3339, empty when unknown.
+        checks:
+          type: object
+          description: Per dependency, "ok" or an error message.
+          additionalProperties:
+            type: string

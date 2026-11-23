@@ -1,0 +1,67 @@
+# Every push to main: test, build, sign and publish a GitHub Release that
+# cardea's updater pulls (on the release webhook, or within five minutes).
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  # Queue, never cancel: every release is published in order.
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create releases
+    env:
+      # cardea's updater accepts nothing but r<number>.
+      TAG: r${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: cachix/install-nix-action@v31
+
+      - name: Build
+        run: |
+          nix develop -c make web-install
+          nix develop -c make release RELEASE_TAG="$TAG" RELEASE_COMMIT="$GITHUB_SHA"
+
+      - name: Sign
+        env:
+          SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          if [ -z "$SIGNING_KEY" ]; then
+            echo "::error::RELEASE_SIGNING_KEY is not set; cardea would reject an unsigned release."
+            exit 1
+          fi
+          key="$RUNNER_TEMP/release-key"
+          install -m600 /dev/null "$key"
+          printf '%s\n' "$SIGNING_KEY" > "$key"
+          # cardea verifies with `ssh-keygen -Y verify -I stockpot-release -n stockpot-release`.
+          ssh-keygen -Y sign -q -f "$key" -n stockpot-release dist/stockpot.tar.gz
+          rm -f "$key"
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$TAG" dist/stockpot.tar.gz dist/stockpot.tar.gz.sig \
+            --target "$GITHUB_SHA" --title "$TAG" --notes "Built from $GITHUB_SHA." --latest
+
+      - name: Keep the newest 10 releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release list --limit 100 --json tagName,createdAt \
+            --jq 'sort_by(.createdAt) | reverse | .[10:] | .[].tagName' |
+            xargs -r -n1 gh release delete --yes --cleanup-tag
