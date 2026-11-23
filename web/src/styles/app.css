@@ -1,0 +1,117 @@
+/*
+ * Design tokens (tokens.css, from the design export) are the single source of visual values.
+ * Tailwind's theme only maps utility names onto those variables, so restyling the app means
+ * editing tokens.css, not components.
+ */
+@import "tailwindcss";
+@import "@fontsource-variable/bricolage-grotesque";
+@import "@fontsource-variable/figtree";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/600.css";
+@import "./tokens.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Self-hosted variable fonts register under "<Family> Variable". */
+:root {
+  --font-display: "Bricolage Grotesque Variable", "Figtree Variable", system-ui, sans-serif;
+  --font-sans: "Figtree Variable", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/*
+ * Utilities resolve to the token variables at runtime (inline), so light/dark switching is
+ * handled entirely by tokens.css. Default palettes and scales are cleared so only tokens exist.
+ */
+@theme inline {
+  --color-*: initial;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-on-brand: var(--on-brand);
+  --color-fresh: var(--fresh);
+  --color-fresh-bg: var(--fresh-bg);
+  --color-soon: var(--soon);
+  --color-soon-bg: var(--soon-bg);
+  --color-expired: var(--expired);
+  --color-expired-bg: var(--expired-bg);
+  --color-low: var(--low);
+  --color-low-bg: var(--low-bg);
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-white: #fff;
+  --color-scrim: rgb(8 12 18 / 0.45);
+
+  --font-*: initial;
+  --font-display: var(--font-display);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  --radius-*: initial;
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-full: var(--radius-pill);
+
+  --shadow-*: initial;
+  --shadow-card: var(--shadow-card);
+  --shadow-sheet: var(--shadow-sheet);
+
+  --ease-standard: var(--ease-standard);
+  --ease-exit: var(--ease-exit);
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 24px;
+  }
+  :focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    /* `scale`, not `transform`: Tailwind centres with the `translate` property. */
+    scale: 0.98;
+  }
+}
+@utility animate-sheet-in {
+  animation: sheet-in var(--duration-slow) var(--ease-standard);
+}
+@utility animate-fade-in {
+  animation: fade-in var(--duration-base) var(--ease-standard);
+}
+@utility animate-dialog-in {
+  animation: dialog-in var(--duration-base) var(--ease-standard);
+}

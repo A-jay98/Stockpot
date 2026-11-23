@@ -21,3 +21,4 @@ dist/
 # Frontend
 node_modules/
 web/dist/
+web/dev-dist/
