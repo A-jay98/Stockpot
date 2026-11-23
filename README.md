@@ -30,7 +30,18 @@ internal/db/         pgx pool, embedded goose migrations
 internal/config/     bootstrap settings from STOCKPOT_* (everything else lives in the DB)
 internal/listener/   systemd socket activation, TCP fallback in dev
 web/                 Vite + React + TypeScript PWA (pnpm, Biome, Vitest)
+  src/app/           router, app shell (tab bar / side nav), theme
+  src/features/      one folder per area (home, inventory, add, shopping, recipes, auth)
+  src/admin/         /admin route group
+  src/ui/            owned UI primitives (Radix + Tailwind, styled only via tokens)
+  src/api/           generated schema.d.ts + openapi-fetch client (problem+json, 401 → /login)
+  src/offline/       Dexie DB (meta, outbox) and enqueueCommand()
+  src/pwa/           service worker registration, update prompt, offline banner
+  src/styles/        tokens.css (design export, verbatim) + Tailwind theme mapping
 ```
+
+Visual changes go through `web/src/styles/tokens.css`: replace it with a new design
+export (drop the Google Fonts `@import`; fonts are self-hosted via Fontsource).
 
 ## Release and deploy
 
