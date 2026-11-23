@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"github.com/a-jay98/stockpot/internal/buildinfo"
@@ -43,8 +44,10 @@ func (s *Server) GetHealth(ctx context.Context, _ GetHealthRequestObject) (GetHe
 		err := p.Ping(pctx)
 		cancel()
 		if err != nil {
+			// /api/health is public; the cause (paths, roles, SQL) stays in the log.
+			slog.WarnContext(ctx, "health check failed", "check", name, "err", err)
 			h.Status = Degraded
-			h.Checks[name] = err.Error()
+			h.Checks[name] = "unavailable"
 			continue
 		}
 		h.Checks[name] = "ok"

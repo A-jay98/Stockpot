@@ -10,8 +10,8 @@ func TestLoad(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Listen != "127.0.0.1:8080" {
-		t.Errorf("Listen = %q, want the default", cfg.Listen)
+	if cfg.Listen != "" {
+		t.Errorf("Listen = %q, want empty", cfg.Listen)
 	}
 	if cfg.PublicURL != "https://stockpot.jamadi.me" {
 		t.Errorf("PublicURL = %q", cfg.PublicURL)

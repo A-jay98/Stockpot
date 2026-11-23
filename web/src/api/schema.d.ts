@@ -40,7 +40,7 @@ export interface components {
             commit: string;
             /** @description RFC 3339, empty when unknown. */
             builtAt: string;
-            /** @description Per dependency, "ok" or an error message. */
+            /** @description Per dependency, "ok" or "unavailable" (details go to the server log). */
             checks: {
                 [key: string]: string;
             };

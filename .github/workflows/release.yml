@@ -7,7 +7,9 @@ on:
     branches: [main]
 
 concurrency:
-  # Queue, never cancel: every release is published in order.
+  # Never cancel a running release. GitHub keeps only the newest pending run
+  # per group, so a burst of pushes may skip some run numbers; the updater
+  # only wants the latest anyway.
   group: release
   cancel-in-progress: false
 

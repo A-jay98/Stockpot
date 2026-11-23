@@ -2,6 +2,14 @@ package listener
 
 import "testing"
 
+func TestListenNeedsSocketOrAddress(t *testing.T) {
+	t.Setenv("LISTEN_PID", "")
+	t.Setenv("LISTEN_FDS", "")
+	if _, err := Listen(t.Context(), ""); err == nil {
+		t.Fatal("want an error without a socket or address")
+	}
+}
+
 func TestListenFallsBackToTCP(t *testing.T) {
 	t.Setenv("LISTEN_PID", "")
 	t.Setenv("LISTEN_FDS", "")

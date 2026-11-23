@@ -58,7 +58,7 @@ gen: ## Regenerate Go and TypeScript code from api/openapi.yaml
 	cd web && pnpm -s gen
 
 serve: migrate ## Run the API on 127.0.0.1:8080
-	go run ./cmd/stockpot serve
+	STOCKPOT_LISTEN=127.0.0.1:8080 go run ./cmd/stockpot serve
 
 test: db-up ## Run Go tests (database tests use a scratch stockpot_test database)
 	@$(call ensure-db,$(TEST_DB))

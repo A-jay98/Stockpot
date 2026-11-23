@@ -49,6 +49,6 @@ components:
           description: RFC 3339, empty when unknown.
         checks:
           type: object
-          description: Per dependency, "ok" or an error message.
+          description: Per dependency, "ok" or "unavailable" (details go to the server log).
           additionalProperties:
             type: string

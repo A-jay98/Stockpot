@@ -48,6 +48,6 @@ Bootstrap environment (set by nixConfig):
 | --- | --- |
 | `STOCKPOT_DATABASE_URL` | libpq string; empty uses `PG*` (dev) |
 | `STOCKPOT_PUBLIC_URL` | public origin, e.g. `https://stockpot.jamadi.me` |
-| `STOCKPOT_LISTEN` | TCP address when no socket is passed (default `127.0.0.1:8080`) |
+| `STOCKPOT_LISTEN` | TCP address when no socket is passed (dev only; `make serve` sets it) |
 | `STOCKPOT_SECRET_KEY_FILE` | systemd credential, encrypts secret settings |
 | `STOCKPOT_ADMIN_SETUP_TOKEN_FILE` | systemd credential, claims the first admin |

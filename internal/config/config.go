@@ -14,7 +14,9 @@ type Config struct {
 	// DatabaseURL is a libpq connection string or URL. Empty: the PG*
 	// variables decide (as in development).
 	DatabaseURL string
-	// Listen is the TCP address used when systemd passes no socket.
+	// Listen is the TCP address used when systemd passes no socket (dev).
+	// Empty: a socket must be passed, so a broken unit fails loudly instead
+	// of quietly binding a port.
 	Listen string
 	// PublicURL is where users reach the app, e.g. https://stockpot.jamadi.me.
 	// Passkeys are bound to its host.
@@ -30,7 +32,7 @@ type Config struct {
 func Load() (Config, error) {
 	cfg := Config{
 		DatabaseURL: os.Getenv("STOCKPOT_DATABASE_URL"),
-		Listen:      getenv("STOCKPOT_LISTEN", "127.0.0.1:8080"),
+		Listen:      os.Getenv("STOCKPOT_LISTEN"),
 		PublicURL:   getenv("STOCKPOT_PUBLIC_URL", "http://localhost:5173"),
 
 		SecretKeyFile:       os.Getenv("STOCKPOT_SECRET_KEY_FILE"),
