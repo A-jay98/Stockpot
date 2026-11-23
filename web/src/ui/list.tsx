@@ -26,6 +26,7 @@ type ListItemProps = Omit<ComponentProps<'div'>, 'title'> & {
    * so the whole row is interactive.
    */
   asChild?: boolean
+  /** Only with `asChild`: the element to render the row as. */
   children?: ReactNode
 }
 

@@ -9,7 +9,7 @@ export function useServerHealth() {
       // 503 still carries a Health body (degraded); only a network failure means unreachable.
       const { data, error } = await api.GET('/health')
       const health = data ?? error
-      if (!health) throw new Error('no health body')
+      if (!health || typeof health.version !== 'string') throw new Error('no health body')
       return health
     },
     staleTime: 60_000,

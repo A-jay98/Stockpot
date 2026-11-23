@@ -66,9 +66,9 @@ export function AppShell() {
               key={to}
               to={to}
               aria-label={label}
-              className="flex flex-col items-center py-1 no-underline"
+              className="group flex flex-col items-center py-1 no-underline"
             >
-              <span className="-mt-[26px] grid size-[52px] place-items-center rounded-full bg-brand text-on-brand shadow-sheet [&_svg]:size-[26px]">
+              <span className="-mt-[26px] grid size-[52px] place-items-center rounded-full bg-brand text-on-brand shadow-sheet ring-brand-soft ring-offset-2 ring-offset-surface group-aria-[current=page]:ring-4 [&_svg]:size-[26px]">
                 <Icon aria-hidden />
               </span>
             </NavLink>

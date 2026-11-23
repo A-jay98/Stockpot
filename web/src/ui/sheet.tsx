@@ -1,5 +1,7 @@
+import { X } from 'lucide-react'
 import { Dialog as D } from 'radix-ui'
 import type { ComponentProps, ReactNode } from 'react'
+import { Button } from './button'
 import { cn } from './cn'
 
 export const Sheet = D.Root
@@ -38,11 +40,18 @@ export function SheetContent({
           aria-hidden
           className="mx-auto mt-2 mb-1 h-[5px] w-10 shrink-0 rounded-full bg-border md:hidden"
         />
-        <div className="flex flex-col gap-1 px-4 pt-2 pb-3 md:px-6 md:pt-5">
-          <D.Title className="t-title-lg m-0">{title}</D.Title>
-          {description && (
-            <D.Description className="t-body-sm m-0 text-ink-muted">{description}</D.Description>
-          )}
+        <div className="flex items-start gap-3 px-4 pt-2 pb-3 md:px-6 md:pt-5">
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <D.Title className="t-title-lg m-0">{title}</D.Title>
+            {description && (
+              <D.Description className="t-body-sm m-0 text-ink-muted">{description}</D.Description>
+            )}
+          </div>
+          <D.Close asChild>
+            <Button variant="ghost" size="icon" aria-label="Close" className="-m-1.5">
+              <X />
+            </Button>
+          </D.Close>
         </div>
         <div className="flex flex-1 flex-col gap-4 overflow-auto px-4 pb-6 md:px-6">{children}</div>
         {footer && (

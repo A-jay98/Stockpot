@@ -13,9 +13,14 @@ export function UpdatePrompt() {
   } = useRegisterSW({
     onRegisteredSW(_url, registration) {
       if (!registration) return
-      setInterval(() => {
+      const check = () => {
         if (navigator.onLine) void registration.update()
-      }, UPDATE_CHECK_MS)
+      }
+      setInterval(check, UPDATE_CHECK_MS)
+      // Also check whenever the app comes back to the foreground (typical for an installed PWA).
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') check()
+      })
     },
   })
 
