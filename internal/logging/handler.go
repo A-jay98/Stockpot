@@ -37,11 +37,17 @@ func (l *lockedWriter) Write(p []byte) (int, error) {
 	return l.w.Write(p)
 }
 
-// FollowSetting keeps level equal to the log.level setting, live.
-func FollowSetting(store *settings.Store, level *slog.LevelVar) {
+// FollowSetting keeps level equal to the log.level setting, live. While no
+// value is stored, fallback (STOCKPOT_LOG_LEVEL) applies.
+func FollowSetting(store *settings.Store, level *slog.LevelVar, fallback slog.Level) {
 	apply := func() {
+		v, ok := settings.LogLevel.Lookup(store)
+		if !ok {
+			level.Set(fallback)
+			return
+		}
 		var l slog.Level
-		if err := l.UnmarshalText([]byte(settings.LogLevel.Get(store))); err == nil {
+		if err := l.UnmarshalText([]byte(v)); err == nil {
 			level.Set(l)
 		}
 	}
@@ -151,6 +157,13 @@ func (h *handler) attrsJSON(r slog.Record) []byte {
 		return true
 	})
 	pruneEmpty(root)
+	// Keep the line's own fields unambiguous: rename clashing attributes.
+	for _, k := range []string{"time", "level", "msg", "request_id", "user_id"} {
+		if v, ok := root[k]; ok {
+			delete(root, k)
+			root["attr."+k] = v
+		}
+	}
 	b, err := json.Marshal(root)
 	if err != nil {
 		b, _ = json.Marshal(map[string]string{"!marshal_error": err.Error()})

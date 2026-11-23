@@ -56,7 +56,7 @@ func TestLoadProduction(t *testing.T) {
 }
 
 func TestLoadDevDefaults(t *testing.T) {
-	cfg, err := LoadFrom(lookupMap(map[string]string{"STOCKPOT_SECRET_KEY": testKey}))
+	cfg, err := LoadFrom(lookupMap(map[string]string{"STOCKPOT_SECRET_KEY": testKey, "STOCKPOT_LISTEN": "127.0.0.1:8080"}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,10 +83,26 @@ func TestLoadReportsEveryProblem(t *testing.T) {
 	}
 }
 
-func TestLoadRequiresSecretKey(t *testing.T) {
+func TestLoadRequires(t *testing.T) {
 	_, err := LoadFrom(lookupMap(nil))
-	if err == nil || !strings.Contains(err.Error(), "STOCKPOT_SECRET_KEY_FILE is required") {
-		t.Fatalf("err = %v", err)
+	for _, want := range []string{"STOCKPOT_SECRET_KEY_FILE is required", "STOCKPOT_PUBLIC_URL is required"} {
+		if err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf("err = %v, want %q", err, want)
+		}
+	}
+}
+
+func TestPublicURLDropsDefaultPort(t *testing.T) {
+	for raw, want := range map[string]string{
+		"https://Stockpot.Jamadi.me:443": "https://stockpot.jamadi.me",
+		"http://localhost:80":            "http://localhost",
+		"http://localhost:5173":          "http://localhost:5173",
+		"https://[::1]:443":              "https://[::1]",
+	} {
+		u, err := parseOrigin(raw)
+		if err != nil || u.String() != want {
+			t.Errorf("parseOrigin(%q) = %v, %v; want %s", raw, u, err, want)
+		}
 	}
 }
 

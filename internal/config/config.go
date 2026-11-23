@@ -59,14 +59,21 @@ func LoadFrom(lookup func(string) (string, bool)) (Config, error) {
 	}
 
 	publicURL := env("STOCKPOT_PUBLIC_URL")
-	if publicURL == "" {
-		publicURL = "http://localhost:5173" // the Vite dev server, which proxies /api
+	switch {
+	case publicURL == "" && cfg.Listen == "":
+		// Socket-activated (production): a wrong origin would fail every
+		// write with a CSRF 403, so refuse to start instead.
+		errs = append(errs, errors.New("STOCKPOT_PUBLIC_URL is required (e.g. https://stockpot.jamadi.me)"))
+	case publicURL == "":
+		publicURL = "http://localhost:5173" // dev: the Vite server, which proxies /api
 	}
-	u, err := parseOrigin(publicURL)
-	if err != nil {
-		errs = append(errs, fmt.Errorf("STOCKPOT_PUBLIC_URL: %w", err))
+	if publicURL != "" {
+		u, err := parseOrigin(publicURL)
+		if err != nil {
+			errs = append(errs, fmt.Errorf("STOCKPOT_PUBLIC_URL: %w", err))
+		}
+		cfg.PublicURL = u
 	}
-	cfg.PublicURL = u
 
 	key, err := secret(lookup, "STOCKPOT_SECRET_KEY")
 	switch {
@@ -111,7 +118,15 @@ func parseOrigin(raw string) (*url.URL, error) {
 	if (u.Path != "" && u.Path != "/") || u.RawQuery != "" || u.Fragment != "" || u.User != nil {
 		return nil, fmt.Errorf("%q must be an origin (scheme://host[:port]) without path, query or credentials", raw)
 	}
-	return &url.URL{Scheme: u.Scheme, Host: u.Host}, nil
+	host := strings.ToLower(u.Host)
+	// Browsers omit the default port from Origin; so must we.
+	if p := u.Port(); (u.Scheme == "https" && p == "443") || (u.Scheme == "http" && p == "80") {
+		host = strings.ToLower(u.Hostname())
+		if strings.Contains(host, ":") {
+			host = "[" + host + "]"
+		}
+	}
+	return &url.URL{Scheme: u.Scheme, Host: host}, nil
 }
 
 // secret reads NAME_FILE (a systemd credential path), or NAME itself for

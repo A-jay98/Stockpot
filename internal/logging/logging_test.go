@@ -102,8 +102,8 @@ func TestFollowSetting(t *testing.T) {
 		t.Fatal(err)
 	}
 	level := new(slog.LevelVar)
-	FollowSetting(store, level)
-	if level.Level() != slog.LevelInfo {
+	FollowSetting(store, level, slog.LevelWarn)
+	if level.Level() != slog.LevelWarn { // nothing stored: the env default
 		t.Fatalf("initial level %v", level.Level())
 	}
 	if err := settings.SetValue(t.Context(), store, settings.LogLevel, "debug", nil); err != nil {
@@ -111,5 +111,11 @@ func TestFollowSetting(t *testing.T) {
 	}
 	if level.Level() != slog.LevelDebug {
 		t.Fatalf("level after set = %v", level.Level())
+	}
+	if err := store.Reset(t.Context(), settings.LogLevel.Key()); err != nil {
+		t.Fatal(err)
+	}
+	if level.Level() != slog.LevelWarn {
+		t.Fatalf("level after reset = %v", level.Level())
 	}
 }

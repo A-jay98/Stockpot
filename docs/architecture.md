@@ -23,7 +23,7 @@ Caddy ── /api/* ──► stockpot serve (socket-activated, sandboxed, stati
 - `postgres = true` (DB `stockpot`, peer auth: `host=/run/postgresql user=stockpot dbname=stockpot`), `internet = true`, `webhook = true`, `sandbox.state = true` (blob storage under `$STATE_DIRECTORY`).
 - Extra binaries the app shells out to (later: `tesseract` for receipts) are added in nixConfig via `systemd.services.stockpot.path`, as Rally does for `pg_dump`.
 - Secrets: `secrets = [ "secret-key" "admin-setup-token" ]` → `$CREDENTIALS_DIRECTORY/<name>`, referenced by `STOCKPOT_SECRET_KEY_FILE=%d/secret-key`, `STOCKPOT_ADMIN_SETUP_TOKEN_FILE=%d/admin-setup-token`.
-- Deploy rollback: health check fails → updater rolls back. `/api/health` returns 200 only when DB is reachable and migrations are at the embedded version.
+- Deploy rollback: health check fails → updater rolls back. `/api/health` returns 200 only when DB is reachable and no embedded migration (app or River) is pending. A database *ahead* of the binary stays healthy, so a rolled-back release keeps serving; migrations must therefore stay backward compatible for one release (expand, then contract).
 
 ## 3. Repo layout
 

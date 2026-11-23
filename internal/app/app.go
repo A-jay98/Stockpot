@@ -77,7 +77,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	go func() { sink.Run(sinkCtx); close(sinkDone) }()
 	defer func() { stopSink(); <-sinkDone }()
 	slog.SetDefault(logging.New(os.Stdout, level, sink))
-	logging.FollowSetting(store, level)
+	logging.FollowSetting(store, level, cfg.LogLevel)
 
 	blobs, err := blob.NewFS(cfg.BlobDir)
 	if err != nil {
@@ -119,7 +119,14 @@ func Serve(ctx context.Context, cfg config.Config) error {
 		sctx, cancel := context.WithTimeout(context.WithoutCancel(gctx), shutdownTimeout)
 		defer cancel()
 		if err := jobClient.Stop(sctx); err != nil {
-			slog.WarnContext(sctx, "jobs did not stop cleanly", "err", err)
+			// Running jobs outlived the grace period: cancel them, so they
+			// release their connections before the pool closes.
+			slog.WarnContext(sctx, "jobs did not stop in time; cancelling", "err", err)
+			cctx, ccancel := context.WithTimeout(context.WithoutCancel(gctx), shutdownTimeout)
+			defer ccancel()
+			if err := jobClient.StopAndCancel(cctx); err != nil {
+				slog.ErrorContext(cctx, "jobs did not cancel", "err", err)
+			}
 		}
 		return nil
 	})

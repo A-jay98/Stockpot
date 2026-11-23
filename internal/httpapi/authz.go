@@ -90,8 +90,10 @@ func rolesOf(op *openapi3.Operation) ([]string, error) {
 	return roles, nil
 }
 
-// authorize finds the request's operation and asks az about its roles.
-// Requests matching no operation pass through to the router's 404/405.
+// authorize finds the request's operation and asks az about its roles. A
+// request matching no operation is answered here (404/405) rather than
+// passed on, so a disagreement between this router and chi can never skip
+// authorization.
 func authorize(spec *openapi3.T, roles RouteRoles, az Authorizer) (func(http.Handler) http.Handler, error) {
 	router, err := gorillamux.NewRouter(spec)
 	if err != nil {
@@ -101,11 +103,12 @@ func authorize(spec *openapi3.T, roles RouteRoles, az Authorizer) (func(http.Han
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			route, _, err := router.FindRoute(r)
 			if err != nil {
-				if errors.Is(err, routers.ErrPathNotFound) || errors.Is(err, routers.ErrMethodNotAllowed) {
-					next.ServeHTTP(w, r)
-					return
+				switch {
+				case errors.Is(err, routers.ErrMethodNotAllowed):
+					writeProblem(w, r, http.StatusMethodNotAllowed, CodeMethodNotAllowed, "")
+				default:
+					writeProblem(w, r, http.StatusNotFound, CodeNotFound, "")
 				}
-				writeProblem(w, r, http.StatusBadRequest, CodeBadRequest, "")
 				return
 			}
 			switch err := az.Authorize(r, roles[route.Operation.OperationID]); {

@@ -29,6 +29,10 @@ type Store struct {
 	q    *dbq.Queries
 	box  *secretbox.Box
 
+	// loadMu serializes Load and reload, so a full reload can't overwrite
+	// a newer single-key reload with its older snapshot.
+	loadMu sync.Mutex
+
 	mu     sync.RWMutex
 	values map[string]any
 	meta   map[string]stored
@@ -59,6 +63,8 @@ func NewStore(pool *pgxpool.Pool, secretKey []byte) (*Store, error) {
 
 // Load reads every stored value into the cache.
 func (s *Store) Load(ctx context.Context) error {
+	s.loadMu.Lock()
+	defer s.loadMu.Unlock()
 	rows, err := s.q.ListSystemSettings(ctx)
 	if err != nil {
 		return fmt.Errorf("load settings: %w", err)
@@ -86,8 +92,10 @@ func (s *Store) Load(ctx context.Context) error {
 // dedicated connection, reloads the changed key, and after any reconnect
 // reloads everything (notifications sent while disconnected are lost).
 func (s *Store) Run(ctx context.Context) error {
-	backoff := time.Second
+	const initialBackoff = time.Second
+	backoff := initialBackoff
 	for {
+		start := time.Now()
 		err := s.listen(ctx)
 		if ctx.Err() != nil {
 			return nil //nolint:nilerr // shutting down
@@ -97,6 +105,9 @@ func (s *Store) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-time.After(backoff):
+		}
+		if time.Since(start) > time.Minute {
+			backoff = initialBackoff // it was healthy for a while: retry fast
 		}
 		backoff = min(backoff*2, 30*time.Second)
 	}
@@ -109,7 +120,11 @@ func (s *Store) listen(ctx context.Context) error {
 	}
 	// A LISTENing connection must never go back to the pool: take it over.
 	conn := pc.Hijack()
-	defer func() { _ = conn.Close(context.WithoutCancel(ctx)) }()
+	defer func() {
+		cctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer cancel()
+		_ = conn.Close(cctx)
+	}()
 	if _, err := conn.Exec(ctx, "LISTEN "+notifyChannel); err != nil {
 		return err
 	}
@@ -129,6 +144,8 @@ func (s *Store) listen(ctx context.Context) error {
 
 // reload refreshes one key from the database.
 func (s *Store) reload(ctx context.Context, key string) error {
+	s.loadMu.Lock()
+	defer s.loadMu.Unlock()
 	if _, ok := Lookup(key); !ok {
 		return nil
 	}
@@ -186,8 +203,9 @@ func (s *Store) decodeRow(ctx context.Context, key string, value, secret []byte)
 	return v, true
 }
 
-// Set validates and stores a JSON value for key, then updates this process's
-// cache (others follow via NOTIFY). actor is the admin making the change.
+// Set validates and stores a JSON value for key, then re-reads the row into
+// this process's cache (others follow via NOTIFY), so a concurrent newer
+// write is never masked by this one. actor is the admin making the change.
 func (s *Store) Set(ctx context.Context, key string, raw json.RawMessage, actor *uuid.UUID) error {
 	def, ok := Lookup(key)
 	if !ok {
@@ -210,8 +228,7 @@ func (s *Store) Set(ctx context.Context, key string, raw json.RawMessage, actor 
 	if err := s.q.UpsertSystemSetting(ctx, p); err != nil {
 		return fmt.Errorf("store setting %s: %w", key, err)
 	}
-	s.apply(key, v, true, stored{UpdatedAt: time.Now(), UpdatedBy: actor})
-	return nil
+	return s.reload(ctx, key)
 }
 
 // Reset deletes the stored value, so the default applies again.
@@ -222,8 +239,7 @@ func (s *Store) Reset(ctx context.Context, key string) error {
 	if err := s.q.DeleteSystemSetting(ctx, key); err != nil {
 		return fmt.Errorf("reset setting %s: %w", key, err)
 	}
-	s.apply(key, nil, false, stored{})
-	return nil
+	return s.reload(ctx, key)
 }
 
 // SetValue stores a typed value for setting (for code and tests; the admin
@@ -236,8 +252,9 @@ func SetValue[T Value](ctx context.Context, s *Store, setting *Setting[T], v T, 
 	return s.Set(ctx, setting.Key(), raw, actor)
 }
 
-// OnChange registers fn to run (on the listener goroutine) whenever key's
-// effective value changes. fn must not block.
+// OnChange registers fn to run whenever key's effective value changes in
+// this process: on the listener goroutine, or on the caller of Set, Reset or
+// Load. fn must not block or call back into the store's write methods.
 func (s *Store) OnChange(key string, fn func()) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

@@ -299,7 +299,7 @@ func TestAuthorize(t *testing.T) {
 		{PublicOnly{}, "/open", http.StatusNoContent},
 		{PublicOnly{}, "/private", http.StatusUnauthorized},
 		{PublicOnly{}, "/admin", http.StatusUnauthorized},
-		{PublicOnly{}, "/unknown", http.StatusNoContent}, // the router answers 404
+		{PublicOnly{}, "/unknown", http.StatusNotFound}, // fails closed
 		{adminOnly{}, "/private", http.StatusNoContent},
 		{adminOnly{}, "/admin", http.StatusForbidden},
 	}

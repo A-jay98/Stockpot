@@ -52,8 +52,7 @@ migrate: db-up .data/secret-key ## Apply pending migrations to the dev database
 
 .data/secret-key:
 	@mkdir -p .data
-	umask 077
-	head -c 32 /dev/urandom | base64 > $@
+	umask 077 && head -c 32 /dev/urandom | base64 > $@
 
 migration: ## Create a migration file (make migration NAME=add_items)
 	@[ -n "$(NAME)" ] || { echo "usage: make migration NAME=add_items"; exit 1; }

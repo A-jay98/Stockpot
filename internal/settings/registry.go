@@ -86,6 +86,16 @@ func (s *Setting[T]) Key() string { return s.def.Key }
 // Default is the value used while none is stored.
 func (s *Setting[T]) Default() T { return s.def.Default.(T) } //nolint:forcetypeassert // set by Define
 
+// Lookup returns the stored value, and false when none is stored (the
+// default applies).
+func (s *Setting[T]) Lookup(store *Store) (T, bool) {
+	if v, ok := store.cached(s.def.Key); ok {
+		return v.(T), true //nolint:forcetypeassert // the cache only holds decoded T
+	}
+	var zero T
+	return zero, false
+}
+
 // Get returns the live value from store's cache.
 func (s *Setting[T]) Get(store *Store) T {
 	if v, ok := store.cached(s.def.Key); ok {
