@@ -1,0 +1,23 @@
+# direnv: .envrc holds no secrets, so track it despite global ignores
+.direnv
+!.envrc
+
+# Secrets: real values live in files outside the repo; only templates are committed
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local Postgres data
+.data/
+
+# macOS
+.DS_Store
+
+# Release build (make release)
+dist/
+
+# Frontend
+node_modules/
+web/dist/
