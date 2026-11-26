@@ -46,9 +46,9 @@ test('says so when the server is down', async () => {
   expect(await screen.findByText('Server unreachable')).toBeInTheDocument()
 })
 
-test('admin route group renders its own layout', () => {
+test('admin route group renders its own layout', async () => {
   renderApp('/admin/audit')
-  expect(screen.getByRole('navigation', { name: 'Admin' })).toBeInTheDocument()
+  expect(await screen.findByRole('navigation', { name: 'Admin' })).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Audit log' })).toBeInTheDocument()
 })
 
