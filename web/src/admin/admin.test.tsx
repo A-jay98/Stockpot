@@ -274,6 +274,7 @@ const user = (id: string, over: Partial<AdminUser> = {}): AdminUser => ({
 
 const usersBase = {
   ...base,
+  'GET /v1/me': () => jsonResponse(adminMe),
   'GET /v1/admin/users': () =>
     jsonResponse([
       user('u1', { displayName: 'Pat', status: 'pending' }),
@@ -448,4 +449,44 @@ test('settings: history lists the changes to one setting', async () => {
   const q = new URL(calls.find((r) => r.url.includes('/v1/admin/audit'))?.url ?? '').searchParams
   expect(q.get('targetType')).toBe('setting')
   expect(q.get('targetId')).toBe('log.level')
+})
+
+test('users: your own role is locked and your current session has no Revoke', async () => {
+  const ue = userEvent.setup()
+  mockApi({
+    ...usersBase,
+    'GET /v1/admin/users': () =>
+      jsonResponse([user(adminMe.user.id, { displayName: 'AJ', systemRole: 'admin' })]),
+    [`GET /v1/admin/users/${adminMe.user.id}/sessions`]: () =>
+      jsonResponse([
+        {
+          id: 'mine',
+          createdAt: '2026-11-20T10:00:00Z',
+          lastSeenAt: '2026-11-23T10:00:00Z',
+          expiresAt: '2026-12-20T10:00:00Z',
+          userAgent: 'Firefox',
+          current: true,
+        },
+      ]),
+  })
+  renderApp('/admin/users')
+  await ue.click(await screen.findByRole('button', { name: 'Manage AJ' }))
+  const dialog = await screen.findByRole('dialog', { name: 'AJ' })
+  expect(within(dialog).getByRole('radio', { name: 'User' })).toBeDisabled()
+  expect(await within(dialog).findByText('this session')).toBeInTheDocument()
+  expect(
+    within(dialog).queryByRole('button', { name: 'Revoke session mine' }),
+  ).not.toBeInTheDocument()
+  expect(within(dialog).getByRole('button', { name: 'Disable account' })).toBeDisabled()
+})
+
+test('audit log: an invalid action says so instead of listing everything', async () => {
+  const calls = mockApi({
+    ...usersBase,
+    'GET /v1/admin/audit': () => jsonResponse({ items: [auditEvent] }),
+  })
+  renderApp('/admin/audit?action=setting.')
+  expect(await screen.findByText(/Not a valid action/)).toBeInTheDocument()
+  expect(screen.queryByRole('table', { name: 'Audit events' })).not.toBeInTheDocument()
+  expect(calls.some((r) => r.url.includes('/v1/admin/audit'))).toBe(false)
 })

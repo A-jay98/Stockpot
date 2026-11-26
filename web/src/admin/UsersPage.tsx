@@ -290,6 +290,7 @@ function ManageUser({ user, self }: { user: AdminUser; self: boolean }) {
         <Segmented
           aria-label="System role"
           className="sm:w-64"
+          disabled={self || update.isPending}
           value={user.systemRole}
           onValueChange={(systemRole) => change({ systemRole })}
           options={[
@@ -297,6 +298,9 @@ function ManageUser({ user, self }: { user: AdminUser; self: boolean }) {
             { value: 'admin', label: 'Admin' },
           ]}
         />
+        {self && (
+          <span className="text-xs text-ink-muted">Ask another admin to change your own role.</span>
+        )}
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <span className="flex-1 text-[14px] text-ink-muted">
@@ -347,21 +351,24 @@ function ManageUser({ user, self }: { user: AdminUser; self: boolean }) {
                   {formatTime(s.expiresAt)}
                 </span>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                disabled={revoke.isPending}
-                aria-label={`Revoke session ${s.id}`}
-                onClick={() =>
-                  revoke.mutate(s.id, {
-                    onSuccess: () => toast({ title: 'Session revoked', tone: 'success' }),
-                    onError: failed('Could not revoke the session'),
-                  })
-                }
-              >
-                <X aria-hidden />
-                Revoke
-              </Button>
+              {/* Ending your own current session is signing out, which lives elsewhere. */}
+              {!s.current && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={revoke.isPending}
+                  aria-label={`Revoke session ${s.id}`}
+                  onClick={() =>
+                    revoke.mutate(s.id, {
+                      onSuccess: () => toast({ title: 'Session revoked', tone: 'success' }),
+                      onError: failed('Could not revoke the session'),
+                    })
+                  }
+                >
+                  <X aria-hidden />
+                  Revoke
+                </Button>
+              )}
             </li>
           ))}
         </ul>

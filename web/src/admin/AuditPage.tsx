@@ -28,14 +28,15 @@ export function AuditPage() {
   const users = useUsers()
   const filters: AuditFilters = {
     actorId: url.actor || undefined,
-    // A half-typed action is not sent; the server would reject it.
-    action: actionPattern.test(url.action) ? url.action : undefined,
+    action: url.action || undefined,
     targetType: url.targetType || undefined,
     targetId: url.targetId || undefined,
     since: url.since || undefined,
     until: url.until || undefined,
   }
-  const events = useAuditEvents(filters)
+  // A half-typed action (e.g. "setting.") is not sent: the server would reject it.
+  const badAction = !!url.action && !actionPattern.test(url.action)
+  const events = useAuditEvents(filters, { enabled: !badAction })
   const rows = events.data?.pages.flatMap((p) => p.items) ?? []
 
   return (
@@ -63,6 +64,8 @@ export function AuditPage() {
           placeholder="Action, e.g. user or setting.update"
           className={cn(compactField, 'min-w-0 flex-1 basis-56')}
           value={action}
+          aria-invalid={badAction || undefined}
+          aria-describedby={badAction ? 'audit-action-hint' : undefined}
           onChange={(e) => setAction(e.target.value.trim().toLowerCase())}
         />
         <select
@@ -89,10 +92,18 @@ export function AuditPage() {
         <TimeRange since={url.since} until={url.until} onChange={setUrl} />
       </FilterBar>
 
-      {events.error && <ErrorNote error={events.error} />}
-      <AuditTable rows={rows} loading={events.isPending} />
+      {badAction ? (
+        <p id="audit-action-hint" role="alert" className="m-0 text-[14px] text-expired">
+          Not a valid action. Use dotted lowercase words, e.g. user or setting.update.
+        </p>
+      ) : (
+        <>
+          {events.error && <ErrorNote error={events.error} />}
+          <AuditTable rows={rows} loading={events.isPending} />
+        </>
+      )}
       <LoadMore
-        hasMore={events.hasNextPage}
+        hasMore={!badAction && events.hasNextPage}
         loading={events.isFetchingNextPage}
         onClick={() => void events.fetchNextPage()}
       />

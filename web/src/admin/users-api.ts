@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api, unwrap } from '../api/client'
 import type { components } from '../api/schema'
+import { meKey } from '../features/auth/session'
 import { adminKeys } from './api'
 
 type S = components['schemas']
@@ -49,12 +50,20 @@ export function useHouseholds() {
   })
 }
 
-/** Every user mutation refreshes the user list (and the audit views). */
+/**
+ * Every user mutation refreshes users, invites, sessions and the audit views, plus the
+ * signed-in account (an admin may have changed their own role or status).
+ */
 function useUserMutation<V, R>(fn: (v: V) => Promise<R>) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: fn,
-    onSettled: () => qc.invalidateQueries({ queryKey: adminKeys.all }),
+    onSettled: () =>
+      Promise.all(
+        [userKeys.users(), userKeys.invites(), [...adminKeys.all, 'audit'], meKey].map((queryKey) =>
+          qc.invalidateQueries({ queryKey }),
+        ),
+      ),
   })
 }
 
