@@ -629,6 +629,121 @@ type InviteInfo struct {
 // InviteStatus defines model for InviteStatus.
 type InviteStatus string
 
+// LLMProviderConfig One entry of the llm.providers setting.
+type LLMProviderConfig struct {
+	BaseUrl string `json:"base_url"`
+
+	// DailyRequestCap 0 = no cap.
+	DailyRequestCap int `json:"daily_request_cap"`
+
+	// DailyTokenCap 0 = no cap.
+	DailyTokenCap int    `json:"daily_token_cap"`
+	Enabled       bool   `json:"enabled"`
+	Id            string `json:"id"`
+	JsonSchema    bool   `json:"json_schema"`
+
+	// Kind Adapter, e.g. openai_compat.
+	Kind  string `json:"kind"`
+	Model string `json:"model"`
+
+	// ResetTz IANA zone whose midnight resets the daily quota.
+	ResetTz        string `json:"reset_tz"`
+	TimeoutSeconds *int   `json:"timeout_seconds,omitempty"`
+	Vision         bool   `json:"vision"`
+}
+
+// LLMProviderKey defines model for LLMProviderKey.
+type LLMProviderKey struct {
+	ApiKey string `json:"apiKey"`
+}
+
+// LLMProviderStatus defines model for LLMProviderStatus.
+type LLMProviderStatus struct {
+	// Config One entry of the llm.providers setting.
+	Config LLMProviderConfig `json:"config"`
+
+	// Detail Why the provider isn't ready.
+	Detail *string `json:"detail,omitempty"`
+	HasKey bool    `json:"hasKey"`
+
+	// RemainingRequests Absent without a request cap.
+	RemainingRequests *int64 `json:"remainingRequests,omitempty"`
+
+	// RemainingTokens Absent without a token cap.
+	RemainingTokens *int64    `json:"remainingTokens,omitempty"`
+	RequestsToday   int64     `json:"requestsToday"`
+	ResetAt         time.Time `json:"resetAt"`
+
+	// State ready, disabled, no_key, unknown_kind, capped, exhausted or cooling_down.
+	State       string `json:"state"`
+	TokensToday int64  `json:"tokensToday"`
+
+	// Until When a capped, exhausted or cooling_down provider returns.
+	Until *time.Time `json:"until,omitempty"`
+}
+
+// LLMStatus defines model for LLMStatus.
+type LLMStatus struct {
+	// Available A text request could be served now.
+	Available bool `json:"available"`
+
+	// Enabled flag.llm_enabled.
+	Enabled         bool   `json:"enabled"`
+	GlobalRemaining *int64 `json:"globalRemaining,omitempty"`
+
+	// GlobalRequestCap 0 = no cap.
+	GlobalRequestCap int                 `json:"globalRequestCap"`
+	Providers        []LLMProviderStatus `json:"providers"`
+	RequestsToday    int64               `json:"requestsToday"`
+	ResetAt          time.Time           `json:"resetAt"`
+	TokensToday      int64               `json:"tokensToday"`
+
+	// Tz Zone of the global daily cap (llm.usage_tz).
+	Tz string `json:"tz"`
+
+	// Vision A request with images could be served now.
+	Vision bool `json:"vision"`
+}
+
+// LLMTestRequest defines model for LLMTestRequest.
+type LLMTestRequest struct {
+	Prompt string `json:"prompt"`
+
+	// Provider Only try this provider id.
+	Provider *string `json:"provider,omitempty"`
+}
+
+// LLMTestResult defines model for LLMTestResult.
+type LLMTestResult struct {
+	LatencyMs int64  `json:"latencyMs"`
+	Model     string `json:"model"`
+	Provider  string `json:"provider"`
+	Text      string `json:"text"`
+	TokensIn  int    `json:"tokensIn"`
+	TokensOut int    `json:"tokensOut"`
+}
+
+// LLMUsage defines model for LLMUsage.
+type LLMUsage struct {
+	Rows []LLMUsageRow `json:"rows"`
+	Tz   string        `json:"tz"`
+}
+
+// LLMUsageRow defines model for LLMUsageRow.
+type LLMUsageRow struct {
+	AvgLatencyMs int                `json:"avgLatencyMs"`
+	CacheHits    int64              `json:"cacheHits"`
+	Day          openapi_types.Date `json:"day"`
+	Failures     int64              `json:"failures"`
+	Feature      string             `json:"feature"`
+	Provider     string             `json:"provider"`
+
+	// Requests Calls that reached the provider (cache hits excluded).
+	Requests  int64 `json:"requests"`
+	TokensIn  int64 `json:"tokensIn"`
+	TokensOut int64 `json:"tokensOut"`
+}
+
 // Me defines model for Me.
 type Me struct {
 	// ActiveHouseholdId Absent when the user belongs to no household.
@@ -801,6 +916,12 @@ type ListAdminJobsParams struct {
 	Limit  *AdminLimit  `form:"limit,omitempty" json:"limit,omitempty"`
 }
 
+// GetLLMUsageParams defines parameters for GetLLMUsage.
+type GetLLMUsageParams struct {
+	// Days Days to report, today included (in the usage time zone).
+	Days *int `form:"days,omitempty" json:"days,omitempty"`
+}
+
 // ListAdminLogsParams defines parameters for ListAdminLogs.
 type ListAdminLogsParams struct {
 	// Level Minimum level.
@@ -830,6 +951,12 @@ type ListInvitesParams struct {
 	HouseholdId *openapi_types.UUID `form:"householdId,omitempty" json:"householdId,omitempty"`
 	All         *bool               `form:"all,omitempty" json:"all,omitempty"`
 }
+
+// SetLLMProviderKeyJSONRequestBody defines body for SetLLMProviderKey for application/json ContentType.
+type SetLLMProviderKeyJSONRequestBody = LLMProviderKey
+
+// TestLLMPromptJSONRequestBody defines body for TestLLMPrompt for application/json ContentType.
+type TestLLMPromptJSONRequestBody = LLMTestRequest
 
 // PutAdminSettingJSONRequestBody defines body for PutAdminSetting for application/json ContentType.
 type PutAdminSettingJSONRequestBody = AdminSettingUpdate
@@ -893,6 +1020,21 @@ type ServerInterface interface {
 	// Run a job again now
 	// (POST /v1/admin/jobs/{id}/retry)
 	RetryAdminJob(w http.ResponseWriter, r *http.Request, id AdminJobID)
+	// Remove a provider's API key
+	// (DELETE /v1/admin/llm/providers/{id}/key)
+	DeleteLLMProviderKey(w http.ResponseWriter, r *http.Request, id string)
+	// Store a provider's API key (write-only, encrypted at rest)
+	// (PUT /v1/admin/llm/providers/{id}/key)
+	SetLLMProviderKey(w http.ResponseWriter, r *http.Request, id string)
+	// LLM providers, their state and today's quota
+	// (GET /v1/admin/llm/status)
+	GetLLMStatus(w http.ResponseWriter, r *http.Request)
+	// Send a test prompt through the gateway
+	// (POST /v1/admin/llm/test)
+	TestLLMPrompt(w http.ResponseWriter, r *http.Request)
+	// LLM usage per day, provider and feature
+	// (GET /v1/admin/llm/usage)
+	GetLLMUsage(w http.ResponseWriter, r *http.Request, params GetLLMUsageParams)
 	// Application log lines, newest first
 	// (GET /v1/admin/logs)
 	ListAdminLogs(w http.ResponseWriter, r *http.Request, params ListAdminLogsParams)
@@ -1040,6 +1182,36 @@ func (_ Unimplemented) CancelAdminJob(w http.ResponseWriter, r *http.Request, id
 // Run a job again now
 // (POST /v1/admin/jobs/{id}/retry)
 func (_ Unimplemented) RetryAdminJob(w http.ResponseWriter, r *http.Request, id AdminJobID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Remove a provider's API key
+// (DELETE /v1/admin/llm/providers/{id}/key)
+func (_ Unimplemented) DeleteLLMProviderKey(w http.ResponseWriter, r *http.Request, id string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Store a provider's API key (write-only, encrypted at rest)
+// (PUT /v1/admin/llm/providers/{id}/key)
+func (_ Unimplemented) SetLLMProviderKey(w http.ResponseWriter, r *http.Request, id string) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// LLM providers, their state and today's quota
+// (GET /v1/admin/llm/status)
+func (_ Unimplemented) GetLLMStatus(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Send a test prompt through the gateway
+// (POST /v1/admin/llm/test)
+func (_ Unimplemented) TestLLMPrompt(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// LLM usage per day, provider and feature
+// (GET /v1/admin/llm/usage)
+func (_ Unimplemented) GetLLMUsage(w http.ResponseWriter, r *http.Request, params GetLLMUsageParams) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -1647,6 +1819,119 @@ func (siw *ServerInterfaceWrapper) RetryAdminJob(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.RetryAdminJob(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteLLMProviderKey operation middleware
+func (siw *ServerInterfaceWrapper) DeleteLLMProviderKey(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteLLMProviderKey(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetLLMProviderKey operation middleware
+func (siw *ServerInterfaceWrapper) SetLLMProviderKey(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", chi.URLParam(r, "id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetLLMProviderKey(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetLLMStatus operation middleware
+func (siw *ServerInterfaceWrapper) GetLLMStatus(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetLLMStatus(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// TestLLMPrompt operation middleware
+func (siw *ServerInterfaceWrapper) TestLLMPrompt(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.TestLLMPrompt(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetLLMUsage operation middleware
+func (siw *ServerInterfaceWrapper) GetLLMUsage(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetLLMUsageParams
+
+	// ------------- Optional query parameter "days" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "days", r.URL.Query(), &params.Days, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "days"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "days", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetLLMUsage(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -2548,6 +2833,21 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/v1/admin/jobs/{id}/retry", wrapper.RetryAdminJob)
 	})
 	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/v1/admin/llm/providers/{id}/key", wrapper.DeleteLLMProviderKey)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/v1/admin/llm/providers/{id}/key", wrapper.SetLLMProviderKey)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/admin/llm/status", wrapper.GetLLMStatus)
+	})
+	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/admin/llm/test", wrapper.TestLLMPrompt)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/admin/llm/usage", wrapper.GetLLMUsage)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/v1/admin/logs", wrapper.ListAdminLogs)
 	})
 	r.Group(func(r chi.Router) {
@@ -2921,6 +3221,189 @@ type RetryAdminJobdefaultApplicationProblemPlusJSONResponse struct {
 }
 
 func (response RetryAdminJobdefaultApplicationProblemPlusJSONResponse) VisitRetryAdminJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteLLMProviderKeyRequestObject struct {
+	Id string `json:"id"`
+}
+
+type DeleteLLMProviderKeyResponseObject interface {
+	VisitDeleteLLMProviderKeyResponse(w http.ResponseWriter) error
+}
+
+type DeleteLLMProviderKey204Response struct {
+}
+
+func (response DeleteLLMProviderKey204Response) VisitDeleteLLMProviderKeyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteLLMProviderKeydefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response DeleteLLMProviderKeydefaultApplicationProblemPlusJSONResponse) VisitDeleteLLMProviderKeyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetLLMProviderKeyRequestObject struct {
+	Id   string `json:"id"`
+	Body *SetLLMProviderKeyJSONRequestBody
+}
+
+type SetLLMProviderKeyResponseObject interface {
+	VisitSetLLMProviderKeyResponse(w http.ResponseWriter) error
+}
+
+type SetLLMProviderKey204Response struct {
+}
+
+func (response SetLLMProviderKey204Response) VisitSetLLMProviderKeyResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type SetLLMProviderKeydefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response SetLLMProviderKeydefaultApplicationProblemPlusJSONResponse) VisitSetLLMProviderKeyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLLMStatusRequestObject struct {
+}
+
+type GetLLMStatusResponseObject interface {
+	VisitGetLLMStatusResponse(w http.ResponseWriter) error
+}
+
+type GetLLMStatus200JSONResponse LLMStatus
+
+func (response GetLLMStatus200JSONResponse) VisitGetLLMStatusResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLLMStatusdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response GetLLMStatusdefaultApplicationProblemPlusJSONResponse) VisitGetLLMStatusResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type TestLLMPromptRequestObject struct {
+	Body *TestLLMPromptJSONRequestBody
+}
+
+type TestLLMPromptResponseObject interface {
+	VisitTestLLMPromptResponse(w http.ResponseWriter) error
+}
+
+type TestLLMPrompt200JSONResponse LLMTestResult
+
+func (response TestLLMPrompt200JSONResponse) VisitTestLLMPromptResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type TestLLMPromptdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response TestLLMPromptdefaultApplicationProblemPlusJSONResponse) VisitTestLLMPromptResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLLMUsageRequestObject struct {
+	Params GetLLMUsageParams
+}
+
+type GetLLMUsageResponseObject interface {
+	VisitGetLLMUsageResponse(w http.ResponseWriter) error
+}
+
+type GetLLMUsage200JSONResponse LLMUsage
+
+func (response GetLLMUsage200JSONResponse) VisitGetLLMUsageResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLLMUsagedefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response GetLLMUsagedefaultApplicationProblemPlusJSONResponse) VisitGetLLMUsageResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -4254,6 +4737,21 @@ type StrictServerInterface interface {
 	// Run a job again now
 	// (POST /v1/admin/jobs/{id}/retry)
 	RetryAdminJob(ctx context.Context, request RetryAdminJobRequestObject) (RetryAdminJobResponseObject, error)
+	// Remove a provider's API key
+	// (DELETE /v1/admin/llm/providers/{id}/key)
+	DeleteLLMProviderKey(ctx context.Context, request DeleteLLMProviderKeyRequestObject) (DeleteLLMProviderKeyResponseObject, error)
+	// Store a provider's API key (write-only, encrypted at rest)
+	// (PUT /v1/admin/llm/providers/{id}/key)
+	SetLLMProviderKey(ctx context.Context, request SetLLMProviderKeyRequestObject) (SetLLMProviderKeyResponseObject, error)
+	// LLM providers, their state and today's quota
+	// (GET /v1/admin/llm/status)
+	GetLLMStatus(ctx context.Context, request GetLLMStatusRequestObject) (GetLLMStatusResponseObject, error)
+	// Send a test prompt through the gateway
+	// (POST /v1/admin/llm/test)
+	TestLLMPrompt(ctx context.Context, request TestLLMPromptRequestObject) (TestLLMPromptResponseObject, error)
+	// LLM usage per day, provider and feature
+	// (GET /v1/admin/llm/usage)
+	GetLLMUsage(ctx context.Context, request GetLLMUsageRequestObject) (GetLLMUsageResponseObject, error)
 	// Application log lines, newest first
 	// (GET /v1/admin/logs)
 	ListAdminLogs(ctx context.Context, request ListAdminLogsRequestObject) (ListAdminLogsResponseObject, error)
@@ -4558,6 +5056,146 @@ func (sh *strictHandler) RetryAdminJob(w http.ResponseWriter, r *http.Request, i
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RetryAdminJobResponseObject); ok {
 		if err := validResponse.VisitRetryAdminJobResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteLLMProviderKey operation middleware
+func (sh *strictHandler) DeleteLLMProviderKey(w http.ResponseWriter, r *http.Request, id string) {
+	var request DeleteLLMProviderKeyRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteLLMProviderKey(ctx, request.(DeleteLLMProviderKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteLLMProviderKey")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteLLMProviderKeyResponseObject); ok {
+		if err := validResponse.VisitDeleteLLMProviderKeyResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetLLMProviderKey operation middleware
+func (sh *strictHandler) SetLLMProviderKey(w http.ResponseWriter, r *http.Request, id string) {
+	var request SetLLMProviderKeyRequestObject
+
+	request.Id = id
+
+	var body SetLLMProviderKeyJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetLLMProviderKey(ctx, request.(SetLLMProviderKeyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetLLMProviderKey")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetLLMProviderKeyResponseObject); ok {
+		if err := validResponse.VisitSetLLMProviderKeyResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetLLMStatus operation middleware
+func (sh *strictHandler) GetLLMStatus(w http.ResponseWriter, r *http.Request) {
+	var request GetLLMStatusRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetLLMStatus(ctx, request.(GetLLMStatusRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetLLMStatus")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetLLMStatusResponseObject); ok {
+		if err := validResponse.VisitGetLLMStatusResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// TestLLMPrompt operation middleware
+func (sh *strictHandler) TestLLMPrompt(w http.ResponseWriter, r *http.Request) {
+	var request TestLLMPromptRequestObject
+
+	var body TestLLMPromptJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.TestLLMPrompt(ctx, request.(TestLLMPromptRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "TestLLMPrompt")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(TestLLMPromptResponseObject); ok {
+		if err := validResponse.VisitTestLLMPromptResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetLLMUsage operation middleware
+func (sh *strictHandler) GetLLMUsage(w http.ResponseWriter, r *http.Request, params GetLLMUsageParams) {
+	var request GetLLMUsageRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetLLMUsage(ctx, request.(GetLLMUsageRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetLLMUsage")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetLLMUsageResponseObject); ok {
+		if err := validResponse.VisitGetLLMUsageResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -5503,120 +6141,142 @@ func (sh *strictHandler) FinishSetup(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

@@ -4,6 +4,7 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -25,6 +26,8 @@ import (
 	"github.com/a-jay98/stockpot/internal/identity/passkey"
 	"github.com/a-jay98/stockpot/internal/jobs"
 	"github.com/a-jay98/stockpot/internal/listener"
+	"github.com/a-jay98/stockpot/internal/llm"
+	"github.com/a-jay98/stockpot/internal/llm/openaicompat"
 	"github.com/a-jay98/stockpot/internal/logging"
 	"github.com/a-jay98/stockpot/internal/settings"
 )
@@ -89,7 +92,23 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	if err != nil {
 		return err
 	}
-	_ = blobs // first used by capture (M2)
+
+	var adminSvc *admin.Service // set below; the gateway's key changes go through it (audited)
+	gateway := llm.NewRouter(llm.Deps{
+		Pool:      pool,
+		Settings:  store,
+		Blobs:     blobs,
+		Factories: map[string]llm.Factory{llm.KindOpenAICompat: openaicompat.Factory(llmHTTPClient())},
+		WriteSetting: func(ctx context.Context, key string, value json.RawMessage) error {
+			var err error
+			if value == nil {
+				_, err = adminSvc.ResetSetting(ctx, key)
+			} else {
+				_, err = adminSvc.SetSetting(ctx, key, value)
+			}
+			return err
+		},
+	})
 
 	passkeys, err := passkey.New(pool, cfg.PublicURL)
 	if err != nil {
@@ -113,6 +132,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	sweepers := []jobs.Sweeper{jobs.AppLogSweeper(pool)}
 	sweepers = append(sweepers, audit.Sweepers(pool)...)
 	sweepers = append(sweepers, identity.Sweepers(pool)...)
+	sweepers = append(sweepers, llm.Sweepers(pool)...)
 	jobClient, err := jobs.New(jobs.Deps{
 		Pool:     pool,
 		Settings: store,
@@ -123,13 +143,14 @@ func Serve(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
-	adminSvc := admin.New(admin.Deps{
+	adminSvc = admin.New(admin.Deps{
 		Pool:      pool,
 		Settings:  store,
 		Jobs:      jobClient,
 		Schema:    schema,
 		LogSink:   sink,
 		StartedAt: startedAt,
+		LLMToday:  llmToday(gateway),
 		Audit: func(ctx context.Context, tx pgx.Tx, action string, t admin.Target, before, after any) error {
 			return audit.Record(ctx, tx, action, audit.Target{Type: t.Type, ID: t.ID}, before, after)
 		},
@@ -140,6 +161,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Checks:   map[string]httpapi.Pinger{"database": pool, "schema": schema},
 			Admin:    adminSvc,
 			Identity: ident,
+			LLM:      gateway,
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,
@@ -205,4 +227,30 @@ func (a accessLogger) LogAccess(_ context.Context, rec httpapi.AccessRecord) {
 		Time: rec.Time, Duration: rec.Duration, Method: rec.Method, Route: rec.Route,
 		Path: rec.Path, Status: rec.Status, Request: rec.Request,
 	})
+}
+
+// llmHTTPClient is shared by every LLM provider: outbound only, bounded
+// connection setup; each call's deadline comes from its provider's timeout.
+func llmHTTPClient() *http.Client {
+	t := http.DefaultTransport.(*http.Transport).Clone() //nolint:forcetypeassert // stdlib default
+	t.TLSHandshakeTimeout = 10 * time.Second
+	t.ResponseHeaderTimeout = 2 * time.Minute
+	t.MaxIdleConnsPerHost = 4
+	return &http.Client{Transport: t}
+}
+
+// llmToday adapts the gateway's status to the admin overview tile.
+func llmToday(g *llm.Router) func(context.Context) (admin.LLMToday, error) {
+	return func(ctx context.Context) (admin.LLMToday, error) {
+		st, err := g.Status(ctx)
+		if err != nil {
+			return admin.LLMToday{}, err
+		}
+		t := admin.LLMToday{Requests: st.RequestsToday, Tokens: st.TokensToday, Available: st.Available}
+		if st.GlobalRequestCap > 0 {
+			c := int64(st.GlobalRequestCap)
+			t.RequestCap = &c
+		}
+		return t, nil
+	}
 }
