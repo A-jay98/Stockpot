@@ -1,15 +1,16 @@
 import type { RouteObject } from 'react-router'
+import { AccessPage } from './AccessPage'
 import { AdminGuard } from './AdminGuard'
 import { AdminLayout } from './AdminLayout'
 import { AdminSectionPage } from './AdminSectionPage'
+import { AuditPage } from './AuditPage'
 import { JobsPage } from './JobsPage'
 import { LogsPage } from './LogsPage'
 import { OverviewPage } from './OverviewPage'
 import { SettingsPage } from './SettingsPage'
+import { UsersPage } from './UsersPage'
 
 const placeholders: Record<string, [string, string]> = {
-  users: ['Users', 'Pending approvals, invites, users, roles and sessions.'],
-  audit: ['Audit log', 'Every security event and change, filterable by user, action and time.'],
   llm: ['LLM', 'Providers, keys, models, daily caps and usage.'],
 }
 
@@ -23,6 +24,9 @@ export const adminRoutes: RouteObject = {
   ),
   children: [
     { index: true, Component: OverviewPage },
+    { path: 'users', Component: UsersPage },
+    { path: 'audit', Component: AuditPage },
+    { path: 'access', Component: AccessPage },
     { path: 'logs', Component: LogsPage },
     { path: 'jobs', Component: JobsPage },
     { path: 'settings', Component: SettingsPage },

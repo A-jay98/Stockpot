@@ -187,6 +187,44 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Audit events, newest first
+         * @description Who changed what: sign-ins, approvals, setting and job changes, and
+         *     (from M1) every data change. Keyset-paginated with `cursor`.
+         */
+        get: operations["listAdminAudit"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** API requests (access log), newest first */
+        get: operations["listAdminAccess"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/setup": {
         parameters: {
             query?: never;
@@ -717,6 +755,59 @@ export interface components {
              * @example unauthenticated
              */
             code: string;
+        };
+        AdminAuditEvent: {
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            time: string;
+            /** Format: uuid */
+            actorId?: string;
+            actorName?: string;
+            /** Format: uuid */
+            householdId?: string;
+            /** @example setting.update */
+            action: string;
+            targetType: string;
+            targetId: string;
+            /** @description Snapshot before the change (absent when none). */
+            before?: unknown;
+            /** @description Snapshot after the change (absent when none). */
+            after?: unknown;
+            requestId?: string;
+            /** Format: uuid */
+            sessionId?: string;
+            ip?: string;
+        };
+        AdminAuditPage: {
+            items: components["schemas"]["AdminAuditEvent"][];
+            nextCursor?: string;
+        };
+        AdminAccessRecord: {
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            time: string;
+            requestId: string;
+            /** Format: uuid */
+            userId?: string;
+            userName?: string;
+            /** Format: uuid */
+            sessionId?: string;
+            /** Format: uuid */
+            householdId?: string;
+            method: string;
+            /** @description Matched route pattern; empty when nothing matched. */
+            route: string;
+            path: string;
+            status: number;
+            durationMs: number;
+            ip?: string;
+            userAgent: string;
+        };
+        AdminAccessPage: {
+            items: components["schemas"]["AdminAccessRecord"][];
+            nextCursor?: string;
         };
         AdminOverview: {
             /** @description Release tag (r<n>) or "dev". */
@@ -1308,6 +1399,71 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AdminSetting"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    listAdminAudit: {
+        parameters: {
+            query?: {
+                actorId?: string;
+                /** @description Exact action or dotted prefix, e.g. `setting` or `setting.update`. */
+                action?: string;
+                targetType?: string;
+                targetId?: string;
+                since?: string;
+                until?: string;
+                /** @description Opaque cursor from the previous page's `nextCursor`. */
+                cursor?: components["parameters"]["AdminCursor"];
+                limit?: components["parameters"]["AdminLimit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of audit events */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminAuditPage"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    listAdminAccess: {
+        parameters: {
+            query?: {
+                userId?: string;
+                method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+                /** @description Case-insensitive text in the route pattern. */
+                route?: string;
+                /** @description Status class. */
+                status?: "2xx" | "3xx" | "4xx" | "5xx";
+                since?: string;
+                until?: string;
+                /** @description Opaque cursor from the previous page's `nextCursor`. */
+                cursor?: components["parameters"]["AdminCursor"];
+                limit?: components["parameters"]["AdminLimit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of requests */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminAccessPage"];
                 };
             };
             default: components["responses"]["Problem"];

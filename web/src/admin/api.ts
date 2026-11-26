@@ -149,8 +149,10 @@ export function useSaveSetting() {
   return useMutation({
     mutationFn: ({ key, value }: { key: string; value: unknown }) =>
       unwrap(api.PUT('/v1/admin/settings/{key}', { params: { path: { key } }, body: { value } })),
-    onSuccess: (s) =>
-      qc.setQueryData<SettingList>(adminKeys.settings(), (old) => replaceSetting(old, s)),
+    onSuccess: (s) => {
+      qc.setQueryData<SettingList>(adminKeys.settings(), (old) => replaceSetting(old, s))
+      void qc.invalidateQueries({ queryKey: [...adminKeys.all, 'audit'] })
+    },
   })
 }
 
@@ -159,7 +161,9 @@ export function useResetSetting() {
   return useMutation({
     mutationFn: (key: string) =>
       unwrap(api.DELETE('/v1/admin/settings/{key}', { params: { path: { key } } })),
-    onSuccess: (s) =>
-      qc.setQueryData<SettingList>(adminKeys.settings(), (old) => replaceSetting(old, s)),
+    onSuccess: (s) => {
+      qc.setQueryData<SettingList>(adminKeys.settings(), (old) => replaceSetting(old, s))
+      void qc.invalidateQueries({ queryKey: [...adminKeys.all, 'audit'] })
+    },
   })
 }

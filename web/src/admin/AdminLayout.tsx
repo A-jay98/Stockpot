@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  Cable,
   Cpu,
   Flag,
   Gauge,
@@ -14,11 +15,12 @@ import { Lockup } from '../app/Logo'
 
 type Section = { to: string; label: string; icon: LucideIcon; end?: boolean }
 
-/** Admin sections (architecture §8). m0-3 replaces the placeholders. */
+/** Admin sections (architecture §8). */
 export const adminSections: Section[] = [
   { to: '/admin', label: 'Overview', icon: Gauge, end: true },
   { to: '/admin/users', label: 'Users', icon: Users },
   { to: '/admin/audit', label: 'Audit log', icon: ShieldCheck },
+  { to: '/admin/access', label: 'Access log', icon: Cable },
   { to: '/admin/logs', label: 'System logs', icon: ScrollText },
   { to: '/admin/jobs', label: 'Jobs', icon: ListChecks },
   { to: '/admin/settings', label: 'Settings & flags', icon: Flag },

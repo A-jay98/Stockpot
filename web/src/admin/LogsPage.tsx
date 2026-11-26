@@ -1,8 +1,17 @@
 import { Pause, Play } from 'lucide-react'
-import { useEffect, useState } from 'react'
 import { Button, cn, Segmented } from '../ui'
 import { type LogEntry, type LogFilters, type LogLevel, useLogs, useLogTail } from './api'
-import { AdminPage, compactField, ErrorNote, FilterBar, LoadMore, useUrlState } from './ui'
+import {
+  AdminPage,
+  compactField,
+  ErrorNote,
+  FilterBar,
+  LoadMore,
+  toISO,
+  toLocal,
+  useDebounced,
+  useUrlState,
+} from './ui'
 
 const levelOptions: { value: LogLevel; label: string }[] = [
   { value: 'debug', label: 'All' },
@@ -19,26 +28,6 @@ const levelStyle: Record<LogLevel, string> = {
 }
 
 const keys = ['level', 'q', 'requestId', 'since', 'until', 'live'] as const
-
-/** `datetime-local` value (local time, no zone) ⇄ RFC 3339. */
-const toISO = (local: string) => (local ? new Date(local).toISOString() : '')
-const toLocal = (iso: string) => {
-  if (!iso) return ''
-  const d = new Date(iso)
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
-}
-
-/** Text input that writes to the URL after the user pauses typing. */
-function useDebounced(value: string, commit: (v: string) => void, ms = 300) {
-  const [draft, setDraft] = useState(value)
-  useEffect(() => setDraft(value), [value])
-  useEffect(() => {
-    if (draft === value) return
-    const t = setTimeout(() => commit(draft), ms)
-    return () => clearTimeout(t)
-  }, [draft, value, commit, ms])
-  return [draft, setDraft] as const
-}
 
 export function LogsPage() {
   const [url, setUrl] = useUrlState(keys)
