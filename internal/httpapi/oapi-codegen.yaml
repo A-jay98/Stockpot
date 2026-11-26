@@ -7,3 +7,5 @@ generate:
   strict-server: true
   embedded-spec: true
   server-urls: true
+compatibility:
+  always-prefix-enum-values: true
