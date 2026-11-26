@@ -1,8 +1,12 @@
 import { createBrowserRouter, type RouteObject } from 'react-router'
 import { adminRoutes } from '../admin/routes'
-import { setUnauthorizedHandler } from '../api/client'
+import { isPublicPage, setUnauthorizedHandler } from '../api/client'
 import { AddPage } from '../features/add/AddPage'
+import { InvitePage } from '../features/auth/InvitePage'
 import { LoginPage } from '../features/auth/LoginPage'
+import { PendingPage } from '../features/auth/PendingPage'
+import { RequireSession } from '../features/auth/RequireSession'
+import { SetupPage } from '../features/auth/SetupPage'
 import { HomePage } from '../features/home/HomePage'
 import { InventoryPage } from '../features/inventory/InventoryPage'
 import { RecipesPage } from '../features/recipes/RecipesPage'
@@ -15,9 +19,20 @@ export const routes: RouteObject[] = [
     ErrorBoundary: ErrorPage,
     children: [
       { path: 'login', Component: LoginPage },
-      adminRoutes,
+      { path: 'setup', Component: SetupPage },
+      { path: 'invite', Component: InvitePage },
+      { path: 'pending', Component: PendingPage },
       {
-        Component: AppShell,
+        ...adminRoutes,
+        // Signed in first; AdminGuard inside explains when the user isn't an admin.
+        element: <RequireSession>{adminRoutes.element}</RequireSession>,
+      },
+      {
+        element: (
+          <RequireSession>
+            <AppShell />
+          </RequireSession>
+        ),
         children: [
           { index: true, Component: HomePage },
           { path: 'inventory', Component: InventoryPage },
@@ -35,7 +50,7 @@ export function createRouter() {
   // Session expired or missing: go to sign-in and come back afterwards.
   setUnauthorizedHandler(() => {
     const { pathname, search } = router.state.location
-    if (pathname === '/login') return
+    if (isPublicPage(pathname)) return
     void router.navigate(`/login?next=${encodeURIComponent(pathname + search)}`, { replace: true })
   })
   return router

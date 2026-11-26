@@ -70,6 +70,13 @@ func NewHandler(si StrictServerInterface, opts Options) (http.Handler, error) {
 			writeProblem(w, r, http.StatusBadRequest, CodeBadRequest, "")
 		},
 		ResponseErrorHandlerFunc: func(w http.ResponseWriter, r *http.Request, err error) {
+			if status, code, detail, ok := identityProblem(err); ok {
+				if status >= http.StatusInternalServerError || code == "passkey_rejected" {
+					slog.WarnContext(r.Context(), "request failed", "code", code, "err", err)
+				}
+				writeProblem(w, r, status, code, detail)
+				return
+			}
 			// The cause goes to the log, never to the client.
 			slog.ErrorContext(r.Context(), "handler failed", "method", r.Method, "path", r.URL.Path, "err", err)
 			writeProblem(w, r, http.StatusInternalServerError, CodeInternal, "")

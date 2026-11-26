@@ -5,10 +5,27 @@
 package dbq
 
 import (
+	"net/netip"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+type AccessLog struct {
+	ID          int64
+	Time        time.Time
+	RequestID   string
+	UserID      *uuid.UUID
+	SessionID   *uuid.UUID
+	HouseholdID *uuid.UUID
+	Method      string
+	Route       string
+	Path        string
+	Status      int16
+	DurationMs  int32
+	Ip          *netip.Addr
+	UserAgent   string
+}
 
 type AppLog struct {
 	ID        int64
@@ -18,6 +35,74 @@ type AppLog struct {
 	Attrs     []byte
 	RequestID *string
 	UserID    *uuid.UUID
+}
+
+type AppUser struct {
+	ID          uuid.UUID
+	DisplayName string
+	Status      string
+	SystemRole  string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	ApprovedAt  *time.Time
+	ApprovedBy  *uuid.UUID
+	LastLoginAt *time.Time
+}
+
+type AuditEvent struct {
+	ID          int64
+	Time        time.Time
+	ActorID     *uuid.UUID
+	HouseholdID *uuid.UUID
+	Action      string
+	TargetType  string
+	TargetID    string
+	Before      []byte
+	After       []byte
+	RequestID   *string
+	SessionID   *uuid.UUID
+	Ip          *netip.Addr
+}
+
+type AuthCeremony struct {
+	ID        uuid.UUID
+	Purpose   string
+	Provider  string
+	State     []byte
+	Context   []byte
+	ExpiresAt time.Time
+}
+
+type Household struct {
+	ID        uuid.UUID
+	Name      string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	CreatedBy *uuid.UUID
+}
+
+type IdentityLink struct {
+	ID         uuid.UUID
+	UserID     uuid.UUID
+	Provider   string
+	Subject    string
+	Data       []byte
+	CreatedAt  time.Time
+	LastUsedAt *time.Time
+}
+
+type Invite struct {
+	ID          uuid.UUID
+	CodeHash    []byte
+	HouseholdID uuid.UUID
+	Role        string
+	Note        string
+	CreatedBy   uuid.UUID
+	CreatedAt   time.Time
+	ExpiresAt   time.Time
+	AcceptedAt  *time.Time
+	AcceptedBy  *uuid.UUID
+	RevokedAt   *time.Time
 }
 
 type LlmCache struct {
@@ -46,6 +131,28 @@ type LlmCall struct {
 	Error       *string
 }
 
+type Membership struct {
+	UserID      uuid.UUID
+	HouseholdID uuid.UUID
+	Role        string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type Session struct {
+	ID          uuid.UUID
+	TokenHash   []byte
+	UserID      uuid.UUID
+	HouseholdID *uuid.UUID
+	Provider    string
+	CreatedAt   time.Time
+	LastSeenAt  time.Time
+	ExpiresAt   time.Time
+	RevokedAt   *time.Time
+	Ip          *netip.Addr
+	UserAgent   string
+}
+
 type Setting struct {
 	ID          int64
 	Key         string
@@ -54,4 +161,21 @@ type Setting struct {
 	Secret      []byte
 	UpdatedAt   time.Time
 	UpdatedBy   *uuid.UUID
+}
+
+type WebauthnCredential struct {
+	ID              []byte
+	UserHandle      []byte
+	Name            string
+	PublicKey       []byte
+	AttestationType string
+	Aaguid          *uuid.UUID
+	SignCount       int64
+	Transports      []string
+	UserPresent     bool
+	UserVerified    bool
+	BackupEligible  bool
+	BackupState     bool
+	CreatedAt       time.Time
+	LastUsedAt      *time.Time
 }

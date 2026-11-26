@@ -8,6 +8,7 @@ import (
 
 	"github.com/a-jay98/stockpot/internal/admin"
 	"github.com/a-jay98/stockpot/internal/buildinfo"
+	"github.com/a-jay98/stockpot/internal/identity"
 )
 
 // Pinger is a dependency the health check probes, e.g. the database pool.
@@ -21,25 +22,28 @@ type Deps struct {
 	Checks map[string]Pinger
 	// Admin serves /api/v1/admin/*.
 	Admin *admin.Service
+	// Identity serves setup, sign-in, the account, invites and admin users.
+	Identity *identity.Service
 	// LLM is the LLM gateway (/api/v1/admin/llm/*); nil answers its
 	// endpoints with 503 llm_unavailable.
 	LLM LLMGateway
 }
 
 // Server implements StrictServerInterface. Handlers live in one file per
-// feature area (admin.go, …).
+// feature area (admin.go, identity.go, …).
 type Server struct {
-	checks map[string]Pinger
-	admin  *admin.Service
-	llm    LLMGateway
-	now    func() time.Time
+	checks   map[string]Pinger
+	admin    *admin.Service
+	identity *identity.Service
+	llm      LLMGateway
+	now      func() time.Time
 }
 
 var _ StrictServerInterface = (*Server)(nil)
 
 // NewServer returns the API implementation.
 func NewServer(d Deps) *Server {
-	return &Server{checks: d.Checks, admin: d.Admin, llm: d.LLM, now: time.Now}
+	return &Server{checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM, now: time.Now}
 }
 
 // healthTimeout bounds each dependency probe; the deploy step polls often.
