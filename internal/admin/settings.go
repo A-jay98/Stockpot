@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -46,8 +46,10 @@ func (s *Service) changeSetting(ctx context.Context, key, action string, change 
 	if err != nil {
 		return settings.View{}, err
 	}
+	// The change is committed: a failed refresh must not report failure (a
+	// retry would apply and audit it twice). NOTIFY catches the cache up.
 	if err := s.d.Settings.Refresh(ctx, key); err != nil {
-		return settings.View{}, fmt.Errorf("refresh setting %s: %w", key, err)
+		slog.WarnContext(ctx, "setting saved but cache refresh failed", "key", key, "err", err)
 	}
 	v, _ := s.d.Settings.View(key)
 	return v, nil

@@ -80,11 +80,19 @@ func (s *Service) changeJob(ctx context.Context, id int64, action string, change
 		if after, err = change(ctx, tx, id); err != nil {
 			return err
 		}
+		// River returns the row unchanged when the action doesn't apply
+		// (retrying a running job, cancelling a finished one).
+		if after.State == before.State && after.ScheduledAt.Equal(before.ScheduledAt) {
+			return ErrNotChanged
+		}
 		return s.d.Audit(ctx, tx, action, Target{Type: "job", ID: strconv.FormatInt(id, 10)},
 			jobSnapshot(before), jobSnapshot(after))
 	})
 	if errors.Is(err, rivertype.ErrNotFound) {
 		return nil, ErrNotFound
+	}
+	if errors.Is(err, ErrNotChanged) {
+		return nil, ErrNotChanged
 	}
 	if err != nil {
 		return nil, fmt.Errorf("%s %d: %w", action, id, err)

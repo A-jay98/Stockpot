@@ -7,7 +7,7 @@ import { AdminPage, ErrorNote, formatBytes, formatDuration, number, Tile } from 
 const queued = ['available', 'scheduled', 'retryable', 'pending', 'running']
 
 export function OverviewPage() {
-  const { data: o, error, dataUpdatedAt } = useOverview()
+  const { data: o, error, dataUpdatedAt } = useOverview({ poll: true })
   const intro = o
     ? `${o.database.reachable && o.database.schemaCurrent ? 'Everything is healthy.' : 'Something needs attention.'} Refreshes every 15 s${dataUpdatedAt ? `, last at ${new Date(dataUpdatedAt).toLocaleTimeString()}` : ''}.`
     : 'Loading…'

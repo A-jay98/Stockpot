@@ -21,6 +21,11 @@ SET value = EXCLUDED.value,
 DELETE FROM setting
 WHERE household_id IS NULL AND key = $1;
 
+-- name: LockSettingKey :exec
+-- Serializes writers of one key, including a first write, which has no row
+-- for FOR UPDATE to lock.
+SELECT pg_advisory_xact_lock(hashtextextended('setting:' || sqlc.arg(key)::text, 0));
+
 -- name: LockSystemSetting :one
 -- Reads the current row inside a write transaction, so the audit trail's
 -- "before" matches what the write replaces.

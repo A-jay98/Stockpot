@@ -291,6 +291,9 @@ func (s *Store) ResetTx(ctx context.Context, tx pgx.Tx, key string) (Change, err
 // before locks key's row and describes what it currently holds.
 func (s *Store) before(ctx context.Context, tx pgx.Tx, def *Definition) (Change, error) {
 	ch := Change{Key: def.Key, Secret: def.Secret}
+	if err := s.q.WithTx(tx).LockSettingKey(ctx, def.Key); err != nil {
+		return Change{}, fmt.Errorf("lock setting %s: %w", def.Key, err)
+	}
 	r, err := s.q.WithTx(tx).LockSystemSetting(ctx, def.Key)
 	switch {
 	case errors.Is(err, pgx.ErrNoRows):

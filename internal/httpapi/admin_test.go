@@ -318,11 +318,18 @@ func TestAdminJobs(t *testing.T) {
 	if rec := e.call(t, RoleAdmin, http.MethodPost, path+"/retry", nil, &j); rec.Code != http.StatusOK || j.State != AdminJobStateAvailable {
 		t.Fatalf("retry: %d %s", rec.Code, rec.Body)
 	}
+	if rec := e.call(t, RoleAdmin, http.MethodPost, path+"/cancel", nil, &j); rec.Code != http.StatusOK || j.State != AdminJobStateCancelled {
+		t.Fatalf("cancel again: %d %s", rec.Code, rec.Body)
+	}
+	// Cancelling a cancelled job changes nothing: 409, and no audit event.
+	if rec := e.call(t, RoleAdmin, http.MethodPost, path+"/cancel", nil, nil); rec.Code != http.StatusConflict || decodeProblem(t, rec).Code != CodeNotChanged {
+		t.Fatalf("no-op cancel: %d %s", rec.Code, rec.Body)
+	}
 	if rec := e.call(t, RoleAdmin, http.MethodPost, "/api/v1/admin/jobs/999999/retry", nil, nil); rec.Code != http.StatusNotFound {
 		t.Fatalf("missing job: %d", rec.Code)
 	}
 
-	if len(e.audits) != 2 || e.audits[0].Action != "job.cancel" || e.audits[1].Action != "job.retry" ||
+	if len(e.audits) != 3 || e.audits[0].Action != "job.cancel" || e.audits[1].Action != "job.retry" || e.audits[2].Action != "job.cancel" ||
 		e.audits[0].Target != (admin.Target{Type: "job", ID: strconv.FormatInt(id, 10)}) {
 		t.Fatalf("audits %+v", e.audits)
 	}

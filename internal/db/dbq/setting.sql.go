@@ -89,6 +89,17 @@ func (q *Queries) ListSystemSettings(ctx context.Context) ([]ListSystemSettingsR
 	return items, nil
 }
 
+const lockSettingKey = `-- name: LockSettingKey :exec
+SELECT pg_advisory_xact_lock(hashtextextended('setting:' || $1::text, 0))
+`
+
+// Serializes writers of one key, including a first write, which has no row
+// for FOR UPDATE to lock.
+func (q *Queries) LockSettingKey(ctx context.Context, key string) error {
+	_, err := q.db.Exec(ctx, lockSettingKey, key)
+	return err
+}
+
 const lockSystemSetting = `-- name: LockSystemSetting :one
 SELECT key, value, secret, updated_at, updated_by
 FROM setting

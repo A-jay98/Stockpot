@@ -27,11 +27,12 @@ export const adminKeys = {
   settings: () => [...adminKeys.all, 'settings'] as const,
 }
 
-export function useOverview() {
+/** `poll` refreshes every 15 s (Overview page only; the access guard reads it once). */
+export function useOverview({ poll = false } = {}) {
   return useQuery({
     queryKey: adminKeys.overview(),
     queryFn: () => unwrap(api.GET('/v1/admin/overview')),
-    refetchInterval: 15_000,
+    refetchInterval: poll ? 15_000 : false,
     staleTime: 5_000,
   })
 }
@@ -45,6 +46,8 @@ export type LogFilters = {
 }
 
 const PAGE = 100
+/** Most lines the live tail keeps in memory. */
+export const TAIL_CAP = 1000
 
 export function useLogs(filters: LogFilters) {
   return useInfiniteQuery({
@@ -86,8 +89,13 @@ export function useLogTail(filters: LogFilters, newestId: number | undefined, en
         qc.setQueryData<InfiniteData<LogPage, string | undefined>>(key, (old) => {
           if (!old) return old
           const [first, ...rest] = old.pages
-          const merged = { ...first, items: [...page.items, ...(first?.items ?? [])] }
-          return { ...old, pages: [merged, ...rest] }
+          const items = [...page.items, ...(first?.items ?? [])]
+          if (items.length <= TAIL_CAP) {
+            return { ...old, pages: [{ ...first, items }, ...rest] }
+          }
+          // Bounded memory: keep the newest lines only. Older pages no longer
+          // follow on, so paging back starts again after pausing the tail.
+          return { pages: [{ items: items.slice(0, TAIL_CAP) }], pageParams: [old.pageParams[0]] }
         })
       }
       return page.items.length

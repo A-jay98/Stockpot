@@ -26,6 +26,8 @@ import (
 var (
 	ErrNotFound  = errors.New("not found")
 	ErrBadCursor = errors.New("invalid cursor")
+	// ErrNotChanged means the action doesn't apply to the target's state.
+	ErrNotChanged = errors.New("not changed")
 )
 
 // Schema reports the database schema state (db.SchemaCheck).

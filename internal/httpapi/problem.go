@@ -19,6 +19,7 @@ const (
 	CodeCrossOrigin      = "cross_origin_request"
 	CodeInternal         = "internal"
 	CodeInvalidValue     = "invalid_value"
+	CodeNotChanged       = "not_changed"
 )
 
 // NewProblem builds an RFC 9457 problem for status. detail is shown to the

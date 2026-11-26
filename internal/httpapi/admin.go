@@ -26,6 +26,8 @@ func adminError(ctx context.Context, err error) (Problem, bool) {
 		return problemCtx(ctx, http.StatusUnprocessableEntity, CodeInvalidValue, verr.Error()), true
 	case errors.Is(err, admin.ErrNotFound):
 		return problemCtx(ctx, http.StatusNotFound, CodeNotFound, ""), true
+	case errors.Is(err, admin.ErrNotChanged):
+		return problemCtx(ctx, http.StatusConflict, CodeNotChanged, "Nothing to do in its current state."), true
 	case errors.Is(err, admin.ErrBadCursor):
 		return problemCtx(ctx, http.StatusBadRequest, CodeBadRequest, "Invalid cursor; start from the first page."), true
 	}
