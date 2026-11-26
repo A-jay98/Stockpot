@@ -218,6 +218,7 @@ func (s *Server) signedIn(ctx context.Context, tok identity.SessionToken) (Signe
 
 // --- setup and sign-in --------------------------------------------------------------
 
+// GetSetupStatus serves getSetupStatus.
 func (s *Server) GetSetupStatus(ctx context.Context, _ GetSetupStatusRequestObject) (GetSetupStatusResponseObject, error) {
 	needed, configured, err := s.identity.SetupStatus(ctx)
 	if err != nil {
@@ -226,6 +227,7 @@ func (s *Server) GetSetupStatus(ctx context.Context, _ GetSetupStatusRequestObje
 	return GetSetupStatus200JSONResponse{Needed: needed, TokenConfigured: configured}, nil
 }
 
+// BeginSetup serves beginSetup.
 func (s *Server) BeginSetup(ctx context.Context, req BeginSetupRequestObject) (BeginSetupResponseObject, error) {
 	c, err := s.identity.BeginSetup(ctx, req.Body.Token, req.Body.DisplayName, req.Body.HouseholdName)
 	if err != nil {
@@ -235,6 +237,7 @@ func (s *Server) BeginSetup(ctx context.Context, req BeginSetupRequestObject) (B
 	return BeginSetup200JSONResponse(out), err
 }
 
+// FinishSetup serves finishSetup.
 func (s *Server) FinishSetup(ctx context.Context, req FinishSetupRequestObject) (FinishSetupResponseObject, error) {
 	cred, name, err := credentialJSON(req.Body)
 	if err != nil {
@@ -248,6 +251,7 @@ func (s *Server) FinishSetup(ctx context.Context, req FinishSetupRequestObject) 
 	return FinishSetup201JSONResponse{out}, err
 }
 
+// BeginLogin serves beginLogin.
 func (s *Server) BeginLogin(ctx context.Context, _ BeginLoginRequestObject) (BeginLoginResponseObject, error) {
 	c, err := s.identity.BeginLogin(ctx)
 	if err != nil {
@@ -257,6 +261,7 @@ func (s *Server) BeginLogin(ctx context.Context, _ BeginLoginRequestObject) (Beg
 	return BeginLogin200JSONResponse(out), err
 }
 
+// FinishLogin serves finishLogin.
 func (s *Server) FinishLogin(ctx context.Context, req FinishLoginRequestObject) (FinishLoginResponseObject, error) {
 	cred, _, err := credentialJSON(req.Body)
 	if err != nil {
@@ -270,6 +275,7 @@ func (s *Server) FinishLogin(ctx context.Context, req FinishLoginRequestObject) 
 	return FinishLogin200JSONResponse{out}, err
 }
 
+// Logout serves logout.
 func (s *Server) Logout(ctx context.Context, _ LogoutRequestObject) (LogoutResponseObject, error) {
 	if err := s.identity.Logout(ctx); err != nil && !errors.Is(err, identity.ErrNotFound) {
 		return nil, err
@@ -280,6 +286,7 @@ func (s *Server) Logout(ctx context.Context, _ LogoutRequestObject) (LogoutRespo
 
 // --- account ----------------------------------------------------------------------------
 
+// GetMe serves getMe.
 func (s *Server) GetMe(ctx context.Context, _ GetMeRequestObject) (GetMeResponseObject, error) {
 	me, err := s.identity.Me(ctx)
 	if err != nil {
@@ -288,6 +295,7 @@ func (s *Server) GetMe(ctx context.Context, _ GetMeRequestObject) (GetMeResponse
 	return GetMe200JSONResponse(toMe(me)), nil
 }
 
+// UpdateMe serves updateMe.
 func (s *Server) UpdateMe(ctx context.Context, req UpdateMeRequestObject) (UpdateMeResponseObject, error) {
 	me, err := s.identity.UpdateMe(ctx, req.Body.DisplayName)
 	if err != nil {
@@ -296,6 +304,7 @@ func (s *Server) UpdateMe(ctx context.Context, req UpdateMeRequestObject) (Updat
 	return UpdateMe200JSONResponse(toMe(me)), nil
 }
 
+// SwitchHousehold serves switchHousehold.
 func (s *Server) SwitchHousehold(ctx context.Context, req SwitchHouseholdRequestObject) (SwitchHouseholdResponseObject, error) {
 	me, err := s.identity.SwitchHousehold(ctx, req.Body.HouseholdId)
 	if err != nil {
@@ -305,6 +314,7 @@ func (s *Server) SwitchHousehold(ctx context.Context, req SwitchHouseholdRequest
 	return SwitchHousehold200JSONResponse(toMe(me)), nil
 }
 
+// ListMySessions serves listMySessions.
 func (s *Server) ListMySessions(ctx context.Context, _ ListMySessionsRequestObject) (ListMySessionsResponseObject, error) {
 	ss, err := s.identity.ListMySessions(ctx)
 	if err != nil {
@@ -313,6 +323,7 @@ func (s *Server) ListMySessions(ctx context.Context, _ ListMySessionsRequestObje
 	return ListMySessions200JSONResponse(toSessions(ss)), nil
 }
 
+// RevokeMySession serves revokeMySession.
 func (s *Server) RevokeMySession(ctx context.Context, req RevokeMySessionRequestObject) (RevokeMySessionResponseObject, error) {
 	if err := s.identity.RevokeMySession(ctx, req.SessionId); err != nil {
 		return nil, err
@@ -320,6 +331,7 @@ func (s *Server) RevokeMySession(ctx context.Context, req RevokeMySessionRequest
 	return RevokeMySession204Response{}, nil
 }
 
+// ListMyPasskeys serves listMyPasskeys.
 func (s *Server) ListMyPasskeys(ctx context.Context, _ ListMyPasskeysRequestObject) (ListMyPasskeysResponseObject, error) {
 	cs, err := s.identity.ListMyPasskeys(ctx)
 	if err != nil {
@@ -332,6 +344,7 @@ func (s *Server) ListMyPasskeys(ctx context.Context, _ ListMyPasskeysRequestObje
 	return out, nil
 }
 
+// BeginAddPasskey serves beginAddPasskey.
 func (s *Server) BeginAddPasskey(ctx context.Context, _ BeginAddPasskeyRequestObject) (BeginAddPasskeyResponseObject, error) {
 	c, err := s.identity.BeginAddPasskey(ctx)
 	if err != nil {
@@ -341,6 +354,7 @@ func (s *Server) BeginAddPasskey(ctx context.Context, _ BeginAddPasskeyRequestOb
 	return BeginAddPasskey200JSONResponse(out), err
 }
 
+// FinishAddPasskey serves finishAddPasskey.
 func (s *Server) FinishAddPasskey(ctx context.Context, req FinishAddPasskeyRequestObject) (FinishAddPasskeyResponseObject, error) {
 	cred, name, err := credentialJSON(req.Body)
 	if err != nil {
@@ -352,6 +366,7 @@ func (s *Server) FinishAddPasskey(ctx context.Context, req FinishAddPasskeyReque
 	return FinishAddPasskey204Response{}, nil
 }
 
+// RemoveMyPasskey serves removeMyPasskey.
 func (s *Server) RemoveMyPasskey(ctx context.Context, req RemoveMyPasskeyRequestObject) (RemoveMyPasskeyResponseObject, error) {
 	if err := s.identity.RemoveMyPasskey(ctx, req.PasskeyId); err != nil {
 		return nil, err
@@ -361,6 +376,7 @@ func (s *Server) RemoveMyPasskey(ctx context.Context, req RemoveMyPasskeyRequest
 
 // --- invites ------------------------------------------------------------------------------
 
+// ListInvites serves listInvites.
 func (s *Server) ListInvites(ctx context.Context, req ListInvitesRequestObject) (ListInvitesResponseObject, error) {
 	hh := uuid.Nil
 	if req.Params.HouseholdId != nil {
@@ -378,6 +394,7 @@ func (s *Server) ListInvites(ctx context.Context, req ListInvitesRequestObject) 
 	return out, nil
 }
 
+// CreateInvite serves createInvite.
 func (s *Server) CreateInvite(ctx context.Context, req CreateInviteRequestObject) (CreateInviteResponseObject, error) {
 	hh := uuid.Nil
 	if req.Body.HouseholdId != nil {
@@ -394,6 +411,7 @@ func (s *Server) CreateInvite(ctx context.Context, req CreateInviteRequestObject
 	return CreateInvite201JSONResponse{Invite: toInvite(inv.Invite), Code: inv.Code, Url: inv.URL}, nil
 }
 
+// RevokeInvite serves revokeInvite.
 func (s *Server) RevokeInvite(ctx context.Context, req RevokeInviteRequestObject) (RevokeInviteResponseObject, error) {
 	if err := s.identity.RevokeInvite(ctx, req.InviteId); err != nil {
 		return nil, err
@@ -401,6 +419,7 @@ func (s *Server) RevokeInvite(ctx context.Context, req RevokeInviteRequestObject
 	return RevokeInvite204Response{}, nil
 }
 
+// InspectInvite serves inspectInvite.
 func (s *Server) InspectInvite(ctx context.Context, req InspectInviteRequestObject) (InspectInviteResponseObject, error) {
 	info, err := s.identity.InspectInvite(ctx, req.Body.Code)
 	if err != nil {
@@ -409,6 +428,7 @@ func (s *Server) InspectInvite(ctx context.Context, req InspectInviteRequestObje
 	return InspectInvite200JSONResponse{HouseholdName: info.HouseholdName, Role: HouseholdRole(info.Role), ExpiresAt: info.ExpiresAt}, nil
 }
 
+// BeginAcceptInvite serves beginAcceptInvite.
 func (s *Server) BeginAcceptInvite(ctx context.Context, req BeginAcceptInviteRequestObject) (BeginAcceptInviteResponseObject, error) {
 	c, err := s.identity.BeginAcceptInvite(ctx, req.Body.Code, req.Body.DisplayName)
 	if err != nil {
@@ -418,6 +438,7 @@ func (s *Server) BeginAcceptInvite(ctx context.Context, req BeginAcceptInviteReq
 	return BeginAcceptInvite200JSONResponse(out), err
 }
 
+// FinishAcceptInvite serves finishAcceptInvite.
 func (s *Server) FinishAcceptInvite(ctx context.Context, req FinishAcceptInviteRequestObject) (FinishAcceptInviteResponseObject, error) {
 	cred, name, err := credentialJSON(req.Body)
 	if err != nil {
@@ -431,6 +452,7 @@ func (s *Server) FinishAcceptInvite(ctx context.Context, req FinishAcceptInviteR
 	return FinishAcceptInvite201JSONResponse{out}, err
 }
 
+// JoinWithInvite serves joinWithInvite.
 func (s *Server) JoinWithInvite(ctx context.Context, req JoinWithInviteRequestObject) (JoinWithInviteResponseObject, error) {
 	me, err := s.identity.JoinWithInvite(ctx, req.Body.Code)
 	if err != nil {
@@ -441,6 +463,7 @@ func (s *Server) JoinWithInvite(ctx context.Context, req JoinWithInviteRequestOb
 
 // --- admin: users ----------------------------------------------------------------------------
 
+// AdminListUsers serves adminListUsers.
 func (s *Server) AdminListUsers(ctx context.Context, req AdminListUsersRequestObject) (AdminListUsersResponseObject, error) {
 	status := ""
 	if req.Params.Status != nil {
@@ -457,6 +480,7 @@ func (s *Server) AdminListUsers(ctx context.Context, req AdminListUsersRequestOb
 	return out, nil
 }
 
+// AdminUpdateUser serves adminUpdateUser.
 func (s *Server) AdminUpdateUser(ctx context.Context, req AdminUpdateUserRequestObject) (AdminUpdateUserResponseObject, error) {
 	var up identity.UserUpdate
 	if req.Body.Status != nil {
@@ -474,6 +498,7 @@ func (s *Server) AdminUpdateUser(ctx context.Context, req AdminUpdateUserRequest
 	return AdminUpdateUser200JSONResponse(toAdminUser(u)), nil
 }
 
+// AdminApproveUser serves adminApproveUser.
 func (s *Server) AdminApproveUser(ctx context.Context, req AdminApproveUserRequestObject) (AdminApproveUserResponseObject, error) {
 	u, err := s.identity.ApproveUser(ctx, req.UserId)
 	if err != nil {
@@ -482,6 +507,7 @@ func (s *Server) AdminApproveUser(ctx context.Context, req AdminApproveUserReque
 	return AdminApproveUser200JSONResponse(toAdminUser(u)), nil
 }
 
+// AdminRejectUser serves adminRejectUser.
 func (s *Server) AdminRejectUser(ctx context.Context, req AdminRejectUserRequestObject) (AdminRejectUserResponseObject, error) {
 	u, err := s.identity.RejectUser(ctx, req.UserId)
 	if err != nil {
@@ -490,6 +516,7 @@ func (s *Server) AdminRejectUser(ctx context.Context, req AdminRejectUserRequest
 	return AdminRejectUser200JSONResponse(toAdminUser(u)), nil
 }
 
+// AdminListUserSessions serves adminListUserSessions.
 func (s *Server) AdminListUserSessions(ctx context.Context, req AdminListUserSessionsRequestObject) (AdminListUserSessionsResponseObject, error) {
 	ss, err := s.identity.AdminListSessions(ctx, req.UserId)
 	if err != nil {
@@ -498,6 +525,7 @@ func (s *Server) AdminListUserSessions(ctx context.Context, req AdminListUserSes
 	return AdminListUserSessions200JSONResponse(toSessions(ss)), nil
 }
 
+// AdminRevokeSession serves adminRevokeSession.
 func (s *Server) AdminRevokeSession(ctx context.Context, req AdminRevokeSessionRequestObject) (AdminRevokeSessionResponseObject, error) {
 	if err := s.identity.AdminRevokeSession(ctx, req.SessionId); err != nil {
 		return nil, err
@@ -505,6 +533,7 @@ func (s *Server) AdminRevokeSession(ctx context.Context, req AdminRevokeSessionR
 	return AdminRevokeSession204Response{}, nil
 }
 
+// AdminListHouseholds serves adminListHouseholds.
 func (s *Server) AdminListHouseholds(ctx context.Context, _ AdminListHouseholdsRequestObject) (AdminListHouseholdsResponseObject, error) {
 	hs, err := s.identity.AdminListHouseholds(ctx)
 	if err != nil {

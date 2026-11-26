@@ -22,11 +22,17 @@ type Target struct {
 	ID   string
 }
 
-// UserTarget, HouseholdTarget, … name common targets.
-func UserTarget(id uuid.UUID) Target      { return Target{Type: "user", ID: id.String()} }
+// UserTarget names a user.
+func UserTarget(id uuid.UUID) Target { return Target{Type: "user", ID: id.String()} }
+
+// HouseholdTarget names a household.
 func HouseholdTarget(id uuid.UUID) Target { return Target{Type: "household", ID: id.String()} }
-func SessionTarget(id uuid.UUID) Target   { return Target{Type: "session", ID: id.String()} }
-func InviteTarget(id uuid.UUID) Target    { return Target{Type: "invite", ID: id.String()} }
+
+// SessionTarget names a session.
+func SessionTarget(id uuid.UUID) Target { return Target{Type: "session", ID: id.String()} }
+
+// InviteTarget names an invite.
+func InviteTarget(id uuid.UUID) Target { return Target{Type: "invite", ID: id.String()} }
 
 var actionPattern = regexp.MustCompile(`^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$`)
 

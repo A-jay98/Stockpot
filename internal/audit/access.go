@@ -73,7 +73,7 @@ func (w *AccessWriter) Log(a Access) {
 		Method:      a.Method,
 		Route:       a.Route,
 		Path:        truncate(a.Path, 512),
-		Status:      int16(min(max(a.Status, 0), 999)),                                     //nolint:gosec // clamped
+		Status:      int16(min(max(a.Status, 0), 999)),                                           //nolint:gosec // clamped
 		DurationMs:  int32(min(a.Duration.Milliseconds(), int64(24*time.Hour/time.Millisecond))), //nolint:gosec // clamped
 		Ip:          parseIP(a.Request.ClientIP),
 		UserAgent:   truncate(a.Request.UserAgent, 512),
