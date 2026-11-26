@@ -7,6 +7,9 @@ package dbq
 
 import (
 	"context"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 const databaseSize = `-- name: DatabaseSize :one
@@ -18,4 +21,188 @@ func (q *Queries) DatabaseSize(ctx context.Context) (int64, error) {
 	var column_1 int64
 	err := row.Scan(&column_1)
 	return column_1, err
+}
+
+const listAccessLog = `-- name: ListAccessLog :many
+SELECT a.id, a.time, a.request_id, a.user_id, u.display_name AS user_name,
+       a.session_id, a.household_id, a.method, a.route, a.path, a.status,
+       a.duration_ms, COALESCE(host(a.ip), '')::text AS ip, a.user_agent
+FROM access_log AS a
+LEFT JOIN app_user AS u ON u.id = a.user_id
+WHERE ($1::bigint IS NULL OR a.id < $1::bigint)
+  AND ($2::uuid IS NULL OR a.user_id = $2::uuid)
+  AND ($3::text IS NULL OR a.method = $3::text)
+  AND ($4::text IS NULL OR a.route ILIKE $4::text)
+  AND ($5::int IS NULL OR a.status >= $5::int)
+  AND ($6::int IS NULL OR a.status <= $6::int)
+  AND ($7::timestamptz IS NULL OR a.time >= $7::timestamptz)
+  AND ($8::timestamptz IS NULL OR a.time < $8::timestamptz)
+ORDER BY a.id DESC
+LIMIT $9::int
+`
+
+type ListAccessLogParams struct {
+	BeforeID  *int64
+	UserID    *uuid.UUID
+	Method    *string
+	Route     *string
+	MinStatus *int32
+	MaxStatus *int32
+	Since     *time.Time
+	Until     *time.Time
+	RowLimit  int32
+}
+
+type ListAccessLogRow struct {
+	ID          int64
+	Time        time.Time
+	RequestID   string
+	UserID      *uuid.UUID
+	UserName    *string
+	SessionID   *uuid.UUID
+	HouseholdID *uuid.UUID
+	Method      string
+	Route       string
+	Path        string
+	Status      int16
+	DurationMs  int32
+	Ip          string
+	UserAgent   string
+}
+
+// Newest first, keyset by id. route is a case-insensitive ILIKE pattern.
+func (q *Queries) ListAccessLog(ctx context.Context, arg ListAccessLogParams) ([]ListAccessLogRow, error) {
+	rows, err := q.db.Query(ctx, listAccessLog,
+		arg.BeforeID,
+		arg.UserID,
+		arg.Method,
+		arg.Route,
+		arg.MinStatus,
+		arg.MaxStatus,
+		arg.Since,
+		arg.Until,
+		arg.RowLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAccessLogRow
+	for rows.Next() {
+		var i ListAccessLogRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Time,
+			&i.RequestID,
+			&i.UserID,
+			&i.UserName,
+			&i.SessionID,
+			&i.HouseholdID,
+			&i.Method,
+			&i.Route,
+			&i.Path,
+			&i.Status,
+			&i.DurationMs,
+			&i.Ip,
+			&i.UserAgent,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listAuditEvents = `-- name: ListAuditEvents :many
+SELECT e.id, e.time, e.actor_id, u.display_name AS actor_name, e.household_id,
+       e.action, e.target_type, e.target_id, e.before, e.after, e.request_id,
+       e.session_id, COALESCE(host(e.ip), '')::text AS ip
+FROM audit_event AS e
+LEFT JOIN app_user AS u ON u.id = e.actor_id
+WHERE ($1::bigint IS NULL OR e.id < $1::bigint)
+  AND ($2::uuid IS NULL OR e.actor_id = $2::uuid)
+  AND ($3::text IS NULL
+       OR e.action = $3::text
+       OR starts_with(e.action, $3::text || '.'))
+  AND ($4::text IS NULL OR e.target_type = $4::text)
+  AND ($5::text IS NULL OR e.target_id = $5::text)
+  AND ($6::timestamptz IS NULL OR e.time >= $6::timestamptz)
+  AND ($7::timestamptz IS NULL OR e.time < $7::timestamptz)
+ORDER BY e.id DESC
+LIMIT $8::int
+`
+
+type ListAuditEventsParams struct {
+	BeforeID   *int64
+	ActorID    *uuid.UUID
+	Action     *string
+	TargetType *string
+	TargetID   *string
+	Since      *time.Time
+	Until      *time.Time
+	RowLimit   int32
+}
+
+type ListAuditEventsRow struct {
+	ID          int64
+	Time        time.Time
+	ActorID     *uuid.UUID
+	ActorName   *string
+	HouseholdID *uuid.UUID
+	Action      string
+	TargetType  string
+	TargetID    string
+	Before      []byte
+	After       []byte
+	RequestID   *string
+	SessionID   *uuid.UUID
+	Ip          string
+}
+
+// Newest first, keyset by id. action matches exactly or as a prefix
+// ("setting" matches "setting.update").
+func (q *Queries) ListAuditEvents(ctx context.Context, arg ListAuditEventsParams) ([]ListAuditEventsRow, error) {
+	rows, err := q.db.Query(ctx, listAuditEvents,
+		arg.BeforeID,
+		arg.ActorID,
+		arg.Action,
+		arg.TargetType,
+		arg.TargetID,
+		arg.Since,
+		arg.Until,
+		arg.RowLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []ListAuditEventsRow
+	for rows.Next() {
+		var i ListAuditEventsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Time,
+			&i.ActorID,
+			&i.ActorName,
+			&i.HouseholdID,
+			&i.Action,
+			&i.TargetType,
+			&i.TargetID,
+			&i.Before,
+			&i.After,
+			&i.RequestID,
+			&i.SessionID,
+			&i.Ip,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
