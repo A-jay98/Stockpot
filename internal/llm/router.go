@@ -175,6 +175,8 @@ func (r *Router) Complete(ctx context.Context, req Request) (Response, error) {
 		attempted = true
 		resp, err := p.Complete(ctx, req)
 		if ctx.Err() != nil {
+			// The provider may still bill it: meter it anyway.
+			r.record(ctx, req.Feature, pc.ID, p.Model(), resp, ctx.Err(), false)
 			return Response{}, ctx.Err()
 		}
 		if err == nil && schema != nil {
@@ -242,9 +244,15 @@ type providerState struct {
 
 func (r *Router) providerState(ctx context.Context, pc ProviderConfig, now time.Time) (providerState, error) {
 	var st providerState
-	keySetting, _ := SettingAPIKey.Member(pc.ID) // ids are validated with the setting
-	if keySetting != nil {
+	// ids are validated with the setting, so Member succeeds.
+	keySetting, _ := SettingAPIKey.Member(pc.ID)
+	hostSetting, _ := SettingAPIKeyHost.Member(pc.ID)
+	var keyForOtherHost bool
+	if keySetting != nil && hostSetting != nil {
 		st.key = keySetting.Get(r.settings)
+		if st.key != "" && hostSetting.Get(r.settings) != keyHost(pc.BaseURL) {
+			st.key, keyForOtherHost = "", true
+		}
 	}
 	u, err := r.q.LLMProviderUsageSince(ctx, dbq.LLMProviderUsageSinceParams{Provider: pc.ID, Since: startOfDay(now, pc.Location())})
 	if err != nil {
@@ -259,6 +267,8 @@ func (r *Router) providerState(ctx context.Context, pc ProviderConfig, now time.
 		st.state, st.detail = stateDisabled, "disabled"
 	case r.factories[pc.Kind] == nil:
 		st.state, st.detail = stateUnknownKind, "unknown kind "+pc.Kind
+	case keyForOtherHost:
+		st.state, st.detail = stateNoKey, "base_url changed since the key was entered; enter the key again"
 	case st.key == "":
 		st.state, st.detail = stateNoKey, "no API key"
 	case blocked && b.key == st.key && now.Before(b.until):
@@ -298,6 +308,8 @@ func (r *Router) penalize(pc ProviderConfig, key string, err error, now time.Tim
 		b.reason, b.detail, b.until = blockReasonFailing, "provider failing", now.Add(upstreamBackoff)
 	case errors.Is(pe.Err, ErrRejected) && (pe.Status == 401 || pe.Status == 403):
 		b.reason, b.detail, b.until = blockReasonFailing, "API key rejected", now.Add(authBackoff)
+	case errors.Is(pe.Err, ErrRejected) && pe.Status == 404:
+		b.reason, b.detail, b.until = blockReasonFailing, "endpoint or model not found", now.Add(authBackoff)
 	default:
 		return // bad output or a bad request: the next request may be fine
 	}
@@ -306,8 +318,13 @@ func (r *Router) penalize(pc ProviderConfig, key string, err error, now time.Tim
 	}
 	b.key = key
 	r.mu.Lock()
+	defer r.mu.Unlock()
+	// Concurrent failures: a short block (a 503) must not cut a long one (a
+	// daily quota) short.
+	if old, ok := r.blocked[pc.ID]; ok && old.key == key && old.until.After(b.until) {
+		return
+	}
 	r.blocked[pc.ID] = b
-	r.mu.Unlock()
 }
 
 // record writes one llm_call row. Metering failures are logged, not

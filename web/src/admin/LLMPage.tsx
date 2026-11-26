@@ -321,7 +321,7 @@ function Usage() {
 
 /** The gateway's own settings (keys are managed per provider above). */
 const isGatewaySetting = (s: Setting) =>
-  s.key === 'flag.llm_enabled' || (s.key.startsWith('llm.') && !s.key.startsWith('llm.api_key.'))
+  s.key === 'flag.llm_enabled' || (s.key.startsWith('llm.') && !s.key.startsWith('llm.api_key'))
 
 function Configuration() {
   const { data, error } = useSettings()

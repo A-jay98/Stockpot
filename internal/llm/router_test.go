@@ -551,3 +551,58 @@ func TestProviderSettingValidation(t *testing.T) {
 		t.Error("duplicate ids accepted")
 	}
 }
+
+func TestKeyIsBoundToItsHost(t *testing.T) {
+	a := newFake(t, ok("a", 1, 1))
+	other := newFake(t, ok("leaked", 1, 1))
+	pa := provider("a", a)
+	e := setup(t, pa)
+
+	// An edited base_url doesn't take the stored key along.
+	pa.BaseURL = "http://localhost:" + strings.Split(other.srv.URL, ":")[2]
+	raw, _ := json.Marshal([]llm.ProviderConfig{pa})
+	if err := e.store.Set(t.Context(), llm.SettingProviders.Key(), raw, nil); err != nil {
+		t.Fatal(err)
+	}
+	_, err := e.router.Complete(t.Context(), ask("x"))
+	if !errors.Is(err, llm.ErrUnavailable) || !strings.Contains(err.Error(), "enter the key again") || other.hits.Load() != 0 {
+		t.Fatalf("key followed the base_url: %v (hits %d)", err, other.hits.Load())
+	}
+	// Re-entering it binds it to the new host.
+	if err := e.router.SetAPIKey(t.Context(), "a", "key-a"); err != nil {
+		t.Fatal(err)
+	}
+	if resp, err := e.router.Complete(t.Context(), ask("x")); err != nil || resp.Text != "leaked" {
+		t.Fatalf("after re-entering: %+v %v", resp, err)
+	}
+}
+
+func TestNotFoundCoolsDown(t *testing.T) {
+	a := newFake(t, status(http.StatusNotFound, `{"error":{"message":"model not found"}}`))
+	b := newFake(t, ok("b", 1, 1))
+	e := setup(t, provider("a", a), provider("b", b))
+	for range 3 {
+		if resp, err := e.router.Complete(t.Context(), ask("x")); err != nil || resp.Provider != "b" {
+			t.Fatalf("%+v %v", resp, err)
+		}
+	}
+	if a.hits.Load() != 1 {
+		t.Fatalf("misconfigured provider called %d times", a.hits.Load())
+	}
+}
+
+func TestCancelledCallIsMetered(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	a := newFake(t, func(w http.ResponseWriter, _ map[string]any) {
+		cancel()
+		time.Sleep(50 * time.Millisecond)
+		ok("late", 1, 1)(w, nil)
+	})
+	e := setup(t, provider("a", a))
+	if _, err := e.router.Complete(ctx, ask("x")); !errors.Is(err, context.Canceled) {
+		t.Fatalf("err = %v", err)
+	}
+	if got := calls(t, e); len(got) != 1 || got[0].Status != "error" {
+		t.Fatalf("llm_call = %+v", got)
+	}
+}

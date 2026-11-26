@@ -158,16 +158,31 @@ var ErrUnknownProvider = errors.New("unknown llm provider")
 // SetAPIKey stores (key != "") or removes (key == "") a provider's API key.
 // A new key lifts any quota or failure block on the provider.
 func (r *Router) SetAPIKey(ctx context.Context, id, key string) error {
-	known := false
-	for _, pc := range SettingProviders.Get(r.settings) {
-		known = known || pc.ID == id
+	var pc *ProviderConfig
+	for _, p := range SettingProviders.Get(r.settings) {
+		if p.ID == id {
+			pc = &p
+		}
 	}
 	s, ok := SettingAPIKey.Member(id)
-	if !known || !ok {
+	h, _ := SettingAPIKeyHost.Member(id)
+	if pc == nil || !ok {
 		return fmt.Errorf("%w: %q", ErrUnknownProvider, id)
 	}
 	if key == "" {
-		return r.write(ctx, s.Key(), nil)
+		if err := r.write(ctx, s.Key(), nil); err != nil {
+			return err
+		}
+		return r.write(ctx, h.Key(), nil)
+	}
+	// Bind the key to the provider's current host first, so a key is never
+	// stored without one.
+	host, err := json.Marshal(keyHost(pc.BaseURL))
+	if err != nil {
+		return err
+	}
+	if err := r.write(ctx, h.Key(), host); err != nil {
+		return err
 	}
 	raw, err := json.Marshal(key)
 	if err != nil {

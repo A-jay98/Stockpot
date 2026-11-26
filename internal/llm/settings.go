@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strings"
 	"time"
 	_ "time/tzdata" // reset_tz must resolve inside the confined (chroot) service
 
@@ -177,6 +178,13 @@ var (
 		Secret:      true,
 		Description: "API key of an LLM provider. A provider without a key is skipped.",
 	})
+	// SettingAPIKeyHost records the base_url host each key was entered for,
+	// llm.api_key_host.<id>. A key is only sent to that host, so editing a
+	// provider's base_url can't redirect its stored key elsewhere.
+	SettingAPIKeyHost = settings.DefineFamily(settings.Def[string]{
+		Key:         "llm.api_key_host",
+		Description: "Host an LLM provider's API key was entered for; the key is only sent there.",
+	})
 	// SettingGlobalDailyRequestCap caps calls across all providers per day
 	// (in llm.usage_tz).
 	SettingGlobalDailyRequestCap = settings.Define(settings.Def[int]{
@@ -230,4 +238,13 @@ func startOfDay(t time.Time, loc *time.Location) time.Time {
 func nextReset(t time.Time, loc *time.Location) time.Time {
 	s := startOfDay(t, loc)
 	return time.Date(s.Year(), s.Month(), s.Day()+1, 0, 0, 0, 0, loc)
+}
+
+// keyHost is the host a provider's key is bound to.
+func keyHost(baseURL string) string {
+	u, err := url.Parse(baseURL)
+	if err != nil {
+		return ""
+	}
+	return strings.ToLower(u.Host)
 }
