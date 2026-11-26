@@ -6,9 +6,16 @@ info:
     Contract between the Stockpot server and its PWA. Edit this file, then run
     `make gen` to regenerate the Go server and TypeScript types.
 
-    Every operation declares `x-roles`, the roles allowed to call it:
-    `public` (no session), `user` (any approved user), `admin` (system admin).
+    Every operation declares `x-roles`, the roles allowed to call it (any one
+    suffices): `public` (no session), `signed_in` (any session, including users
+    still waiting for approval), `user` (an approved user), `household_owner`
+    (an approved user who owns their active household), `admin` (system admin).
     The server refuses to start if an operation lacks it.
+
+    Sessions are an opaque `__Host-stockpot_session` cookie. A request that
+    needs one and lacks it gets 401 with code `unauthenticated`; public
+    operations never answer with that code, so clients redirect to sign-in on
+    it alone.
 
     Errors are RFC 9457 problem documents (`application/problem+json`) with a
     stable machine-readable `code`.
@@ -19,6 +26,14 @@ tags:
     description: Health and build metadata.
   - name: admin
     description: Admin panel (system admins only).
+  - name: auth
+    description: First-run setup, passkey sign-in and sessions.
+  - name: account
+    description: The signed-in user, their households, sessions and passkeys.
+  - name: invites
+    description: Household invites.
+  - name: admin-users
+    description: User approval and management (admin).
 paths:
   /health:
     get:
@@ -267,8 +282,561 @@ paths:
         default:
           $ref: "#/components/responses/Problem"
   # --- end admin panel -------------------------------------------------------
+  # --- identity (m0-2) ---
+  /v1/setup:
+    get:
+      operationId: getSetupStatus
+      summary: Whether the first admin still has to be claimed
+      tags: [auth]
+      x-roles: [public]
+      responses:
+        "200":
+          description: Setup status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SetupStatus"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/setup/begin:
+    post:
+      operationId: beginSetup
+      summary: Check the admin setup token and start enrolling the first admin's passkey
+      tags: [auth]
+      x-roles: [public]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetupBegin"
+      responses:
+        "200":
+          description: Passkey creation options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CeremonyStart"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/setup/finish:
+    post:
+      operationId: finishSetup
+      summary: Create the first admin and household, and sign in
+      tags: [auth]
+      x-roles: [public]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CeremonyFinish"
+      responses:
+        "201":
+          $ref: "#/components/responses/SignedIn"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/auth/login/begin:
+    post:
+      operationId: beginLogin
+      summary: Start a passkey sign-in
+      tags: [auth]
+      x-roles: [public]
+      responses:
+        "200":
+          description: Passkey request options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CeremonyStart"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/auth/login/finish:
+    post:
+      operationId: finishLogin
+      summary: Verify the passkey and sign in
+      description: |
+        Users waiting for approval are signed in too; they can only read their
+        account (status `pending`) and sign out.
+      tags: [auth]
+      x-roles: [public]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CeremonyFinish"
+      responses:
+        "200":
+          $ref: "#/components/responses/SignedIn"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/auth/logout:
+    post:
+      operationId: logout
+      summary: Sign out this session
+      tags: [auth]
+      x-roles: [signed_in]
+      responses:
+        "204":
+          description: Signed out
+          headers:
+            Set-Cookie:
+              $ref: "#/components/headers/SetCookie"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/me:
+    get:
+      operationId: getMe
+      summary: The signed-in user, their households and the active one
+      tags: [account]
+      x-roles: [signed_in]
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        default:
+          $ref: "#/components/responses/Problem"
+    patch:
+      operationId: updateMe
+      summary: Change the display name
+      tags: [account]
+      x-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MeUpdate"
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/me/household:
+    put:
+      operationId: switchHousehold
+      summary: Make another of the user's households active for this session
+      tags: [account]
+      x-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HouseholdSwitch"
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/me/sessions:
+    get:
+      operationId: listMySessions
+      summary: The user's signed-in sessions
+      tags: [account]
+      x-roles: [signed_in]
+      responses:
+        "200":
+          description: Sessions, most recently used first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/me/sessions/{sessionId}:
+    delete:
+      operationId: revokeMySession
+      summary: Sign out one of the user's sessions
+      tags: [account]
+      x-roles: [signed_in]
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "204":
+          description: Revoked
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/me/passkeys:
+    get:
+      operationId: listMyPasskeys
+      summary: The user's passkeys
+      tags: [account]
+      x-roles: [user]
+      responses:
+        "200":
+          description: Passkeys
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Passkey"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/me/passkeys/begin:
+    post:
+      operationId: beginAddPasskey
+      summary: Start adding a passkey
+      tags: [account]
+      x-roles: [user]
+      responses:
+        "200":
+          description: Passkey creation options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CeremonyStart"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/me/passkeys/finish:
+    post:
+      operationId: finishAddPasskey
+      summary: Store the new passkey
+      tags: [account]
+      x-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CeremonyFinish"
+      responses:
+        "204":
+          description: Added
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/me/passkeys/{passkeyId}:
+    delete:
+      operationId: removeMyPasskey
+      summary: Remove a passkey (not the last one)
+      tags: [account]
+      x-roles: [user]
+      parameters:
+        - name: passkeyId
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 1400
+      responses:
+        "204":
+          description: Removed
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/invites:
+    get:
+      operationId: listInvites
+      summary: Invites of a household
+      description: |
+        Owners see their household's invites; admins any household's, or every
+        household's with `all=true`. Without `householdId`, the active household.
+      tags: [invites]
+      x-roles: [household_owner, admin]
+      parameters:
+        - name: householdId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: all
+          in: query
+          schema:
+            type: boolean
+      responses:
+        "200":
+          description: Invites, newest first (at most 200)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Invite"
+        default:
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: createInvite
+      summary: Create a single-use invite link
+      tags: [invites]
+      x-roles: [household_owner, admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteCreate"
+      responses:
+        "201":
+          description: The invite and its one-time code (shown only now)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteCreated"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/invites/{inviteId}:
+    delete:
+      operationId: revokeInvite
+      summary: Revoke a pending invite
+      tags: [invites]
+      x-roles: [household_owner, admin]
+      parameters:
+        - name: inviteId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Revoked
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/invites/inspect:
+    post:
+      operationId: inspectInvite
+      summary: What an invite code joins (household, role, expiry)
+      description: The code travels in the body so it stays out of URLs and logs.
+      tags: [invites]
+      x-roles: [public]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteCode"
+      responses:
+        "200":
+          description: Invite details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InviteInfo"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/invites/accept/begin:
+    post:
+      operationId: beginAcceptInvite
+      summary: Start creating an account from an invite (passkey enrolment)
+      tags: [invites]
+      x-roles: [public]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteAcceptBegin"
+      responses:
+        "200":
+          description: Passkey creation options
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CeremonyStart"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/invites/accept/finish:
+    post:
+      operationId: finishAcceptInvite
+      summary: Create the account (pending approval by default) and sign in
+      tags: [invites]
+      x-roles: [public]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CeremonyFinish"
+      responses:
+        "201":
+          $ref: "#/components/responses/SignedIn"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/invites/join:
+    post:
+      operationId: joinWithInvite
+      summary: Join another household with an invite, as a signed-in user
+      tags: [invites]
+      x-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InviteCode"
+      responses:
+        "200":
+          description: Account, with the joined household active
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Me"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/users:
+    get:
+      operationId: adminListUsers
+      summary: Users, newest first
+      tags: [admin-users]
+      x-roles: [admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/UserStatus"
+      responses:
+        "200":
+          description: Users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/users/{userId}:
+    patch:
+      operationId: adminUpdateUser
+      summary: Enable, disable or change the system role of an approved user
+      description: Disabling signs the user out everywhere. One active admin always remains.
+      tags: [admin-users]
+      x-roles: [admin]
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/users/{userId}/approve:
+    post:
+      operationId: adminApproveUser
+      summary: Approve a pending user
+      tags: [admin-users]
+      x-roles: [admin]
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: Approved user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/users/{userId}/reject:
+    post:
+      operationId: adminRejectUser
+      summary: Reject a pending user (disables them and signs them out)
+      tags: [admin-users]
+      x-roles: [admin]
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: Rejected user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUser"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/users/{userId}/sessions:
+    get:
+      operationId: adminListUserSessions
+      summary: A user's signed-in sessions
+      tags: [admin-users]
+      x-roles: [admin]
+      parameters:
+        - $ref: "#/components/parameters/UserId"
+      responses:
+        "200":
+          description: Sessions, most recently used first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/sessions/{sessionId}:
+    delete:
+      operationId: adminRevokeSession
+      summary: Sign out any session
+      tags: [admin-users]
+      x-roles: [admin]
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "204":
+          description: Revoked
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/households:
+    get:
+      operationId: adminListHouseholds
+      summary: Every household
+      tags: [admin-users]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: Households by name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Household"
+        default:
+          $ref: "#/components/responses/Problem"
 components:
+  headers:
+    SetCookie:
+      description: Sets or clears the `__Host-stockpot_session` cookie.
+      schema:
+        type: string
   parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     AdminCursor:
       name: cursor
       in: query
@@ -293,6 +861,15 @@ components:
         format: int64
         minimum: 1
   responses:
+    SignedIn:
+      description: Signed in; the session cookie is set
+      headers:
+        Set-Cookie:
+          $ref: "#/components/headers/SetCookie"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Me"
     Problem:
       description: Error (RFC 9457 problem document)
       content:
@@ -598,3 +1175,296 @@ components:
       properties:
         value:
           description: New value, of the setting's kind.
+    SetupStatus:
+      type: object
+      required: [needed, tokenConfigured]
+      properties:
+        needed:
+          type: boolean
+          description: No admin exists yet.
+        tokenConfigured:
+          type: boolean
+          description: The server has an admin setup token to claim it with.
+    SetupBegin:
+      type: object
+      required: [token, displayName, householdName]
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 512
+        displayName:
+          $ref: "#/components/schemas/Name"
+        householdName:
+          $ref: "#/components/schemas/Name"
+    Name:
+      type: string
+      minLength: 1
+      maxLength: 80
+    CeremonyStart:
+      type: object
+      required: [ceremonyId, options, expiresAt]
+      properties:
+        ceremonyId:
+          type: string
+          format: uuid
+        options:
+          type: object
+          additionalProperties: true
+          description: |
+            WebAuthn `PublicKeyCredentialCreationOptions` (enrolment) or
+            `PublicKeyCredentialRequestOptions` (sign-in) in their JSON form
+            (binary fields base64url).
+        expiresAt:
+          type: string
+          format: date-time
+    CeremonyFinish:
+      type: object
+      required: [ceremonyId, credential]
+      properties:
+        ceremonyId:
+          type: string
+          format: uuid
+        credential:
+          type: object
+          additionalProperties: true
+          description: The `PublicKeyCredential` in its JSON form (`toJSON()`).
+        name:
+          type: string
+          maxLength: 60
+          description: Label for a new passkey, e.g. "iPhone".
+    UserStatus:
+      type: string
+      enum: [pending, active, disabled]
+    SystemRole:
+      type: string
+      enum: [admin, user]
+    HouseholdRole:
+      type: string
+      enum: [owner, member]
+    User:
+      type: object
+      required: [id, displayName, status, systemRole, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        status:
+          $ref: "#/components/schemas/UserStatus"
+        systemRole:
+          $ref: "#/components/schemas/SystemRole"
+        createdAt:
+          type: string
+          format: date-time
+        lastLoginAt:
+          type: string
+          format: date-time
+    HouseholdMembership:
+      type: object
+      required: [householdId, name, role]
+      properties:
+        householdId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          $ref: "#/components/schemas/HouseholdRole"
+    Me:
+      type: object
+      required: [user, households]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        households:
+          type: array
+          items:
+            $ref: "#/components/schemas/HouseholdMembership"
+        activeHouseholdId:
+          type: string
+          format: uuid
+          description: Absent when the user belongs to no household.
+    MeUpdate:
+      type: object
+      required: [displayName]
+      properties:
+        displayName:
+          $ref: "#/components/schemas/Name"
+    HouseholdSwitch:
+      type: object
+      required: [householdId]
+      properties:
+        householdId:
+          type: string
+          format: uuid
+    Session:
+      type: object
+      required: [id, createdAt, lastSeenAt, expiresAt, userAgent, current]
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        lastSeenAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        ip:
+          type: string
+        userAgent:
+          type: string
+        current:
+          type: boolean
+          description: The session making this request.
+    Passkey:
+      type: object
+      required: [id, name, createdAt, synced]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+        synced:
+          type: boolean
+          description: Backed up to a cloud keychain (usable on the user's other devices).
+    InviteStatus:
+      type: string
+      enum: [pending, accepted, revoked, expired]
+    Invite:
+      type: object
+      required: [id, householdId, householdName, role, note, createdBy, createdByName, createdAt, expiresAt, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        householdId:
+          type: string
+          format: uuid
+        householdName:
+          type: string
+        role:
+          $ref: "#/components/schemas/HouseholdRole"
+        note:
+          type: string
+        createdBy:
+          type: string
+          format: uuid
+        createdByName:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        acceptedAt:
+          type: string
+          format: date-time
+        acceptedBy:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/InviteStatus"
+    InviteCreate:
+      type: object
+      required: [role]
+      properties:
+        householdId:
+          type: string
+          format: uuid
+          description: Defaults to the active household.
+        role:
+          $ref: "#/components/schemas/HouseholdRole"
+        note:
+          type: string
+          maxLength: 200
+    InviteCreated:
+      type: object
+      required: [invite, code, url]
+      properties:
+        invite:
+          $ref: "#/components/schemas/Invite"
+        code:
+          type: string
+        url:
+          type: string
+          description: Link to share; the code is in the fragment.
+    InviteCode:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+    InviteInfo:
+      type: object
+      required: [householdName, role, expiresAt]
+      properties:
+        householdName:
+          type: string
+        role:
+          $ref: "#/components/schemas/HouseholdRole"
+        expiresAt:
+          type: string
+          format: date-time
+    InviteAcceptBegin:
+      type: object
+      required: [code, displayName]
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+        displayName:
+          $ref: "#/components/schemas/Name"
+    AdminUser:
+      allOf:
+        - $ref: "#/components/schemas/User"
+        - type: object
+          required: [households]
+          properties:
+            households:
+              type: array
+              items:
+                $ref: "#/components/schemas/HouseholdMembership"
+            approvedAt:
+              type: string
+              format: date-time
+            approvedBy:
+              type: string
+              format: uuid
+    AdminUserUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, disabled]
+        systemRole:
+          $ref: "#/components/schemas/SystemRole"
+    Household:
+      type: object
+      required: [id, name, createdAt, memberCount]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        memberCount:
+          type: integer

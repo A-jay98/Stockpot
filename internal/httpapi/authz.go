@@ -9,16 +9,20 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
+
+	"github.com/a-jay98/stockpot/internal/identity"
 )
 
-// Roles an operation may list in x-roles.
+// Roles an operation may list in x-roles; identity defines what each means.
 const (
-	RolePublic = "public" // no session needed
-	RoleUser   = "user"   // any approved, signed-in user
-	RoleAdmin  = "admin"  // system administrator
+	RolePublic         = identity.RolePublic
+	RoleSignedIn       = identity.RoleSignedIn
+	RoleUser           = identity.RoleUser
+	RoleHouseholdOwner = identity.RoleHouseholdOwner
+	RoleAdmin          = identity.RoleAdmin
 )
 
-var knownRoles = []string{RolePublic, RoleUser, RoleAdmin}
+var knownRoles = identity.RouteRoles
 
 // Authorization errors an Authorizer returns.
 var (

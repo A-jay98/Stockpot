@@ -13,7 +13,9 @@ test('a 401 from the API sends the user to sign-in and keeps where they were', a
   const router = createRouter()
   vi.stubGlobal(
     'fetch',
-    vi.fn(async () => jsonResponse({ title: 'Unauthorized', status: 401 }, 401)),
+    vi.fn(async () =>
+      jsonResponse({ title: 'Unauthorized', status: 401, code: 'unauthenticated' }, 401),
+    ),
   )
   await api.GET('/health')
   await vi.waitFor(() => expect(router.state.location.pathname).toBe('/login'))
