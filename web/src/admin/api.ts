@@ -163,3 +163,62 @@ export function useResetSetting() {
       qc.setQueryData<SettingList>(adminKeys.settings(), (old) => replaceSetting(old, s)),
   })
 }
+
+// --- LLM gateway -------------------------------------------------------------
+
+export type LLMStatus = S['LLMStatus']
+export type LLMProviderStatus = S['LLMProviderStatus']
+export type LLMUsage = S['LLMUsage']
+export type LLMTestResult = S['LLMTestResult']
+
+export const llmKeys = {
+  all: [...adminKeys.all, 'llm'] as const,
+  status: () => [...llmKeys.all, 'status'] as const,
+  usage: (days: number) => [...llmKeys.all, 'usage', days] as const,
+}
+
+export function useLLMStatus() {
+  return useQuery({
+    queryKey: llmKeys.status(),
+    queryFn: () => unwrap(api.GET('/v1/admin/llm/status')),
+    refetchInterval: 15_000,
+  })
+}
+
+export function useLLMUsage(days: number) {
+  return useQuery({
+    queryKey: llmKeys.usage(days),
+    queryFn: () => unwrap(api.GET('/v1/admin/llm/usage', { params: { query: { days } } })),
+    placeholderData: keepPreviousData,
+  })
+}
+
+/** Stores (apiKey set) or removes (apiKey empty) a provider's key. */
+export function useLLMKey() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, apiKey }: { id: string; apiKey: string }) =>
+      apiKey
+        ? unwrap(
+            api.PUT('/v1/admin/llm/providers/{id}/key', {
+              params: { path: { id } },
+              body: { apiKey },
+            }),
+          )
+        : unwrap(api.DELETE('/v1/admin/llm/providers/{id}/key', { params: { path: { id } } })),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: llmKeys.status() }),
+        qc.invalidateQueries({ queryKey: adminKeys.settings() }),
+      ]),
+  })
+}
+
+export function useLLMTest() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { prompt: string; provider?: string }) =>
+      unwrap(api.POST('/v1/admin/llm/test', { body })),
+    onSettled: () => qc.invalidateQueries({ queryKey: llmKeys.all }),
+  })
+}

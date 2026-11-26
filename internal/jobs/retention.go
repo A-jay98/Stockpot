@@ -17,6 +17,8 @@ import (
 // Sweeper deletes one kind of row older than a retention setting.
 type Sweeper struct {
 	Name string
+	// Days is the retention period. Nil means rows carry their own expiry:
+	// Sweep gets the current time as before.
 	Days *settings.Setting[int]
 	// Sweep deletes rows older than before and returns how many it removed.
 	Sweep func(ctx context.Context, before time.Time) (int64, error)
@@ -53,8 +55,11 @@ func (w *RetentionWorker) Work(ctx context.Context, _ *river.Job[RetentionArgs])
 	}
 	var errs []error
 	for _, s := range w.sweepers {
-		days := s.Days.Get(w.settings)
-		before := now().AddDate(0, 0, -days)
+		days, before := 0, now()
+		if s.Days != nil {
+			days = s.Days.Get(w.settings)
+			before = before.AddDate(0, 0, -days)
+		}
 		n, err := s.Sweep(ctx, before)
 		if err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", s.Name, err))

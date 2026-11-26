@@ -20,6 +20,32 @@ type AppLog struct {
 	UserID    *uuid.UUID
 }
 
+type LlmCache struct {
+	Key       []byte
+	Feature   string
+	Provider  string
+	Model     string
+	Response  string
+	CreatedAt time.Time
+	ExpiresAt time.Time
+}
+
+type LlmCall struct {
+	ID          int64
+	Time        time.Time
+	Feature     string
+	Provider    string
+	Model       string
+	UserID      *uuid.UUID
+	HouseholdID *uuid.UUID
+	TokensIn    int32
+	TokensOut   int32
+	LatencyMs   int32
+	Status      string
+	CacheHit    bool
+	Error       *string
+}
+
 type Setting struct {
 	ID          int64
 	Key         string

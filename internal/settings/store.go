@@ -6,6 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 
@@ -365,11 +367,18 @@ type View struct {
 	UpdatedBy *uuid.UUID
 }
 
-// List returns every declared setting with its effective value.
+// List returns every declared setting with its effective value, plus every
+// stored member of a family.
 func (s *Store) List() []View {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	defs := Definitions()
+	for key := range s.values {
+		if d, ok := Lookup(key); ok && d.Family != "" {
+			defs = append(defs, d)
+		}
+	}
+	slices.SortFunc(defs, func(a, b *Definition) int { return strings.Compare(a.Key, b.Key) })
 	out := make([]View, 0, len(defs))
 	for _, d := range defs {
 		out = append(out, s.view(d))
