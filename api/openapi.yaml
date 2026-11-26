@@ -34,6 +34,8 @@ tags:
     description: Household invites.
   - name: admin-users
     description: User approval and management (admin).
+  - name: llm
+    description: LLM gateway administration (providers, keys, quota, usage).
 paths:
   /health:
     get:
@@ -816,6 +818,110 @@ paths:
                   $ref: "#/components/schemas/Household"
         default:
           $ref: "#/components/responses/Problem"
+  # --- LLM gateway (m0-5) ----------------------------------------------------
+  /v1/admin/llm/status:
+    get:
+      operationId: getLLMStatus
+      summary: LLM providers, their state and today's quota
+      description: |
+        Each configured provider with its state (ready, disabled, no_key,
+        unknown_kind, capped, exhausted, cooling_down), today's usage and
+        remaining caps, plus usage against the global daily cap.
+      tags: [llm]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: Gateway status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LLMStatus"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/llm/usage:
+    get:
+      operationId: getLLMUsage
+      summary: LLM usage per day, provider and feature
+      tags: [llm]
+      x-roles: [admin]
+      parameters:
+        - name: days
+          in: query
+          description: Days to report, today included (in the usage time zone).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 90
+            default: 7
+      responses:
+        "200":
+          description: Usage rows, newest day first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LLMUsage"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/llm/test:
+    post:
+      operationId: testLLMPrompt
+      summary: Send a test prompt through the gateway
+      description: |
+        A real, metered, uncached call (feature admin_test). With provider
+        set, only that provider is tried. Answers 503 llm_unavailable when no
+        provider can take it, with the reasons in detail.
+      tags: [llm]
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LLMTestRequest"
+      responses:
+        "200":
+          description: The reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LLMTestResult"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/llm/providers/{id}/key:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*$"
+          maxLength: 64
+    put:
+      operationId: setLLMProviderKey
+      summary: Store a provider's API key (write-only, encrypted at rest)
+      tags: [llm]
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LLMProviderKey"
+      responses:
+        "204":
+          description: Stored; the provider is back in rotation
+        default:
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: deleteLLMProviderKey
+      summary: Remove a provider's API key
+      tags: [llm]
+      x-roles: [admin]
+      responses:
+        "204":
+          description: Removed; the provider is skipped until a key is set
+        default:
+          $ref: "#/components/responses/Problem"
 components:
   headers:
     SetCookie:
@@ -1468,3 +1574,182 @@ components:
           format: date-time
         memberCount:
           type: integer
+    # --- LLM gateway (m0-5) --------------------------------------------------
+    LLMProviderConfig:
+      type: object
+      description: One entry of the llm.providers setting.
+      required: [id, kind, base_url, model, vision, json_schema, enabled, daily_request_cap, daily_token_cap, reset_tz]
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          description: Adapter, e.g. openai_compat.
+        base_url:
+          type: string
+        model:
+          type: string
+        vision:
+          type: boolean
+        json_schema:
+          type: boolean
+        enabled:
+          type: boolean
+        daily_request_cap:
+          type: integer
+          description: 0 = no cap.
+        daily_token_cap:
+          type: integer
+          description: 0 = no cap.
+        reset_tz:
+          type: string
+          description: IANA zone whose midnight resets the daily quota.
+        timeout_seconds:
+          type: integer
+    LLMProviderStatus:
+      type: object
+      required: [config, hasKey, state, requestsToday, tokensToday, resetAt]
+      properties:
+        config:
+          $ref: "#/components/schemas/LLMProviderConfig"
+        hasKey:
+          type: boolean
+        state:
+          type: string
+          description: ready, disabled, no_key, unknown_kind, capped, exhausted or cooling_down.
+        detail:
+          type: string
+          description: Why the provider isn't ready.
+        until:
+          type: string
+          format: date-time
+          description: When a capped, exhausted or cooling_down provider returns.
+        requestsToday:
+          type: integer
+          format: int64
+        tokensToday:
+          type: integer
+          format: int64
+        remainingRequests:
+          type: integer
+          format: int64
+          description: Absent without a request cap.
+        remainingTokens:
+          type: integer
+          format: int64
+          description: Absent without a token cap.
+        resetAt:
+          type: string
+          format: date-time
+    LLMStatus:
+      type: object
+      required: [enabled, available, vision, providers, tz, requestsToday, tokensToday, globalRequestCap, resetAt]
+      properties:
+        enabled:
+          type: boolean
+          description: flag.llm_enabled.
+        available:
+          type: boolean
+          description: A text request could be served now.
+        vision:
+          type: boolean
+          description: A request with images could be served now.
+        providers:
+          type: array
+          items:
+            $ref: "#/components/schemas/LLMProviderStatus"
+        tz:
+          type: string
+          description: Zone of the global daily cap (llm.usage_tz).
+        requestsToday:
+          type: integer
+          format: int64
+        tokensToday:
+          type: integer
+          format: int64
+        globalRequestCap:
+          type: integer
+          description: 0 = no cap.
+        globalRemaining:
+          type: integer
+          format: int64
+        resetAt:
+          type: string
+          format: date-time
+    LLMUsageRow:
+      type: object
+      required: [day, provider, feature, requests, cacheHits, failures, tokensIn, tokensOut, avgLatencyMs]
+      properties:
+        day:
+          type: string
+          format: date
+        provider:
+          type: string
+        feature:
+          type: string
+        requests:
+          type: integer
+          format: int64
+          description: Calls that reached the provider (cache hits excluded).
+        cacheHits:
+          type: integer
+          format: int64
+        failures:
+          type: integer
+          format: int64
+        tokensIn:
+          type: integer
+          format: int64
+        tokensOut:
+          type: integer
+          format: int64
+        avgLatencyMs:
+          type: integer
+    LLMUsage:
+      type: object
+      required: [tz, rows]
+      properties:
+        tz:
+          type: string
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/LLMUsageRow"
+    LLMTestRequest:
+      type: object
+      required: [prompt]
+      additionalProperties: false
+      properties:
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 4000
+        provider:
+          type: string
+          description: Only try this provider id.
+    LLMTestResult:
+      type: object
+      required: [text, provider, model, tokensIn, tokensOut, latencyMs]
+      properties:
+        text:
+          type: string
+        provider:
+          type: string
+        model:
+          type: string
+        tokensIn:
+          type: integer
+        tokensOut:
+          type: integer
+        latencyMs:
+          type: integer
+          format: int64
+    LLMProviderKey:
+      type: object
+      required: [apiKey]
+      additionalProperties: false
+      properties:
+        apiKey:
+          type: string
+          minLength: 1
+          maxLength: 1024

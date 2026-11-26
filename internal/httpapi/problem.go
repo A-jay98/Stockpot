@@ -20,6 +20,9 @@ const (
 	CodeInternal         = "internal"
 	CodeInvalidValue     = "invalid_value"
 	CodeNotChanged       = "not_changed"
+	// CodeLLMUnavailable: no LLM provider could answer; the client offers
+	// the manual path.
+	CodeLLMUnavailable = "llm_unavailable"
 )
 
 // NewProblem builds an RFC 9457 problem for status. detail is shown to the

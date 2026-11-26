@@ -105,6 +105,32 @@ type Invite struct {
 	RevokedAt   *time.Time
 }
 
+type LlmCache struct {
+	Key       []byte
+	Feature   string
+	Provider  string
+	Model     string
+	Response  string
+	CreatedAt time.Time
+	ExpiresAt time.Time
+}
+
+type LlmCall struct {
+	ID          int64
+	Time        time.Time
+	Feature     string
+	Provider    string
+	Model       string
+	UserID      *uuid.UUID
+	HouseholdID *uuid.UUID
+	TokensIn    int32
+	TokensOut   int32
+	LatencyMs   int32
+	Status      string
+	CacheHit    bool
+	Error       *string
+}
+
 type Membership struct {
 	UserID      uuid.UUID
 	HouseholdID uuid.UUID

@@ -662,6 +662,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/llm/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * LLM providers, their state and today's quota
+         * @description Each configured provider with its state (ready, disabled, no_key,
+         *     unknown_kind, capped, exhausted, cooling_down), today's usage and
+         *     remaining caps, plus usage against the global daily cap.
+         */
+        get: operations["getLLMStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/llm/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** LLM usage per day, provider and feature */
+        get: operations["getLLMUsage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/llm/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a test prompt through the gateway
+         * @description A real, metered, uncached call (feature admin_test). With provider
+         *     set, only that provider is tried. Answers 503 llm_unavailable when no
+         *     provider can take it, with the reasons in detail.
+         */
+        post: operations["testLLMPrompt"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/llm/providers/{id}/key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Store a provider's API key (write-only, encrypted at rest) */
+        put: operations["setLLMProviderKey"];
+        post?: never;
+        /** Remove a provider's API key */
+        delete: operations["deleteLLMProviderKey"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1022,6 +1103,115 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
             memberCount: number;
+        };
+        /** @description One entry of the llm.providers setting. */
+        LLMProviderConfig: {
+            id: string;
+            /** @description Adapter, e.g. openai_compat. */
+            kind: string;
+            base_url: string;
+            model: string;
+            vision: boolean;
+            json_schema: boolean;
+            enabled: boolean;
+            /** @description 0 = no cap. */
+            daily_request_cap: number;
+            /** @description 0 = no cap. */
+            daily_token_cap: number;
+            /** @description IANA zone whose midnight resets the daily quota. */
+            reset_tz: string;
+            timeout_seconds?: number;
+        };
+        LLMProviderStatus: {
+            config: components["schemas"]["LLMProviderConfig"];
+            hasKey: boolean;
+            /** @description ready, disabled, no_key, unknown_kind, capped, exhausted or cooling_down. */
+            state: string;
+            /** @description Why the provider isn't ready. */
+            detail?: string;
+            /**
+             * Format: date-time
+             * @description When a capped, exhausted or cooling_down provider returns.
+             */
+            until?: string;
+            /** Format: int64 */
+            requestsToday: number;
+            /** Format: int64 */
+            tokensToday: number;
+            /**
+             * Format: int64
+             * @description Absent without a request cap.
+             */
+            remainingRequests?: number;
+            /**
+             * Format: int64
+             * @description Absent without a token cap.
+             */
+            remainingTokens?: number;
+            /** Format: date-time */
+            resetAt: string;
+        };
+        LLMStatus: {
+            /** @description flag.llm_enabled. */
+            enabled: boolean;
+            /** @description A text request could be served now. */
+            available: boolean;
+            /** @description A request with images could be served now. */
+            vision: boolean;
+            providers: components["schemas"]["LLMProviderStatus"][];
+            /** @description Zone of the global daily cap (llm.usage_tz). */
+            tz: string;
+            /** Format: int64 */
+            requestsToday: number;
+            /** Format: int64 */
+            tokensToday: number;
+            /** @description 0 = no cap. */
+            globalRequestCap: number;
+            /** Format: int64 */
+            globalRemaining?: number;
+            /** Format: date-time */
+            resetAt: string;
+        };
+        LLMUsageRow: {
+            /** Format: date */
+            day: string;
+            provider: string;
+            feature: string;
+            /**
+             * Format: int64
+             * @description Calls that reached the provider (cache hits excluded).
+             */
+            requests: number;
+            /** Format: int64 */
+            cacheHits: number;
+            /** Format: int64 */
+            failures: number;
+            /** Format: int64 */
+            tokensIn: number;
+            /** Format: int64 */
+            tokensOut: number;
+            avgLatencyMs: number;
+        };
+        LLMUsage: {
+            tz: string;
+            rows: components["schemas"]["LLMUsageRow"][];
+        };
+        LLMTestRequest: {
+            prompt: string;
+            /** @description Only try this provider id. */
+            provider?: string;
+        };
+        LLMTestResult: {
+            text: string;
+            provider: string;
+            model: string;
+            tokensIn: number;
+            tokensOut: number;
+            /** Format: int64 */
+            latencyMs: number;
+        };
+        LLMProviderKey: {
+            apiKey: string;
         };
     };
     responses: {
@@ -1952,6 +2142,122 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Household"][];
                 };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getLLMStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Gateway status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMStatus"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getLLMUsage: {
+        parameters: {
+            query?: {
+                /** @description Days to report, today included (in the usage time zone). */
+                days?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Usage rows, newest day first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMUsage"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    testLLMPrompt: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LLMTestRequest"];
+            };
+        };
+        responses: {
+            /** @description The reply */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LLMTestResult"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    setLLMProviderKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LLMProviderKey"];
+            };
+        };
+        responses: {
+            /** @description Stored; the provider is back in rotation */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    deleteLLMProviderKey: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed; the provider is skipped until a key is set */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             default: components["responses"]["Problem"];
         };
