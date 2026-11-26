@@ -1,31 +1,32 @@
 import type { RouteObject } from 'react-router'
+import { AdminGuard } from './AdminGuard'
 import { AdminLayout } from './AdminLayout'
 import { AdminSectionPage } from './AdminSectionPage'
+import { JobsPage } from './JobsPage'
+import { LogsPage } from './LogsPage'
+import { OverviewPage } from './OverviewPage'
+import { SettingsPage } from './SettingsPage'
 
-const about: Record<string, [string, string]> = {
+const placeholders: Record<string, [string, string]> = {
   users: ['Users', 'Pending approvals, invites, users, roles and sessions.'],
   audit: ['Audit log', 'Every security event and change, filterable by user, action and time.'],
-  logs: ['System logs', 'Server logs with level and text filters, live tail.'],
-  jobs: ['Jobs', 'Background jobs: list, retry, cancel.'],
-  settings: ['Settings & flags', 'Typed runtime settings and feature flags with change history.'],
   llm: ['LLM', 'Providers, keys, models, daily caps and usage.'],
 }
 
-/** `/admin` route group. Admin-only guarding arrives with identity (m0-2). */
+/** `/admin` route group, admin-only (AdminGuard). */
 export const adminRoutes: RouteObject = {
   path: 'admin',
-  Component: AdminLayout,
+  element: (
+    <AdminGuard>
+      <AdminLayout />
+    </AdminGuard>
+  ),
   children: [
-    {
-      index: true,
-      element: (
-        <AdminSectionPage
-          title="Overview"
-          about="Version, uptime, database, jobs, errors and LLM usage at a glance."
-        />
-      ),
-    },
-    ...Object.entries(about).map(([path, [title, text]]) => ({
+    { index: true, Component: OverviewPage },
+    { path: 'logs', Component: LogsPage },
+    { path: 'jobs', Component: JobsPage },
+    { path: 'settings', Component: SettingsPage },
+    ...Object.entries(placeholders).map(([path, [title, text]]) => ({
       path,
       element: <AdminSectionPage title={title} about={text} />,
     })),

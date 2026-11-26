@@ -58,16 +58,16 @@ func TestHealth(t *testing.T) {
 		wantStatus int
 		want       HealthStatus
 	}{
-		{name: "healthy", wantStatus: http.StatusOK, want: Ok},
-		{name: "database down", db: errors.New("connection refused"), wantStatus: http.StatusServiceUnavailable, want: Degraded},
-		{name: "schema behind", schema: errors.New("migrations pending"), wantStatus: http.StatusServiceUnavailable, want: Degraded},
+		{name: "healthy", wantStatus: http.StatusOK, want: HealthStatusOk},
+		{name: "database down", db: errors.New("connection refused"), wantStatus: http.StatusServiceUnavailable, want: HealthStatusDegraded},
+		{name: "schema behind", schema: errors.New("migrations pending"), wantStatus: http.StatusServiceUnavailable, want: HealthStatusDegraded},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			h := newHandler(t, NewServer(map[string]Pinger{
+			h := newHandler(t, NewServer(Deps{Checks: map[string]Pinger{
 				"database": pingFunc(func(context.Context) error { return tt.db }),
 				"schema":   pingFunc(func(context.Context) error { return tt.schema }),
-			}), Options{})
+			}}), Options{})
 			rec := do(h, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/health", nil))
 			if rec.Code != tt.wantStatus {
 				t.Fatalf("status = %d, want %d; body %s", rec.Code, tt.wantStatus, rec.Body)
@@ -87,7 +87,7 @@ func TestHealth(t *testing.T) {
 }
 
 func TestMeta(t *testing.T) {
-	s := NewServer(nil)
+	s := NewServer(Deps{})
 	fixed := time.Date(2026, 11, 23, 8, 0, 0, 0, time.UTC)
 	s.now = func() time.Time { return fixed }
 	rec := do(newHandler(t, s, Options{}), httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/v1/meta", nil))
@@ -104,7 +104,7 @@ func TestMeta(t *testing.T) {
 }
 
 func TestProblems(t *testing.T) {
-	h := newHandler(t, NewServer(nil), Options{PublicURL: &url.URL{Scheme: "https", Host: "stockpot.test"}})
+	h := newHandler(t, NewServer(Deps{}), Options{PublicURL: &url.URL{Scheme: "https", Host: "stockpot.test"}})
 	tests := []struct {
 		name   string
 		method string
@@ -150,7 +150,7 @@ func (failing) GetMeta(context.Context, GetMetaRequestObject) (GetMetaResponseOb
 
 func TestHandlerFailuresBecome500Problems(t *testing.T) {
 	var logged []AccessRecord
-	for name, si := range map[string]StrictServerInterface{"panic": panicky{NewServer(nil)}, "error": failing{NewServer(nil)}} {
+	for name, si := range map[string]StrictServerInterface{"panic": panicky{NewServer(Deps{})}, "error": failing{NewServer(Deps{})}} {
 		t.Run(name, func(t *testing.T) {
 			h := newHandler(t, si, Options{AccessLog: accessFunc(func(rec AccessRecord) { logged = append(logged, rec) })})
 			rec := do(h, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/api/v1/meta", nil))
@@ -179,7 +179,7 @@ func TestAccessLogSeesSessionFields(t *testing.T) {
 			next.ServeHTTP(w, r)
 		})
 	}
-	h := newHandler(t, NewServer(nil), Options{
+	h := newHandler(t, NewServer(Deps{}), Options{
 		Session:   session,
 		AccessLog: accessFunc(func(rec AccessRecord) { got = rec }),
 	})

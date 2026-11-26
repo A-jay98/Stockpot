@@ -17,6 +17,8 @@ servers:
 tags:
   - name: system
     description: Health and build metadata.
+  - name: admin
+    description: Admin panel (system admins only).
 paths:
   /health:
     get:
@@ -59,7 +61,237 @@ paths:
                 $ref: "#/components/schemas/Meta"
         default:
           $ref: "#/components/responses/Problem"
+  # --- admin panel (m0-3) ---------------------------------------------------
+  /v1/admin/overview:
+    get:
+      operationId: getAdminOverview
+      summary: System state at a glance
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: Overview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminOverview"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/logs:
+    get:
+      operationId: listAdminLogs
+      summary: Application log lines, newest first
+      description: |
+        Keyset-paginated: pass `cursor` from the previous page for older
+        lines. For a live tail, poll with `after` set to the newest id the
+        client holds; if that answer has a `nextCursor`, more lines arrived
+        than fit and the client should reload.
+      tags: [admin]
+      x-roles: [admin]
+      parameters:
+        - name: level
+          in: query
+          description: Minimum level.
+          schema:
+            $ref: "#/components/schemas/AdminLogLevel"
+        - name: q
+          in: query
+          description: Case-insensitive text in the message or attributes.
+          schema:
+            type: string
+            maxLength: 200
+        - name: requestId
+          in: query
+          schema:
+            type: string
+            maxLength: 64
+        - name: since
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: until
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: after
+          in: query
+          description: Only lines with a larger id (live tail).
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+        - $ref: "#/components/parameters/AdminCursor"
+        - $ref: "#/components/parameters/AdminLimit"
+      responses:
+        "200":
+          description: A page of log lines
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLogPage"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/jobs:
+    get:
+      operationId: listAdminJobs
+      summary: Background jobs, newest first
+      tags: [admin]
+      x-roles: [admin]
+      parameters:
+        - name: state
+          in: query
+          style: form
+          explode: false
+          description: Comma-separated states.
+          schema:
+            type: array
+            items:
+              $ref: "#/components/schemas/AdminJobState"
+        - name: kind
+          in: query
+          style: form
+          explode: false
+          description: Comma-separated job kinds.
+          schema:
+            type: array
+            items:
+              type: string
+              maxLength: 100
+        - $ref: "#/components/parameters/AdminCursor"
+        - $ref: "#/components/parameters/AdminLimit"
+      responses:
+        "200":
+          description: A page of jobs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminJobPage"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/jobs/{id}/retry:
+    post:
+      operationId: retryAdminJob
+      summary: Run a job again now
+      description: Makes a finished, failed or scheduled job available immediately. A running job is unchanged.
+      tags: [admin]
+      x-roles: [admin]
+      parameters:
+        - $ref: "#/components/parameters/AdminJobID"
+      responses:
+        "200":
+          description: The job after the change
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminJob"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/jobs/{id}/cancel:
+    post:
+      operationId: cancelAdminJob
+      summary: Cancel a job
+      description: A running job is asked to stop; a pending one never runs.
+      tags: [admin]
+      x-roles: [admin]
+      parameters:
+        - $ref: "#/components/parameters/AdminJobID"
+      responses:
+        "200":
+          description: The job after the change
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminJob"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/settings:
+    get:
+      operationId: listAdminSettings
+      summary: Every runtime setting and feature flag
+      description: Secret values are never returned; `isSet` says whether one is stored.
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: Settings, sorted by key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSettingList"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/settings/{key}:
+    parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)+$"
+          maxLength: 200
+    put:
+      operationId: putAdminSetting
+      summary: Change a setting
+      description: Validated against the setting's type and rules (422 with `code` invalid_value otherwise). Applies live in every process. Audited.
+      tags: [admin]
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminSettingUpdate"
+      responses:
+        "200":
+          description: The setting after the change
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSetting"
+        default:
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: resetAdminSetting
+      summary: Reset a setting to its default
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: The setting after the reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSetting"
+        default:
+          $ref: "#/components/responses/Problem"
+  # --- end admin panel -------------------------------------------------------
 components:
+  parameters:
+    AdminCursor:
+      name: cursor
+      in: query
+      description: Opaque cursor from the previous page's `nextCursor`.
+      schema:
+        type: string
+        maxLength: 512
+    AdminLimit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 500
+        default: 100
+    AdminJobID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
   responses:
     Problem:
       description: Error (RFC 9457 problem document)
@@ -131,3 +363,238 @@ components:
           type: string
           description: Stable machine-readable error code.
           example: unauthenticated
+    # --- admin panel (m0-3) -------------------------------------------------
+    AdminOverview:
+      type: object
+      required: [version, commit, builtAt, startedAt, uptimeSeconds, database]
+      properties:
+        version:
+          type: string
+          description: Release tag (r<n>) or "dev".
+        commit:
+          type: string
+        builtAt:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        uptimeSeconds:
+          type: integer
+          format: int64
+        database:
+          $ref: "#/components/schemas/AdminDatabaseStatus"
+        jobs:
+          type: object
+          description: Job count per River state; absent when unavailable.
+          additionalProperties:
+            type: integer
+            format: int64
+        errors24h:
+          type: integer
+          format: int64
+        warnings24h:
+          type: integer
+          format: int64
+        logSink:
+          type: object
+          required: [written, dropped]
+          description: Lines this process wrote to the System logs table, and dropped under load.
+          properties:
+            written:
+              type: integer
+              format: int64
+            dropped:
+              type: integer
+              format: int64
+        llm:
+          $ref: "#/components/schemas/AdminLLMToday"
+    AdminDatabaseStatus:
+      type: object
+      required: [reachable, latencyMs, schemaCurrent]
+      properties:
+        reachable:
+          type: boolean
+        latencyMs:
+          type: number
+        sizeBytes:
+          type: integer
+          format: int64
+        schemaCurrent:
+          type: boolean
+          description: False while migrations are pending.
+        appVersion:
+          type: integer
+          format: int64
+        appTarget:
+          type: integer
+          format: int64
+        riverVersion:
+          type: integer
+        riverTarget:
+          type: integer
+    AdminLLMToday:
+      type: object
+      required: [requests, tokens, available]
+      properties:
+        requests:
+          type: integer
+          format: int64
+        tokens:
+          type: integer
+          format: int64
+        requestCap:
+          type: integer
+          format: int64
+        available:
+          type: boolean
+    AdminLogLevel:
+      type: string
+      enum: [debug, info, warn, error]
+    AdminLogEntry:
+      type: object
+      required: [id, time, level, msg, attrs]
+      properties:
+        id:
+          type: integer
+          format: int64
+        time:
+          type: string
+          format: date-time
+        level:
+          $ref: "#/components/schemas/AdminLogLevel"
+        msg:
+          type: string
+        attrs:
+          type: object
+          additionalProperties: true
+        requestId:
+          type: string
+        userId:
+          type: string
+          format: uuid
+    AdminLogPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminLogEntry"
+        nextCursor:
+          type: string
+    AdminJobState:
+      type: string
+      enum: [available, cancelled, completed, discarded, pending, retryable, running, scheduled]
+    AdminJobError:
+      type: object
+      required: [at, attempt, error]
+      properties:
+        at:
+          type: string
+          format: date-time
+        attempt:
+          type: integer
+        error:
+          type: string
+    AdminJob:
+      type: object
+      required: [id, kind, state, queue, attempt, maxAttempts, priority, args, errors, createdAt, scheduledAt, tags]
+      properties:
+        id:
+          type: integer
+          format: int64
+        kind:
+          type: string
+        state:
+          $ref: "#/components/schemas/AdminJobState"
+        queue:
+          type: string
+        attempt:
+          type: integer
+        maxAttempts:
+          type: integer
+        priority:
+          type: integer
+        args:
+          description: The job's arguments as stored.
+        errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminJobError"
+        createdAt:
+          type: string
+          format: date-time
+        scheduledAt:
+          type: string
+          format: date-time
+        attemptedAt:
+          type: string
+          format: date-time
+        finalizedAt:
+          type: string
+          format: date-time
+        tags:
+          type: array
+          items:
+            type: string
+    AdminJobPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminJob"
+        nextCursor:
+          type: string
+    AdminSettingKind:
+      type: string
+      enum: [bool, int, string, json]
+    AdminSetting:
+      type: object
+      required: [key, kind, scope, description, secret, isSet]
+      properties:
+        key:
+          type: string
+          example: retention.app_log_days
+        kind:
+          $ref: "#/components/schemas/AdminSettingKind"
+        scope:
+          type: string
+          enum: [system, household]
+        description:
+          type: string
+        secret:
+          type: boolean
+          description: Write-only; value and default are never returned.
+        default:
+          description: Value used while none is stored (absent for secrets).
+        value:
+          description: Effective value (absent for secrets).
+        options:
+          type: array
+          description: When present, the only accepted values.
+          items: {}
+        isSet:
+          type: boolean
+          description: A value is stored; otherwise the default applies.
+        updatedAt:
+          type: string
+          format: date-time
+        updatedBy:
+          type: string
+          format: uuid
+    AdminSettingList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminSetting"
+    AdminSettingUpdate:
+      type: object
+      required: [value]
+      properties:
+        value:
+          description: New value, of the setting's kind.

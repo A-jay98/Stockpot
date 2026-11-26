@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -17,11 +18,18 @@ const (
 	CodeTooLarge         = "payload_too_large"
 	CodeCrossOrigin      = "cross_origin_request"
 	CodeInternal         = "internal"
+	CodeInvalidValue     = "invalid_value"
+	CodeNotChanged       = "not_changed"
 )
 
 // NewProblem builds an RFC 9457 problem for status. detail is shown to the
 // client, so it must never carry internals (SQL, paths, stack traces).
 func NewProblem(r *http.Request, status int, code, detail string) Problem {
+	return problemCtx(r.Context(), status, code, detail)
+}
+
+// problemCtx is NewProblem for strict handlers, which see only the context.
+func problemCtx(ctx context.Context, status int, code, detail string) Problem {
 	p := Problem{
 		Type:   "about:blank",
 		Title:  http.StatusText(status),
@@ -31,7 +39,7 @@ func NewProblem(r *http.Request, status int, code, detail string) Problem {
 	if detail != "" {
 		p.Detail = &detail
 	}
-	if info := reqctx.From(r.Context()); info != nil && info.RequestID != "" {
+	if info := reqctx.From(ctx); info != nil && info.RequestID != "" {
 		p.Instance = &info.RequestID
 	}
 	return p

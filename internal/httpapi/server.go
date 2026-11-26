@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/a-jay98/stockpot/internal/admin"
 	"github.com/a-jay98/stockpot/internal/buildinfo"
 )
 
@@ -14,18 +15,27 @@ type Pinger interface {
 	Ping(ctx context.Context) error
 }
 
-// Server implements StrictServerInterface.
+// Deps are the services the API is built on. Each feature adds its own.
+type Deps struct {
+	// Checks are probed by /api/health, keyed by the name reported to the client.
+	Checks map[string]Pinger
+	// Admin serves /api/v1/admin/*.
+	Admin *admin.Service
+}
+
+// Server implements StrictServerInterface. Handlers live in one file per
+// feature area (admin.go, …).
 type Server struct {
 	checks map[string]Pinger
+	admin  *admin.Service
 	now    func() time.Time
 }
 
 var _ StrictServerInterface = (*Server)(nil)
 
-// NewServer returns the API implementation. checks are probed by /api/health,
-// keyed by the name reported to the client.
-func NewServer(checks map[string]Pinger) *Server {
-	return &Server{checks: checks, now: time.Now}
+// NewServer returns the API implementation.
+func NewServer(d Deps) *Server {
+	return &Server{checks: d.Checks, admin: d.Admin, now: time.Now}
 }
 
 // healthTimeout bounds each dependency probe; the deploy step polls often.
@@ -35,7 +45,7 @@ const healthTimeout = 2 * time.Second
 func (s *Server) GetHealth(ctx context.Context, _ GetHealthRequestObject) (GetHealthResponseObject, error) {
 	bi := buildinfo.Get()
 	h := Health{
-		Status:  Ok,
+		Status:  HealthStatusOk,
 		Version: bi.Version,
 		Commit:  bi.Commit,
 		BuiltAt: bi.BuiltAt,
@@ -48,13 +58,13 @@ func (s *Server) GetHealth(ctx context.Context, _ GetHealthRequestObject) (GetHe
 		if err != nil {
 			// /api/health is public; the cause (paths, roles, SQL) stays in the log.
 			slog.WarnContext(ctx, "health check failed", "check", name, "err", err)
-			h.Status = Degraded
+			h.Status = HealthStatusDegraded
 			h.Checks[name] = "unavailable"
 			continue
 		}
 		h.Checks[name] = "ok"
 	}
-	if h.Status != Ok {
+	if h.Status != HealthStatusOk {
 		return GetHealth503JSONResponse(h), nil
 	}
 	return GetHealth200JSONResponse(h), nil
