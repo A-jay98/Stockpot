@@ -15,6 +15,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/riverqueue/river"
@@ -164,6 +165,8 @@ func TestAdminOperationsRequireAdmin(t *testing.T) {
 		{http.MethodGet, "/api/v1/admin/overview"},
 		{http.MethodGet, "/api/v1/admin/logs"},
 		{http.MethodGet, "/api/v1/admin/jobs"},
+		{http.MethodGet, "/api/v1/admin/audit"},
+		{http.MethodGet, "/api/v1/admin/access"},
 		{http.MethodPost, "/api/v1/admin/jobs/1/retry"},
 		{http.MethodPost, "/api/v1/admin/jobs/1/cancel"},
 		{http.MethodGet, "/api/v1/admin/settings"},
@@ -408,5 +411,89 @@ func TestAdminSettings(t *testing.T) {
 	wantJSON, _ := json.Marshal(want)
 	if !bytes.Equal(gotJSON, wantJSON) {
 		t.Fatalf("audits\n got %s\nwant %s", gotJSON, wantJSON)
+	}
+}
+
+func TestAdminAuditAndAccessLog(t *testing.T) {
+	e := newAdminEnv(t)
+	ctx := t.Context()
+	aj := uuid.Must(uuid.NewV7())
+	if _, err := e.pool.Exec(ctx, `INSERT INTO app_user (id, display_name, status, system_role) VALUES ($1, 'AJ', 'active', 'admin')`, aj); err != nil {
+		t.Fatal(err)
+	}
+	base := time.Date(2026, 11, 23, 12, 0, 0, 0, time.UTC)
+	for i, a := range []string{"auth.login", "setting.update", "setting.reset", "settings_x.update", "job.retry"} {
+		tt, tid := "setting", "log.level"
+		if strings.HasPrefix(a, "auth") {
+			tt, tid = "user", aj.String()
+		}
+		if _, err := e.pool.Exec(ctx, `INSERT INTO audit_event (time, actor_id, action, target_type, target_id, before, after, ip)
+			VALUES ($1, $2, $3, $4, $5, '{"set":false}', '{"set":true,"value":"debug"}', '192.0.2.7')`,
+			base.Add(time.Duration(i)*time.Minute), aj, a, tt, tid); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for i, st := range []int{200, 204, 404, 500} {
+		if _, err := e.pool.Exec(ctx, `INSERT INTO access_log (time, request_id, user_id, method, route, path, status, duration_ms, ip)
+			VALUES ($1, $2, $3, $4, '/api/v1/admin/settings/{key}', '/api/v1/admin/settings/log.level', $5, 12, '2001:db8::1')`,
+			base.Add(time.Duration(i)*time.Minute), "r-"+strconv.Itoa(i), aj, []string{"GET", "PUT", "GET", "PUT"}[i], st); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	audit := func(query string) AdminAuditPage {
+		t.Helper()
+		var p AdminAuditPage
+		if rec := e.call(t, RoleAdmin, http.MethodGet, "/api/v1/admin/audit?"+query, nil, &p); rec.Code != http.StatusOK {
+			t.Fatalf("audit %s: %d %s", query, rec.Code, rec.Body)
+		}
+		return p
+	}
+	all := audit("")
+	if len(all.Items) != 5 || all.Items[0].Action != "job.retry" || *all.Items[0].ActorName != "AJ" || *all.Items[0].Ip != "192.0.2.7" {
+		t.Fatalf("audit all %+v", all.Items)
+	}
+	if b, _ := json.Marshal(all.Items[0].After); string(b) != `{"set":true,"value":"debug"}` {
+		t.Fatalf("after %s", b)
+	}
+	// Dotted prefix: "setting" matches setting.* but not settings_x.*.
+	if p := audit("action=setting"); len(p.Items) != 2 {
+		t.Fatalf("action prefix %+v", p.Items)
+	}
+	if p := audit("targetType=setting&targetId=log.level&limit=2"); len(p.Items) != 2 || p.NextCursor == nil {
+		t.Fatalf("target %+v", p)
+	} else if p2 := audit("targetType=setting&targetId=log.level&limit=2&cursor=" + url.QueryEscape(*p.NextCursor)); len(p2.Items) != 2 || p2.Items[0].Id >= p.Items[1].Id {
+		t.Fatalf("page 2 %+v", p2.Items)
+	}
+	if p := audit("actorId=" + uuid.Must(uuid.NewV7()).String()); len(p.Items) != 0 {
+		t.Fatalf("actor filter %+v", p.Items)
+	}
+	if rec := e.call(t, RoleAdmin, http.MethodGet, "/api/v1/admin/audit?action=DROP%25", nil, nil); rec.Code != http.StatusBadRequest {
+		t.Fatalf("bad action: %d", rec.Code)
+	}
+
+	access := func(query string) AdminAccessPage {
+		t.Helper()
+		var p AdminAccessPage
+		if rec := e.call(t, RoleAdmin, http.MethodGet, "/api/v1/admin/access?"+query, nil, &p); rec.Code != http.StatusOK {
+			t.Fatalf("access %s: %d %s", query, rec.Code, rec.Body)
+		}
+		return p
+	}
+	if p := access(""); len(p.Items) != 4 || *p.Items[0].UserName != "AJ" || *p.Items[0].Ip != "2001:db8::1" || p.Items[0].DurationMs != 12 {
+		t.Fatalf("access all %+v", p.Items)
+	}
+	if p := access("status=2xx"); len(p.Items) != 2 {
+		t.Fatalf("2xx %+v", p.Items)
+	}
+	if p := access("status=5xx&method=PUT"); len(p.Items) != 1 || p.Items[0].Status != 500 {
+		t.Fatalf("5xx PUT %+v", p.Items)
+	}
+	if p := access("route=SETTINGS%2F%7B"); len(p.Items) != 4 {
+		t.Fatalf("route %+v", p.Items)
+	}
+	since := url.QueryEscape(base.Add(2 * time.Minute).Format(time.RFC3339))
+	if p := access("since=" + since + "&userId=" + aj.String()); len(p.Items) != 2 {
+		t.Fatalf("since+user %+v", p.Items)
 	}
 }

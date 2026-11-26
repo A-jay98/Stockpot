@@ -1,5 +1,12 @@
 import type { LucideIcon } from 'lucide-react'
-import { type ComponentProps, type ReactNode, useCallback, useMemo } from 'react'
+import {
+  type ComponentProps,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
 import { useSearchParams } from 'react-router'
 import { ApiError } from '../api/problem'
 import { Page } from '../app/Page'
@@ -180,3 +187,23 @@ export function formatBytes(n: number) {
 }
 
 export const number = new Intl.NumberFormat()
+
+/** `datetime-local` value (local time, no zone) ⇄ RFC 3339. */
+export const toISO = (local: string) => (local ? new Date(local).toISOString() : '')
+export const toLocal = (iso: string) => {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+}
+
+/** Text input that writes to the URL after the user pauses typing. */
+export function useDebounced(value: string, commit: (v: string) => void, ms = 300) {
+  const [draft, setDraft] = useState(value)
+  useEffect(() => setDraft(value), [value])
+  useEffect(() => {
+    if (draft === value) return
+    const t = setTimeout(() => commit(draft), ms)
+    return () => clearTimeout(t)
+  }, [draft, value, commit, ms])
+  return [draft, setDraft] as const
+}

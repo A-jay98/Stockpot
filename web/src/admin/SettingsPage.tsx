@@ -1,9 +1,11 @@
-import { KeyRound, RotateCcw } from 'lucide-react'
+import { History, KeyRound, RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 import { ApiError } from '../api/problem'
 import { Badge, Button, Field, Input, Switch, Textarea, toast } from '../ui'
+import { AuditTable } from './AuditPage'
 import { type Setting, useResetSetting, useSaveSetting, useSettings } from './api'
-import { AdminPage, ErrorNote, formatTime } from './ui'
+import { useAuditEvents } from './trail-api'
+import { AdminPage, ErrorNote, formatTime, LoadMore } from './ui'
 
 export function SettingsPage() {
   const { data, error } = useSettings()
@@ -74,9 +76,10 @@ function Meta({ setting }: { setting: Setting }) {
 
 function FlagRow({ setting }: { setting: Setting }) {
   const save = useSaveSetting()
+  const history = useHistory(setting)
   const on = setting.value === true
   return (
-    <li className="flex items-center gap-3.5 px-4 py-3.5">
+    <li className="flex flex-wrap items-center gap-3.5 px-4 py-3.5">
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <span className="font-semibold">{setting.description}</span>
         <Meta setting={setting} />
@@ -95,8 +98,48 @@ function FlagRow({ setting }: { setting: Setting }) {
           )
         }
       />
+      {history.toggle}
+      {history.panel}
     </li>
   )
+}
+
+/** "History" button and the setting's audit trail (setting.update / setting.reset). */
+function useHistory(setting: Setting) {
+  const [open, setOpen] = useState(false)
+  const events = useAuditEvents(
+    { targetType: 'setting', targetId: setting.key },
+    { limit: 10, enabled: open },
+  )
+  const toggle = (
+    <Button
+      type="button"
+      size="sm"
+      variant="ghost"
+      aria-expanded={open}
+      aria-label={`History of ${setting.key}`}
+      onClick={() => setOpen(!open)}
+    >
+      <History aria-hidden />
+      History
+    </Button>
+  )
+  const panel = open && (
+    <div className="flex basis-full flex-col gap-2">
+      {events.error && <ErrorNote error={events.error} />}
+      <AuditTable
+        rows={events.data?.pages.flatMap((p) => p.items) ?? []}
+        loading={events.isPending}
+        showTarget={false}
+      />
+      <LoadMore
+        hasMore={events.hasNextPage}
+        loading={events.isFetchingNextPage}
+        onClick={() => void events.fetchNextPage()}
+      />
+    </div>
+  )
+  return { toggle, panel }
 }
 
 type Parsed = { ok: true; value: unknown } | { ok: false; error: string }
@@ -132,6 +175,7 @@ function toDraft(setting: Setting) {
 export function SettingEditor({ setting }: { setting: Setting }) {
   const save = useSaveSetting()
   const reset = useResetSetting()
+  const history = useHistory(setting)
   const [draft, setDraft] = useState(() => toDraft(setting))
   const [base, setBase] = useState(setting)
   const [serverError, setServerError] = useState<string>()
@@ -264,11 +308,13 @@ export function SettingEditor({ setting }: { setting: Setting }) {
               {setting.secret ? 'Remove' : 'Reset to default'}
             </Button>
           )}
+          {history.toggle}
           <span className="ml-auto">
             <Meta setting={setting} />
           </span>
         </div>
       </form>
+      {history.panel}
     </li>
   )
 }

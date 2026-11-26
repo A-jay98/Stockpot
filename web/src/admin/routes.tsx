@@ -1,17 +1,14 @@
 import type { RouteObject } from 'react-router'
+import { AccessPage } from './AccessPage'
 import { AdminGuard } from './AdminGuard'
 import { AdminLayout } from './AdminLayout'
-import { AdminSectionPage } from './AdminSectionPage'
+import { AuditPage } from './AuditPage'
 import { JobsPage } from './JobsPage'
 import { LLMPage } from './LLMPage'
 import { LogsPage } from './LogsPage'
 import { OverviewPage } from './OverviewPage'
 import { SettingsPage } from './SettingsPage'
-
-const placeholders: Record<string, [string, string]> = {
-  users: ['Users', 'Pending approvals, invites, users, roles and sessions.'],
-  audit: ['Audit log', 'Every security event and change, filterable by user, action and time.'],
-}
+import { UsersPage } from './UsersPage'
 
 /** `/admin` route group, admin-only (AdminGuard). */
 export const adminRoutes: RouteObject = {
@@ -23,13 +20,12 @@ export const adminRoutes: RouteObject = {
   ),
   children: [
     { index: true, Component: OverviewPage },
+    { path: 'users', Component: UsersPage },
+    { path: 'audit', Component: AuditPage },
+    { path: 'access', Component: AccessPage },
     { path: 'logs', Component: LogsPage },
     { path: 'jobs', Component: JobsPage },
     { path: 'settings', Component: SettingsPage },
     { path: 'llm', Component: LLMPage },
-    ...Object.entries(placeholders).map(([path, [title, text]]) => ({
-      path,
-      element: <AdminSectionPage title={title} about={text} />,
-    })),
   ],
 }
