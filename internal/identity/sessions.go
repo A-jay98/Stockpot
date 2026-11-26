@@ -61,7 +61,7 @@ func (s *Service) createSession(ctx context.Context, q *dbq.Queries, user dbq.Ap
 }
 
 // Authenticate loads the session for a cookie token. It slides the expiry
-// and resolves the active household (falling back to the first membership
+// (returning the renewed token, or a zero one if unchanged) and resolves the active household (falling back to the first membership
 // when the stored one is gone). ErrUnauthenticated for anything invalid.
 func (s *Service) Authenticate(ctx context.Context, token string) (*Principal, SessionToken, error) {
 	if token == "" || len(token) > 128 {
@@ -104,9 +104,11 @@ func (s *Service) Authenticate(ctx context.Context, token string) (*Principal, S
 			}
 		}
 	}
-	renewed := SessionToken{Token: token, ExpiresAt: sess.ExpiresAt}
+	// renewed is set only when the expiry slid, so the caller re-sends
+	// the cookie at most once per touchEvery.
+	var renewed SessionToken
 	if now.Sub(sess.LastSeenAt) >= touchEvery {
-		renewed.ExpiresAt = now.Add(s.sessionTTL())
+		renewed = SessionToken{Token: token, ExpiresAt: now.Add(s.sessionTTL())}
 		if err := s.q.TouchSession(ctx, dbq.TouchSessionParams{
 			ID: sess.ID, LastSeenAt: now, ExpiresAt: renewed.ExpiresAt, Ip: clientIP(ctx),
 		}); err != nil {
