@@ -44,9 +44,30 @@ test('a 401 calls the unauthorized handler', async () => {
   vi.stubGlobal(
     'fetch',
     vi.fn(async () =>
-      jsonResponse({ title: 'Unauthorized', status: 401 }, 401, 'application/problem+json'),
+      jsonResponse(
+        { title: 'Unauthorized', status: 401, code: 'unauthenticated' },
+        401,
+        'application/problem+json',
+      ),
     ),
   )
   await expect(unwrap(api.GET('/health'))).rejects.toMatchObject({ status: 401 })
   expect(handler).toHaveBeenCalledOnce()
+})
+
+test('a 401 from a public endpoint (rejected passkey) does not redirect', async () => {
+  const handler = vi.fn()
+  setUnauthorizedHandler(handler)
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(async () =>
+      jsonResponse(
+        { title: 'Unauthorized', status: 401, code: 'passkey_rejected' },
+        401,
+        'application/problem+json',
+      ),
+    ),
+  )
+  await expect(unwrap(api.GET('/health'))).rejects.toMatchObject({ code: 'passkey_rejected' })
+  expect(handler).not.toHaveBeenCalled()
 })

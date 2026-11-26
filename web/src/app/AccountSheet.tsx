@@ -1,17 +1,39 @@
-import { Monitor, Moon, Shield, Sun } from 'lucide-react'
+import { LogOut, Monitor, Moon, Shield, Sun } from 'lucide-react'
 import type { ReactElement } from 'react'
 import { Link } from 'react-router'
+import { useMe, useSignOut, useSwitchHousehold } from '../features/auth/session'
 import { Button, Segmented, Sheet, SheetContent, SheetTrigger } from '../ui'
 import { ServerStatus } from './ServerStatus'
 import { type ThemePreference, useTheme } from './theme'
 
-/** Account menu: theme, admin entry, server version. Profile and household arrive with m0-2. */
+/** Account menu: who is signed in, household switch, theme, admin entry, sign out, server version. */
 export function AccountSheet({ trigger }: { trigger: ReactElement }) {
   const [theme, setTheme] = useTheme()
+  const me = useMe().data
+  const switchHousehold = useSwitchHousehold()
+  const signOut = useSignOut()
+  const households = me?.households ?? []
   return (
     <Sheet>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
-      <SheetContent title="Account" description="Profile and household settings come with sign-in.">
+      <SheetContent
+        title={me?.user.displayName ?? 'Account'}
+        description={me?.user.systemRole === 'admin' ? 'Admin' : 'Signed in'}
+      >
+        {households.length > 1 && (
+          <div className="flex flex-col gap-2">
+            <span className="t-label text-ink-muted">Household</span>
+            <Segmented<string>
+              aria-label="Household"
+              value={me?.activeHouseholdId ?? ''}
+              onValueChange={(id) => switchHousehold.mutate(id)}
+              options={households.map((h) => ({ value: h.householdId, label: h.name }))}
+            />
+          </div>
+        )}
+        {households.length === 1 && (
+          <p className="t-body-sm m-0 text-ink-muted">Household: {households[0]?.name}</p>
+        )}
         <div className="flex flex-col gap-2">
           <span className="t-label text-ink-muted">Theme</span>
           <Segmented<ThemePreference>
@@ -49,11 +71,17 @@ export function AccountSheet({ trigger }: { trigger: ReactElement }) {
             ]}
           />
         </div>
-        <Button variant="secondary" asChild>
-          <Link to="/admin">
-            <Shield aria-hidden />
-            Admin panel
-          </Link>
+        {me?.user.systemRole === 'admin' && (
+          <Button variant="secondary" asChild>
+            <Link to="/admin">
+              <Shield aria-hidden />
+              Admin panel
+            </Link>
+          </Button>
+        )}
+        <Button variant="ghost" onClick={() => signOut.mutate()} disabled={signOut.isPending}>
+          <LogOut aria-hidden />
+          Sign out
         </Button>
         <ServerStatus />
       </SheetContent>

@@ -8,7 +8,7 @@ type UnauthorizedHandler = () => void
 // until then (and in tests) fall back to a full navigation.
 let onUnauthorized: UnauthorizedHandler = () => {
   const next = window.location.pathname + window.location.search
-  if (window.location.pathname !== '/login') {
+  if (!isPublicPage(window.location.pathname)) {
     window.location.assign(`/login?next=${encodeURIComponent(next)}`)
   }
 }
@@ -17,9 +17,25 @@ export function setUnauthorizedHandler(handler: UnauthorizedHandler) {
   onUnauthorized = handler
 }
 
+/** Pages a signed-out visitor may be on; a 401 there is expected, not a redirect. */
+const publicPages = ['/login', '/setup', '/invite', '/pending']
+export const isPublicPage = (pathname: string) =>
+  publicPages.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+
+// Only a missing or expired session (code "unauthenticated") sends the user to
+// sign-in. Public endpoints never answer with that code, so a rejected passkey
+// or a bad invite stays on its page and shows its own error.
+// GET /v1/me is the session probe: its callers (the route guard) handle a 401 themselves.
 const authRedirect: Middleware = {
-  onResponse({ response }) {
-    if (response.status === 401) onUnauthorized()
+  async onResponse({ response, schemaPath, request }) {
+    if (response.status !== 401) return undefined
+    if (schemaPath === '/v1/me' && request.method === 'GET') return undefined
+    const problem: unknown = await response
+      .clone()
+      .json()
+      .catch(() => undefined)
+    const code = (problem as { code?: unknown } | undefined)?.code
+    if (code === 'unauthenticated') onUnauthorized()
     return undefined
   },
 }

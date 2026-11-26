@@ -1,5 +1,6 @@
 import { Plus, Shield, UserRound } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
+import { useMe } from '../features/auth/session'
 import { OfflineIndicator } from '../pwa/OfflineIndicator'
 import { Button, cn } from '../ui'
 import { AccountSheet } from './AccountSheet'
@@ -11,6 +12,7 @@ const sideLink =
 
 /** Phones: content + bottom tab bar. From `md` up: side nav + content. */
 export function AppShell() {
+  const isAdmin = useMe().data?.user.systemRole === 'admin'
   return (
     <div className="flex min-h-dvh flex-col md:grid md:grid-cols-[232px_minmax(0,1fr)]">
       <nav
@@ -33,10 +35,12 @@ export function AppShell() {
             </NavLink>
           ))}
         <div className="flex-1" />
-        <NavLink to="/admin" className={sideLink}>
-          <Shield aria-hidden />
-          Admin
-        </NavLink>
+        {isAdmin && (
+          <NavLink to="/admin" className={sideLink}>
+            <Shield aria-hidden />
+            Admin
+          </NavLink>
+        )}
         <AccountSheet
           trigger={
             <button type="button" className={cn(sideLink, 'border-0 bg-transparent text-left')}>
