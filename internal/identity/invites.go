@@ -329,6 +329,9 @@ func (s *Service) JoinWithInvite(ctx context.Context, code string) (Me, error) {
 	err = pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
 		q := s.q.WithTx(tx)
 		inv, err := q.LockInvite(ctx, found.ID)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrInviteInvalid
+		}
 		if err != nil {
 			return err
 		}

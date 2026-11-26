@@ -82,18 +82,28 @@ func Record(ctx context.Context, tx dbq.DBTX, action string, target Target, befo
 		}
 		p.Ip = parseIP(info.ClientIP)
 	}
+	// An explicit actor wins: a browser still signed in as A that signs in
+	// (or accepts an invite) as B acts as B.
 	if ac, ok := ctx.Value(actorKey{}).(actor); ok {
-		if p.ActorID == nil {
-			p.ActorID = nonNil(ac.user)
+		if info(ctx).UserID != ac.user {
+			p.SessionID = nil // the request's session belongs to someone else
 		}
-		if p.HouseholdID == nil {
-			p.HouseholdID = nonNil(ac.household)
+		p.ActorID = nonNil(ac.user)
+		if ac.household != uuid.Nil {
+			p.HouseholdID = &ac.household
 		}
 	}
 	if err := dbq.New(tx).InsertAuditEvent(ctx, p); err != nil {
 		return fmt.Errorf("audit %s: %w", action, err)
 	}
 	return nil
+}
+
+func info(ctx context.Context) reqctx.Info {
+	if i := reqctx.From(ctx); i != nil {
+		return *i
+	}
+	return reqctx.Info{}
 }
 
 func encode(v any) ([]byte, error) {

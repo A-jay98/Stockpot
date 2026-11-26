@@ -18,6 +18,7 @@ import (
 	"github.com/go-webauthn/webauthn/protocol"
 	"github.com/go-webauthn/webauthn/webauthn"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/a-jay98/stockpot/internal/db/dbq"
@@ -194,6 +195,9 @@ func (p *Provider) FinishEnroll(ctx context.Context, in identity.EnrollFinish) (
 		BackupEligible:  cred.Flags.BackupEligible,
 		BackupState:     cred.Flags.BackupState,
 	}); err != nil {
+		if pgErr := (*pgconn.PgError)(nil); errors.As(err, &pgErr) && pgErr.Code == "23505" /* unique_violation */ {
+			return identity.Identity{}, rejected(errors.New("credential already registered"))
+		}
 		return identity.Identity{}, fmt.Errorf("passkey: store credential: %w", err)
 	}
 	return identity.Identity{Provider: ProviderID, Subject: encode(session.UserID)}, nil

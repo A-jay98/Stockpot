@@ -70,3 +70,20 @@ func TestAccessWriterBatches(t *testing.T) {
 		t.Fatalf("rows %d written %d dropped %d", n, w.Written(), w.Dropped())
 	}
 }
+
+func TestWithActorWinsOverStaleSession(t *testing.T) {
+	pool := testdb.New(t)
+	a, b := uuid.New(), uuid.New()
+	ctx := reqctx.With(t.Context(), &reqctx.Info{UserID: a, SessionID: uuid.New()})
+	if err := Record(WithActor(ctx, b, uuid.Nil), pool, "auth.login", UserTarget(b), nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	var actor uuid.UUID
+	var session *uuid.UUID
+	if err := pool.QueryRow(t.Context(), "SELECT actor_id, session_id FROM audit_event").Scan(&actor, &session); err != nil {
+		t.Fatal(err)
+	}
+	if actor != b || session != nil {
+		t.Fatalf("actor %v session %v, want %v and none", actor, session, b)
+	}
+}

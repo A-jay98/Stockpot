@@ -51,7 +51,17 @@ export async function signInWithPasskey(): Promise<Me> {
 /** Where a freshly signed-in user goes. */
 export function homeFor(me: Me, next?: string | null) {
   if (me.user.status === 'pending') return '/pending'
-  return next?.startsWith('/') && !next.startsWith('//') ? next : '/'
+  return isSafeNext(next) ? next : '/'
+}
+
+/** Only same-origin paths: rejects //host, /\\host and anything absolute. */
+export function isSafeNext(next?: string | null): next is string {
+  if (!next?.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) return false
+  try {
+    return new URL(next, window.location.origin).origin === window.location.origin
+  } catch {
+    return false
+  }
 }
 
 export function useSignOut() {

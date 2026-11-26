@@ -2,6 +2,7 @@ import { screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { adminMe, jsonResponse, renderApp } from '../../test-utils'
+import { isSafeNext } from './session'
 import { base64urlToBuffer, bufferToBase64url, creationOptions } from './webauthn'
 
 type Route = (url: URL, init: Request) => Response | Promise<Response>
@@ -129,4 +130,11 @@ test('base64url helpers round-trip and decode creation options', () => {
   expect(new Uint8Array(opts.challenge as ArrayBuffer)).toEqual(new Uint8Array([0, 1, 2]))
   expect(new Uint8Array(opts.user.id as ArrayBuffer)).toEqual(new Uint8Array([251, 255]))
   expect(opts.excludeCredentials?.[0]?.id).toBeInstanceOf(ArrayBuffer)
+})
+
+test('sign-in only returns to same-origin paths', () => {
+  expect(isSafeNext('/shopping?x=1')).toBe(true)
+  for (const bad of ['//evil.com', '/\\evil.com', 'https://evil.com', 'evil', '', null]) {
+    expect(isSafeNext(bad)).toBe(false)
+  }
 })

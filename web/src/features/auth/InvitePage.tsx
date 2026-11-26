@@ -7,12 +7,19 @@ import { AuthLayout, FormError } from './AuthLayout'
 import { authErrorMessage } from './errors'
 import { enroll, homeFor, type Me, meKey, useMe } from './session'
 
+function decodeCode(raw: string) {
+  try {
+    return decodeURIComponent(raw)
+  } catch {
+    return raw // malformed escapes: let the server call it invalid
+  }
+}
+
 /** /invite#<code>: create an account (or join, if signed in) from an invite link. */
 export function InvitePage() {
   const { hash, search } = useLocation()
   // The code travels in the fragment so it never reaches a server log.
-  const code =
-    decodeURIComponent(hash.replace(/^#/, '')) || new URLSearchParams(search).get('code') || ''
+  const code = decodeCode(hash.replace(/^#/, '')) || new URLSearchParams(search).get('code') || ''
   const me = useMe()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -31,6 +38,8 @@ export function InvitePage() {
     setError(undefined)
     try {
       const account = await action()
+      // A new account or a newly active household: nothing cached still applies.
+      qc.clear()
       qc.setQueryData(meKey, account)
       await navigate(homeFor(account), { replace: true })
     } catch (e) {
@@ -66,6 +75,17 @@ export function InvitePage() {
   if (!info.data) return <AuthLayout title="Invite">{null}</AuthLayout>
 
   const roleText = info.data.role === 'owner' ? 'as an owner' : 'as a member'
+  if (me.data?.user.status === 'pending') {
+    return (
+      <AuthLayout title={`Join ${info.data.householdName}`}>
+        <p className="t-body m-0 text-ink-muted">
+          Your account is still waiting for approval. Open this link again once an admin approves
+          it.
+        </p>
+        <Link to="/pending">Back</Link>
+      </AuthLayout>
+    )
+  }
   const signedIn = me.data?.user.status === 'active'
   return (
     <AuthLayout title={`Join ${info.data.householdName}`}>
