@@ -22,6 +22,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/blob"
 	"github.com/a-jay98/stockpot/internal/buildinfo"
 	"github.com/a-jay98/stockpot/internal/catalog"
+	"github.com/a-jay98/stockpot/internal/catalog/resolve"
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/config"
 	"github.com/a-jay98/stockpot/internal/db"
@@ -135,7 +136,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	// Offline sync: commands are the only write path; each feature registers
 	// its handlers here (one line per area).
 	cmdRegistry := commands.NewRegistry()
-	catalog.Register(cmdRegistry, catalog.ExactResolver{})
+	catalog.Register(cmdRegistry, resolve.Resolver{})
 	syncStore, err := syncdb.New(ctx, pool)
 	if err != nil {
 		return err
