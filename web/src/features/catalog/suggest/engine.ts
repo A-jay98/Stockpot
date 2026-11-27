@@ -51,6 +51,25 @@ const latest = (...rows: (ProductStat | undefined)[]): number | null => {
   return t.length ? Math.max(...t) : null
 }
 
+/**
+ * The amount to prefill for a product: the unit the user last chose by hand (`defaultUnit`) wins,
+ * then the unit it is usually bought in. The usual quantity only goes with the usual unit; a
+ * hand-picked unit takes the hand-picked quantity.
+ */
+export function usualAmount(
+  p: Pick<Product, 'defaultQty' | 'defaultUnit'>,
+  st: Pick<ProductStat, 'typicalQty' | 'typicalUnit'> | undefined,
+): { qty?: string; unit?: string } {
+  const out: { qty?: string; unit?: string } = {}
+  const manual = p.defaultUnit
+  const fromStat = !manual || st?.typicalUnit === manual
+  const qty = (fromStat ? st?.typicalQty : null) ?? p.defaultQty
+  const unit = manual ?? st?.typicalUnit
+  if (qty) out.qty = qty
+  if (unit) out.unit = unit
+  return out
+}
+
 /** Build the index once per replica change; searching is then allocation-light. */
 export function buildIndex({ products, ingredients, stats, stores }: SuggestData): Index {
   const storeName = new Map(stores.map((s) => [s.id, s.name]))
@@ -90,8 +109,7 @@ export function buildIndex({ products, ingredients, stats, stores }: SuggestData
       name: p.name,
       brand: p.brand ?? undefined,
       storeName: storeId ? storeName.get(storeId) : undefined,
-      qty: st?.typicalQty ?? p.defaultQty ?? undefined,
-      unit: st?.typicalUnit ?? p.defaultUnit ?? undefined,
+      ...usualAmount(p, st),
       categoryId: p.categoryId ?? ing?.categoryId ?? undefined,
       icon: p.icon ?? ing?.icon ?? undefined,
       // Popularity is the product's, across stores; the store row only tells which store.

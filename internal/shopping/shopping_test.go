@@ -435,3 +435,62 @@ func TestTypicalQtyIgnoresPurchasesWithoutQuantity(t *testing.T) {
 		t.Fatalf("%+v", s)
 	}
 }
+
+func TestAddCreatesTheProposedProduct(t *testing.T) {
+	e := newEnv(t)
+	var cream uuid.UUID
+	if err := e.pool.QueryRow(t.Context(), `SELECT id FROM ingredient WHERE slug = 'cream-cheese' AND household_id IS NULL`).Scan(&cream); err != nil {
+		t.Fatal(err)
+	}
+	type row struct {
+		name, source string
+		ingredient   *uuid.UUID
+		category     *uuid.UUID
+	}
+	get := func(id uuid.UUID) (r row) {
+		t.Helper()
+		if err := e.pool.QueryRow(t.Context(), `SELECT name, ingredient_id, match_source, category_id FROM product WHERE id = $1`, id).
+			Scan(&r.name, &r.ingredient, &r.source, &r.category); err != nil {
+			t.Fatal(err)
+		}
+		return r
+	}
+	itemProduct := func(item uuid.UUID) (p uuid.UUID) {
+		t.Helper()
+		if err := e.pool.QueryRow(t.Context(), `SELECT product_id FROM shopping_item WHERE id = $1`, item).Scan(&p); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+
+	// A picked ingredient is the user's match, and the item keeps what was typed.
+	want := uuid.New()
+	item := e.addItem(t, map[string]any{"text": "Philadelphia cheese", "productId": want, "ingredientId": cream})
+	if got := itemProduct(item); got != want {
+		t.Fatalf("item product = %s, want %s", got, want)
+	}
+	if r := get(want); r.name != "Philadelphia cheese" || r.ingredient == nil || *r.ingredient != cream || r.source != "user" || r.category == nil {
+		t.Fatalf("product = %+v", r)
+	}
+
+	// Free text: the resolver links it.
+	milk := uuid.New()
+	e.addItem(t, map[string]any{"text": "Milk", "productId": milk})
+	if r := get(milk); r.ingredient == nil || r.source != "rule" {
+		t.Fatalf("product = %+v", r)
+	}
+
+	// The same name again lands on the existing product, never the new id or the pick.
+	again := e.addItem(t, map[string]any{"text": "milk", "productId": uuid.New(), "ingredientId": cream})
+	if got := itemProduct(again); got != milk {
+		t.Fatalf("item product = %s, want %s", got, milk)
+	}
+	if r := get(milk); r.source != "rule" {
+		t.Fatalf("existing product changed: %+v", r)
+	}
+
+	// An unknown ingredient is rejected.
+	if r := e.do(t, "shopping.item.add", map[string]any{"id": uuid.New(), "listId": e.list, "text": "x", "productId": uuid.New(), "ingredientId": uuid.New()}); r.Status == commands.StatusApplied {
+		t.Fatal("unknown ingredient accepted")
+	}
+}

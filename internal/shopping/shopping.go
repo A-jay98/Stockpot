@@ -51,11 +51,15 @@ type ItemFields struct {
 	Note       Opt[string]      `json:"note"`
 }
 
-// ItemAdd is shopping.item.add.
+// ItemAdd is shopping.item.add. A ProductID the household doesn't have yet is
+// the client's id for a new product named Text (as on check), so every item is
+// linked to a product and shows its match and icon from the start.
+// IngredientID is the catalog ingredient the user picked for that new product.
 type ItemAdd struct {
-	ID     uuid.UUID `json:"id"`
-	ListID uuid.UUID `json:"listId"`
-	Sort   *int      `json:"sort"`
+	ID           uuid.UUID  `json:"id"`
+	ListID       uuid.UUID  `json:"listId"`
+	Sort         *int       `json:"sort"`
+	IngredientID *uuid.UUID `json:"ingredientId"`
 	ItemFields
 }
 
@@ -279,6 +283,9 @@ func (h *handlers) itemAdd(ctx context.Context, tx pgx.Tx, p ItemAdd) error {
 	if err != nil {
 		return err
 	}
+	if err := h.linkNewProduct(ctx, tx, hh, &p); err != nil {
+		return err
+	}
 	if err := checkItemRefs(ctx, tx, hh, &p.ItemFields); err != nil {
 		return err
 	}
@@ -465,6 +472,38 @@ func (h *handlers) itemCheck(ctx context.Context, tx pgx.Tx, p ItemCheck) error 
 		return h.addToInventory(ctx, tx, hh, p.ID, *product, qty, unit, p.Inventory)
 	}
 	return nil
+}
+
+// linkNewProduct creates the product an added item names when the client
+// proposed a new one (an id the household doesn't have, plus text). EnsureProduct
+// may land on an existing product of that name; only a product created here
+// takes the user's ingredient pick.
+func (h *handlers) linkNewProduct(ctx context.Context, tx pgx.Tx, hh uuid.UUID, p *ItemAdd) error {
+	if !p.ProductID.Set || p.ProductID.Value == nil || !p.Text.Set || p.Text.Value == nil || strings.TrimSpace(*p.Text.Value) == "" {
+		return nil
+	}
+	if p.IngredientID != nil {
+		if err := catalog.CheckIngredient(ctx, tx, hh, *p.IngredientID); err != nil {
+			return err
+		}
+	}
+	want := *p.ProductID.Value
+	ok, err := exists(ctx, tx, `SELECT 1 FROM product WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL`, want, hh)
+	if err != nil || ok {
+		return err
+	}
+	id, err := catalog.EnsureProduct(ctx, tx, h.res, hh, *p.Text.Value, want)
+	if err != nil {
+		return err
+	}
+	p.ProductID.Value = &id
+	if id != want || p.IngredientID == nil {
+		return nil
+	}
+	_, err = tx.Exec(ctx, `UPDATE product p SET ingredient_id = i.id, match_source = 'user', match_confidence = 1,
+		enrich_state = 'done', category_id = coalesce(i.category_id, p.category_id)
+		FROM ingredient i WHERE p.id = $1 AND i.id = $2`, id, *p.IngredientID)
+	return err
 }
 
 // productFor is the product a free-text item becomes: the client's pick when

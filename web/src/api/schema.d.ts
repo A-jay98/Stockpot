@@ -2266,8 +2266,16 @@ export interface components {
                 /** Format: uuid */
                 listId: string;
                 sort?: number | null;
-                /** Format: uuid */
+                /**
+                 * Format: uuid
+                 * @description A household product, or with text the client's id for a new product named text (created on apply).
+                 */
                 productId?: string | null;
+                /**
+                 * Format: uuid
+                 * @description The ingredient the user picked for a new product (sets match_source=user).
+                 */
+                ingredientId?: string | null;
                 text?: string | null;
                 /** @description Decimal string. */
                 qty?: string | null;
