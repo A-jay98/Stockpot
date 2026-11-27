@@ -1,3 +1,4 @@
+// Package catalog holds the shared grocery catalog: ingredients, categories and the food icon registry.
 package catalog
 
 import (
