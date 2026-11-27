@@ -15,9 +15,10 @@ import (
 // letting res link it to an ingredient) when none exists. Matching is by
 // case-insensitive name, then by resolved ingredient (brand-less product), so a free-text
 // "mandarins" lands on the product the household already buys instead of a
-// duplicate. A new product gets the id want when it is free (an offline client
-// proposes one to show the product before syncing), else a fresh one. The
-// caller holds the household write lock (command handlers do).
+// duplicate. With want set (an offline client already shows a product under
+// that id), only the exact name match applies, so the client's product exists
+// once it syncs; it is created under want unless that id is taken. The caller
+// holds the household write lock (command handlers do).
 func EnsureProduct(ctx context.Context, tx pgx.Tx, res Resolver, hh uuid.UUID, name string, want uuid.UUID) (uuid.UUID, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
@@ -37,7 +38,8 @@ func EnsureProduct(ctx context.Context, tx pgx.Tx, res Resolver, hh uuid.UUID, n
 		return uuid.Nil, err
 	}
 	// "mandarin" for the household's "Mandarins": the same ingredient, no brand, is the same product.
-	if m, err := res.Resolve(ctx, tx, hh, name, nil); err != nil {
+	// Skipped when the client matched names itself and chose a new product.
+	if m, err := resolveFor(ctx, tx, res, hh, name, want); err != nil {
 		return uuid.Nil, err
 	} else if m != nil && m.Confidence >= 0.85 {
 		err := tx.QueryRow(ctx, `SELECT id FROM product
@@ -71,4 +73,11 @@ func EnsureProduct(ctx context.Context, tx pgx.Tx, res Resolver, hh uuid.UUID, n
 	_, err = tx.Exec(ctx, `UPDATE product p SET category_id = i.category_id
 		FROM ingredient i WHERE p.id = $1 AND p.ingredient_id = i.id AND p.category_id IS NULL`, id)
 	return id, err
+}
+
+func resolveFor(ctx context.Context, tx pgx.Tx, res Resolver, hh uuid.UUID, name string, want uuid.UUID) (*Match, error) {
+	if want != uuid.Nil {
+		return nil, nil
+	}
+	return res.Resolve(ctx, tx, hh, name, nil)
 }

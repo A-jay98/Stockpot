@@ -137,37 +137,26 @@ async function optimisticStock(
 }
 
 /**
- * The product a free-text item becomes when ticked, as the server picks it: the household's
- * product of that name (brand-less first), else a new one under the id the command proposes.
- * The server may still match by ingredient instead; the pull then relinks the rows, and the
- * unused optimistic product is dropped once the outbox drains.
+ * The product a free-text item becomes when ticked: the client's pick (see `productPick`), which
+ * the server uses as is or creates under that id. A new one is shown optimistically meanwhile.
  */
 async function productFor(
   db: import('../../offline/db').StockpotDB,
   row: ShoppingItem,
-  newProductId: string | undefined,
+  pick: string | null | undefined,
   clientTime: string,
 ): Promise<string | null> {
-  if (row.productId) return row.productId
+  if (row.productId || !pick) return row.productId
   const name = row.text.trim()
   if (!name) return null
-  const key = name.toLowerCase()
-  const known = (
-    await db.product.filter((p) => p.name.trim().toLowerCase() === key).toArray()
-  ).sort(
-    (a, b) =>
-      Number(a.brand !== null) - Number(b.brand !== null) || a.createdAt.localeCompare(b.createdAt),
-  )
-  if (known[0]) return known[0].id
-  if (!newProductId) return null
-  await applyReducer(db, 'catalog.product.create', { id: newProductId, name }, clientTime)
-  return newProductId
+  await applyReducer(db, 'catalog.product.create', { id: pick, name }, clientTime)
+  return pick
 }
 
 registerReducer('shopping.item.check', async (db, p, { clientTime }) => {
   const found = await db.shopping_item.get(p.id)
   if (!found) return
-  const row = { ...found, productId: await productFor(db, found, p.newProductId, clientTime) }
+  const row = { ...found, productId: await productFor(db, found, p.productId, clientTime) }
   const putAway = p.inventory && !row.stockItemId
   if (p.inventory && putAway && row.productId)
     await optimisticStock(db, { ...row, productId: row.productId }, p.inventory, clientTime)

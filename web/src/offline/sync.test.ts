@@ -213,7 +213,7 @@ test('optimistic rows the server never created are dropped once the outbox drain
   server.online = false
   await dispatch('catalog.store.create', { id: sid(3), name: 'Queued' }, db)
   server.online = true
-  await db.meta.put({ key: 'sync.settle', value: true })
+  await db.meta.put({ key: 'sync.settle', value: Date.now() - 1 })
   await pull(db)
   expect((await db.store.toArray()).map((s) => s.name).sort()).toEqual(['Kept', 'Queued'])
 })

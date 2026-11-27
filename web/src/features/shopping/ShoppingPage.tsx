@@ -15,19 +15,11 @@ import {
 } from '../catalog/hooks'
 import { type PickedItem, ProductPicker } from '../catalog/ProductPicker'
 import { formatQty, guessList } from '../catalog/suggest'
-import { normalize } from '../catalog/suggest/text'
 import { ManageList } from '../settings/ManageList'
 import { useAllShoppingItems, useShoppingItems, useShoppingLists, useStockItems } from './hooks'
 import { ItemSheet } from './ItemSheet'
-import { groupRows, type Row, toRows } from './items'
+import { groupRows, productPick, type Row, sameName, toRows } from './items'
 import { PutAwaySheet } from './PutAwaySheet'
-
-/** Name key for matching typed text to products: case, accents and a plural s/es ignored. */
-const sameName = (name: string) =>
-  normalize(name)
-    .split(' ')
-    .map((w) => (w.length > 3 ? w.replace(/(es|s)$/, '') : w))
-    .join(' ')
 
 export function ShoppingPage() {
   const lists = useShoppingLists()
@@ -105,7 +97,7 @@ export function ShoppingPage() {
       : dispatch('shopping.item.check', {
           id: r.id,
           ...(storeFilter ? { storeId: storeFilter } : {}),
-          ...(r.productId ? {} : { newProductId: uuidv7() }),
+          ...productPick(r, products, uuidv7),
         }))
 
   const iconFor = (r: Row) =>
@@ -262,6 +254,7 @@ export function ShoppingPage() {
           open={putAway}
           onOpenChange={setPutAway}
           rows={cart}
+          products={products}
           locations={locations}
           storeId={storeFilter}
         />

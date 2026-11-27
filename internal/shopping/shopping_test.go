@@ -237,31 +237,41 @@ func TestFreeTextLinksExistingProductByName(t *testing.T) {
 	}
 }
 
-func TestFreeTextCheckUsesProposedProductID(t *testing.T) {
+func TestFreeTextCheckUsesClientsProductPick(t *testing.T) {
 	e := newEnv(t)
 	want := uuid.New()
 	id := e.addItem(t, map[string]any{"text": "Pomegranate"})
-	e.mustDo(t, "shopping.item.check", map[string]any{"id": id, "newProductId": want, "inventory": map[string]any{"stockItemId": uuid.New()}})
+	e.mustDo(t, "shopping.item.check", map[string]any{"id": id, "productId": want, "inventory": map[string]any{"stockItemId": uuid.New()}})
 	var linked, stocked uuid.UUID
 	_ = e.pool.QueryRow(t.Context(), `SELECT s.product_id, i.product_id FROM shopping_item s JOIN stock_item i ON i.id = s.stock_item_id WHERE s.id = $1`, id).Scan(&linked, &stocked)
 	if linked != want || stocked != want {
 		t.Fatalf("product %v, stock product %v, want %v", linked, stocked, want)
 	}
 
-	// A known product wins over the proposed id.
-	again := e.addItem(t, map[string]any{"text": "pomegranate"})
-	e.mustDo(t, "shopping.item.check", map[string]any{"id": again, "newProductId": uuid.New()})
+	// An existing household product the client picked is used as is, whatever the text says.
+	again := e.addItem(t, map[string]any{"text": "pomegranates"})
+	e.mustDo(t, "shopping.item.check", map[string]any{"id": again, "productId": want})
 	_ = e.pool.QueryRow(t.Context(), `SELECT product_id FROM shopping_item WHERE id = $1`, again).Scan(&linked)
 	if linked != want {
 		t.Fatalf("second item linked %v, want %v", linked, want)
 	}
 
-	// A taken id falls back to a fresh one.
-	third := e.addItem(t, map[string]any{"text": "Quince"})
-	e.mustDo(t, "shopping.item.check", map[string]any{"id": third, "newProductId": want})
+	// A new id is honoured even where the ingredient would match an existing product, so the
+	// product an offline client already shows exists once it syncs.
+	fresh := uuid.New()
+	third := e.addItem(t, map[string]any{"text": "Pomegranate seeds"})
+	e.mustDo(t, "shopping.item.check", map[string]any{"id": third, "productId": fresh})
 	_ = e.pool.QueryRow(t.Context(), `SELECT product_id FROM shopping_item WHERE id = $1`, third).Scan(&linked)
-	if linked == want || linked == uuid.Nil {
-		t.Fatalf("taken id reused: %v", linked)
+	if linked != fresh {
+		t.Fatalf("third item linked %v, want %v", linked, fresh)
+	}
+
+	// Without a pick, an exact name still wins over nothing.
+	fourth := e.addItem(t, map[string]any{"text": "POMEGRANATE"})
+	e.mustDo(t, "shopping.item.check", map[string]any{"id": fourth})
+	_ = e.pool.QueryRow(t.Context(), `SELECT product_id FROM shopping_item WHERE id = $1`, fourth).Scan(&linked)
+	if linked != want {
+		t.Fatalf("fourth item linked %v, want %v", linked, want)
 	}
 }
 

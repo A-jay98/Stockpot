@@ -230,9 +230,20 @@ test('a typed-in item put away offline gets a product, not an empty link', async
   await user.click(await screen.findByRole('button', { name: 'Move 1 to inventory' }))
   await user.click(await screen.findByRole('button', { name: 'Add to inventory' }))
   await waitFor(async () => expect(await db.stock_item.count()).toBe(1))
-  const tick = (await db.outbox.toArray())[1]?.payload as { newProductId: string }
-  // The tick proposes the product id; the server creates it under that id when nothing matches.
-  expect(tick.newProductId).toBeTruthy()
-  expect(await db.product.get(tick.newProductId)).toMatchObject({ name: 'Quince', rev: 0 })
-  expect((await db.stock_item.toArray())[0]?.productId).toBe(tick.newProductId)
+  const tick = (await db.outbox.toArray())[1]?.payload as { productId: string }
+  // The tick proposes the product id; the server creates it under that id.
+  expect(tick.productId).toBeTruthy()
+  expect(await db.product.get(tick.productId)).toMatchObject({ name: 'Quince', rev: 0 })
+  expect((await db.stock_item.toArray())[0]?.productId).toBe(tick.productId)
+})
+
+test('typed text picks the product it names, ignoring case and plurals', async () => {
+  const { productNamed } = await import('./items')
+  await seed()
+  const products = await db.product.toArray()
+  expect(productNamed(products, 'MILK')?.id).toBe('p-milk')
+  expect(productNamed(products, 'milks')?.id).toBe('p-milk')
+  // A branded product needs the exact name.
+  expect(productNamed(products, 'mandarin')).toBeUndefined()
+  expect(productNamed(products, 'mandarins')?.id).toBe('p-mand')
 })

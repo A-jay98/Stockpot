@@ -81,14 +81,14 @@ type InventoryMove struct {
 }
 
 // ItemCheck is shopping.item.check: tick the item (learning from the
-// purchase) and optionally add it to inventory. NewProductID names the
-// product created for a free-text item, so an offline client can show it
-// before syncing.
+// purchase) and optionally add it to inventory. ProductID is the client's
+// pick for an item with no product: an existing household product, or the id
+// for a new one, so an offline client can show it before syncing.
 type ItemCheck struct {
-	ID           uuid.UUID      `json:"id"`
-	StoreID      *uuid.UUID     `json:"storeId"`
-	NewProductID *uuid.UUID     `json:"newProductId"`
-	Inventory    *InventoryMove `json:"inventory"`
+	ID        uuid.UUID      `json:"id"`
+	StoreID   *uuid.UUID     `json:"storeId"`
+	ProductID *uuid.UUID     `json:"productId"`
+	Inventory *InventoryMove `json:"inventory"`
 }
 
 // ListClear is shopping.item.clear_checked.
@@ -439,11 +439,7 @@ func (h *handlers) itemCheck(ctx context.Context, tx pgx.Tx, p ItemCheck) error 
 			if strings.TrimSpace(text) == "" {
 				return commands.Invalid("the item has no name")
 			}
-			var want uuid.UUID
-			if p.NewProductID != nil {
-				want = *p.NewProductID
-			}
-			id, err := catalog.EnsureProduct(ctx, tx, h.res, hh, text, want)
+			id, err := h.productFor(ctx, tx, hh, text, p.ProductID)
 			if err != nil {
 				return err
 			}
@@ -469,6 +465,21 @@ func (h *handlers) itemCheck(ctx context.Context, tx pgx.Tx, p ItemCheck) error 
 		return h.addToInventory(ctx, tx, hh, p.ID, *product, qty, unit, p.Inventory)
 	}
 	return nil
+}
+
+// productFor is the product a free-text item becomes: the client's pick when
+// it is a household product, else the named one, created under the client's
+// id when new.
+func (h *handlers) productFor(ctx context.Context, tx pgx.Tx, hh uuid.UUID, text string, pick *uuid.UUID) (uuid.UUID, error) {
+	var want uuid.UUID
+	if pick != nil {
+		ok, err := exists(ctx, tx, `SELECT 1 FROM product WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL`, *pick, hh)
+		if err != nil || ok {
+			return *pick, err
+		}
+		want = *pick
+	}
+	return catalog.EnsureProduct(ctx, tx, h.res, hh, text, want)
 }
 
 // addToInventory creates the stock item for a ticked item and links it.

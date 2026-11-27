@@ -156,7 +156,8 @@ export async function flushOutbox(database: StockpotDB = db): Promise<FlushResul
     size = BATCH
     const byId = new Map(out.results.map((r) => [r.id, r]))
     await database.transaction('rw', database.outbox, database.meta, async () => {
-      if (out.results.some((r) => r.status !== 'rejected')) await setMeta(database, SETTLE, true)
+      if (out.results.some((r) => r.status !== 'rejected'))
+        await setMeta(database, SETTLE, Date.now())
       for (const row of rows) {
         const r = byId.get(row.id)
         if (!r) continue
@@ -199,6 +200,7 @@ type SyncPage = {
 
 /** Pulls until caught up. Returns false when offline. */
 export async function pull(database: StockpotDB = db): Promise<boolean> {
+  const started = Date.now()
   for (;;) {
     const since = await getMeta(database, REV, 0)
     const sinceGlobal = await getMeta(database, REV_GLOBAL, 0)
@@ -216,7 +218,7 @@ export async function pull(database: StockpotDB = db): Promise<boolean> {
     await applyPage(database, page)
     if (!page.more) {
       if (await getMeta(database, REBUILD, false)) await purgeGhosts(database)
-      else if (await getMeta(database, SETTLE, false)) await settle(database)
+      else await settle(database, started)
       return true
     }
   }
@@ -273,10 +275,13 @@ async function purgeGhosts(database: StockpotDB) {
 /**
  * After sent commands are pulled back, optimistic rows the server chose not to create (a free-text
  * check that matched an existing product instead of the proposed one) are left with rev 0. Once
- * nothing is queued, every rev-0 row is such a ghost: drop them.
+ * nothing is queued, every rev-0 row is such a ghost: drop them. Only a pull that started after
+ * the flush (in any tab) has those commands' rows, so an earlier one leaves the flag for later.
  */
-async function settle(database: StockpotDB) {
+async function settle(database: StockpotDB, pullStarted: number) {
   await database.transaction('rw', database.tables, async () => {
+    const flushedAt = await getMeta<number | null>(database, SETTLE, null)
+    if (flushedAt === null || flushedAt > pullStarted) return
     const household = await getMeta<string | null>(database, HOUSEHOLD, null)
     if ((await pendingFor(database, household)).length > 0) return
     for (const t of replicaTables) {

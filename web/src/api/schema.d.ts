@@ -2351,9 +2351,9 @@ export interface components {
                 storeId?: string | null;
                 /**
                  * Format: uuid
-                 * @description Id for the product the server creates when a free-text item names none the household has. Lets an offline client show the product before it syncs; ignored when the item already has a product or one matches.
+                 * @description For an item without a product: the household product the client matched it to, or the id for a new one (created under it unless a product of exactly that name exists). Lets an offline client show the product before it syncs. Ignored when the item already has a product.
                  */
-                newProductId?: string;
+                productId?: string | null;
                 inventory?: {
                     /** Format: uuid */
                     stockItemId: string;
