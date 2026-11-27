@@ -11,6 +11,7 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -319,7 +320,7 @@ var enrichSchema = json.RawMessage(`{
 
 const enrichSystem = `You match grocery product names, as typed by a household in Canada, to canonical ingredients so recipes can find them.
 For each item return exactly one object with the item's "ref".
-- ingredient_slug: the slug of the single best ingredient. Choose from the item's candidates, or any slug you are certain exists. Brands, stores, sizes and adjectives never matter: "Kirkland organic mandarins 2 lb" is mandarin. Prefer the most specific ingredient that is correct (greek-yogurt over yogurt), never a broader one when a specific one fits.
+- ingredient_slug: the slug of the single best ingredient. Choose from the item's candidates. Brands, stores, sizes and adjectives never matter: "Kirkland organic mandarins 2 lb" is mandarin. Prefer the most specific ingredient that is correct (greek-yogurt over yogurt), never a broader one when a specific one fits.
 - If no ingredient fits, leave ingredient_slug empty and fill new_ingredient (name, plural, a parent_slug that is an existing ingredient slug, category_slug, aliases). Otherwise leave new_ingredient.name empty.
 - extra_ingredient_slugs: further ingredients a mix contains (e.g. stir-fry vegetables); usually empty.
 - category_slug and icon must come from the given lists; empty when unsure.
@@ -432,13 +433,8 @@ func (e *Enricher) callAndApply(ctx context.Context, items []pending, st *runSta
 	})
 	if err != nil {
 		if errors.Is(err, llm.ErrBadOutput) {
-			for _, g := range groups {
-				for _, it := range g {
-					if ferr := e.failAttempt(ctx, it); ferr != nil {
-						return ferr
-					}
-					st.failed++
-				}
+			if ferr := e.failGroups(ctx, groups, st); ferr != nil {
+				return ferr
 			}
 		}
 		return err
@@ -448,6 +444,9 @@ func (e *Enricher) callAndApply(ctx context.Context, items []pending, st *runSta
 		Items []enrichItem `json:"items"`
 	}
 	if err := json.Unmarshal(resp.JSON, &reply); err != nil {
+		if ferr := e.failGroups(ctx, groups, st); ferr != nil {
+			return ferr
+		}
 		return fmt.Errorf("%w: %v", llm.ErrBadOutput, err)
 	}
 	answers := map[string]enrichItem{}
@@ -485,6 +484,19 @@ func (e *Enricher) callAndApply(ctx context.Context, items []pending, st *runSta
 				ON CONFLICT (key) DO UPDATE SET result = EXCLUDED.result, created_at = now()`, g[0].key, raw); err != nil {
 				slog.WarnContext(ctx, "catalog enrich: cache write", "err", err)
 			}
+		}
+	}
+	return nil
+}
+
+// failGroups counts an unusable reply against every product of the call.
+func (e *Enricher) failGroups(ctx context.Context, groups [][]pending, st *runStats) error {
+	for _, g := range groups {
+		for _, it := range g {
+			if err := e.failAttempt(ctx, it); err != nil {
+				return err
+			}
+			st.failed++
 		}
 	}
 	return nil
@@ -552,7 +564,7 @@ func (e *Enricher) inHousehold(ctx context.Context, hh uuid.UUID, fn func(tx pgx
 
 func trimLen(s string, max int) (string, bool) {
 	s = strings.TrimSpace(s)
-	return s, len(s) <= max && strings.IndexFunc(s, func(r rune) bool { return r < 0x20 }) < 0
+	return s, utf8.RuneCountInString(s) <= max && strings.IndexFunc(s, func(r rune) bool { return r < 0x20 }) < 0
 }
 
 // applyOne validates ans against the household's catalog and writes it to
@@ -671,7 +683,7 @@ func (e *Enricher) validate(ctx context.Context, tx pgx.Tx, hh uuid.UUID, ans en
 		v.ingredient, v.parentCat = id, cat
 	default:
 		name, ok := trimLen(ni.Name, 80)
-		if !ok || name == "" || len(ni.Plural) > 80 || len(ni.Aliases) > 10 {
+		if !ok || name == "" || utf8.RuneCountInString(ni.Plural) > 80 || len(ni.Aliases) > 10 {
 			return v, errInvalid
 		}
 		if len(ni.ParentSlug) == 0 {

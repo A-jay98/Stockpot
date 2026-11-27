@@ -50,10 +50,11 @@ type Resolver struct{}
 
 // Resolve returns nil, nil when nothing matches.
 func (Resolver) Resolve(ctx context.Context, q dbq.DBTX, household uuid.UUID, name string, brand *string) (*Match, error) {
-	p := Parse(name, brand, nil)
-	if stores, err := storeNames(ctx, q, household); err == nil && len(stores) > 0 {
-		p = Parse(name, brand, stores)
+	stores, err := storeNames(ctx, q, household)
+	if err != nil {
+		return nil, err
 	}
+	p := Parse(name, brand, stores)
 	if p.Whole == "" {
 		return nil, nil
 	}
@@ -160,7 +161,8 @@ func exact(ctx context.Context, q dbq.DBTX, household uuid.UUID, p Parsed) (*Mat
 		JOIN ingredient i ON i.deleted_at IS NULL AND (i.household_id = $1 OR i.household_id IS NULL)
 		 AND (`+sqlNorm("i.name")+` = ph OR `+sqlNorm("coalesce(i.plural, '')")+` = ph
 		      OR replace(i.slug, '-', ' ') = ph OR ph = ANY(i.aliases))
-		LEFT JOIN category c ON c.id = i.category_id`, household, phrases)
+		LEFT JOIN category c ON c.id = i.category_id
+		ORDER BY ph, i.household_id IS NULL, i.id`, household, phrases)
 	if err != nil {
 		return nil, err
 	}
@@ -282,8 +284,9 @@ type Candidate struct {
 	Score      float32
 }
 
-// Candidates lists the n ingredients most similar to name, best first, for
-// the LLM to choose from.
+// Candidates lists the n global ingredients most similar to name, best first,
+// for the LLM to choose from. Household-only ingredients are left out: no
+// household data goes to the LLM.
 func Candidates(ctx context.Context, q dbq.DBTX, household uuid.UUID, name string, brand *string, n int) ([]Candidate, error) {
 	p := Parse(name, brand, nil)
 	phrase := ""
@@ -297,7 +300,7 @@ func Candidates(ctx context.Context, q dbq.DBTX, household uuid.UUID, name strin
 		SELECT slug, name, score FROM (
 			SELECT i.slug, i.name, `+strings.ReplaceAll(similarityScore, "similarity(", "word_similarity(")+` AS score, i.household_id
 			FROM ingredient i
-			WHERE i.deleted_at IS NULL AND (i.household_id = $2 OR i.household_id IS NULL)
+			WHERE i.deleted_at IS NULL AND i.household_id IS NULL AND $2::uuid IS NOT NULL
 		) t WHERE score > 0.3 ORDER BY score DESC, household_id IS NULL, length(name) LIMIT $3`, phrase, household, n)
 	if err != nil {
 		return nil, err

@@ -353,8 +353,8 @@ func TestAdminIngredientOps(t *testing.T) {
 	}
 	var alias bool
 	_ = e.pool.QueryRow(ctx, `SELECT 'jabuticaba' = ANY(aliases) FROM ingredient WHERE id = $1`, kum).Scan(&alias)
-	if !alias {
-		t.Fatal("merged name is not an alias")
+	if alias {
+		t.Fatal("a household's name became an alias of a global ingredient")
 	}
 	_ = p
 }
@@ -394,3 +394,74 @@ func TestMatchSemantics(t *testing.T) {
 }
 
 type resolve0 = resolve.Resolver
+
+func TestDeleteAndMergeClearTheEnrichCache(t *testing.T) {
+	kumquat := map[string]any{"new_ingredient": map[string]any{"name": "Kumquat", "plural": "Kumquats", "parent_slug": "citrus", "category_slug": "", "aliases": []string{}}}
+	e := newEnrichEnv(t, map[string]map[string]any{"Kumquats": kumquat, "Calamansi": kumquat}, 100)
+	ctx := t.Context()
+	a := e.product(t, "Kumquats")
+	if err := e.en.Run(ctx, catalog.TriggerManual, nil); err != nil {
+		t.Fatal(err)
+	}
+	var kum uuid.UUID
+	_ = e.pool.QueryRow(ctx, `SELECT id FROM ingredient WHERE slug = 'kumquat'`).Scan(&kum)
+
+	// Delete: the cached answer that created it goes too, so the next run
+	// asks again (here the model now picks an existing ingredient) instead of
+	// resurrecting a "kumquat-2".
+	if err := e.en.DeleteIngredient(ctx, kum); err != nil {
+		t.Fatal(err)
+	}
+	var cached int
+	_ = e.pool.QueryRow(ctx, `SELECT count(*) FROM enrich_cache`).Scan(&cached)
+	if cached != 0 {
+		t.Fatalf("cache rows after delete = %d", cached)
+	}
+	e.fake.answers["Kumquats"] = map[string]any{"ingredient_slug": "orange"}
+	hits := e.fake.hits.Load()
+	if err := e.en.Run(ctx, catalog.TriggerManual, nil); err != nil {
+		t.Fatal(err)
+	}
+	var recreated int
+	_ = e.pool.QueryRow(ctx, `SELECT count(*) FROM ingredient WHERE slug LIKE 'kumquat%' AND deleted_at IS NULL`).Scan(&recreated)
+	if recreated != 0 || e.fake.hits.Load() != hits+1 {
+		t.Fatalf("recreated %d, hits %d (want %d)", recreated, e.fake.hits.Load(), hits+1)
+	}
+	if r := e.row(t, a); r.slug != "orange" {
+		t.Fatalf("product = %+v", r)
+	}
+
+	// Merge: cached answers naming the merged ingredient now name the target.
+	b := e.product(t, "Calamansi")
+	e.fake.answers["Calamansi"] = kumquat
+	if err := e.en.Run(ctx, catalog.TriggerManual, nil); err != nil {
+		t.Fatal(err)
+	}
+	var cal uuid.UUID
+	_ = e.pool.QueryRow(ctx, `SELECT id FROM ingredient WHERE slug LIKE 'kumquat%' AND deleted_at IS NULL`).Scan(&cal)
+	if err := e.en.Merge(ctx, cal, "lemon"); err != nil {
+		t.Fatal(err)
+	}
+	var n int
+	_ = e.pool.QueryRow(ctx, `SELECT count(*) FROM enrich_cache WHERE result->>'ingredient_slug' = 'lemon' AND result->'new_ingredient'->>'name' = ''`).Scan(&n)
+	if n != 1 {
+		t.Fatalf("cached answers pointing at the merge target = %d", n)
+	}
+	_ = b
+}
+
+func TestCandidatesAreGlobalOnly(t *testing.T) {
+	e := newEnv(t)
+	if _, err := e.pool.Exec(t.Context(), `INSERT INTO ingredient (household_id, slug, name, source) VALUES ($1, 'secret-sauce', 'Secret sauce', 'household')`, e.hh); err != nil {
+		t.Fatal(err)
+	}
+	cs, err := resolve.Candidates(t.Context(), e.pool, e.hh, "secret sauce", nil, 8)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range cs {
+		if c.Slug == "secret-sauce" {
+			t.Fatal("household ingredient offered to the LLM")
+		}
+	}
+}

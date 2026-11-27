@@ -2,7 +2,9 @@ package catalog
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"slices"
 	"strings"
 	"time"
 
@@ -315,8 +317,8 @@ func (e *Enricher) Merge(ctx context.Context, id uuid.UUID, targetSlug string) e
 		if err != nil {
 			return err
 		}
-		var tSource string
-		if err := tx.QueryRow(ctx, `SELECT source FROM ingredient WHERE id = $1 FOR UPDATE`, target).Scan(&tSource); err != nil {
+		var tHH *uuid.UUID
+		if err := tx.QueryRow(ctx, `SELECT household_id FROM ingredient WHERE id = $1 FOR UPDATE`, target).Scan(&tHH); err != nil {
 			return err
 		}
 		if under, err := exists(ctx, tx, `WITH RECURSIVE up AS (SELECT id, parent_id FROM ingredient WHERE id = $1
@@ -335,11 +337,16 @@ func (e *Enricher) Merge(ctx context.Context, id uuid.UUID, targetSlug string) e
 		if _, err := tx.Exec(ctx, `UPDATE ingredient SET parent_id = $2 WHERE parent_id = $1 AND deleted_at IS NULL`, id, target); err != nil {
 			return err
 		}
-		if tSource != "seed" {
+		// The merged name becomes an alias only of a household's own ingredient:
+		// on a global one it would show up for every household.
+		if tHH != nil {
 			if _, err := tx.Exec(ctx, `UPDATE ingredient SET aliases = ARRAY(SELECT DISTINCT unnest(aliases || $2::text[])) WHERE id = $1`,
 				target, normalizedAliases([]string{r.name, r.slug})); err != nil {
 				return err
 			}
+		}
+		if err := rewriteCache(ctx, tx, r.slug, r.name, targetSlug); err != nil {
+			return err
 		}
 		if _, err := tx.Exec(ctx, `UPDATE ingredient SET deleted_at = now() WHERE id = $1`, id); err != nil {
 			return err
@@ -370,9 +377,74 @@ func (e *Enricher) DeleteIngredient(ctx context.Context, id uuid.UUID) error {
 		if _, err := tx.Exec(ctx, `UPDATE ingredient SET parent_id = $2 WHERE parent_id = $1 AND deleted_at IS NULL`, id, r.parent); err != nil {
 			return err
 		}
+		if err := rewriteCache(ctx, tx, r.slug, r.name, ""); err != nil {
+			return err
+		}
 		if _, err := tx.Exec(ctx, `UPDATE ingredient SET deleted_at = now() WHERE id = $1`, id); err != nil {
 			return err
 		}
 		return audit.Record(ctx, tx, "catalog.ingredient.delete", audit.Target{Type: "ingredient", ID: id.String()}, map[string]any{"slug": r.slug}, nil)
 	})
+}
+
+// rewriteCache stops cached answers from bringing back an ingredient the
+// admin removed. An answer that names slug (as ingredient_slug, an extra, or
+// by creating an ingredient of that name) is pointed at replacement, or
+// dropped when replacement is empty (the products are matched afresh).
+func rewriteCache(ctx context.Context, tx pgx.Tx, slug, name, replacement string) error {
+	creates := func(it enrichItem) bool {
+		n := strings.TrimSpace(it.NewIngredient.Name)
+		// The slug can carry a suffix (kumquat-2) when the name was taken.
+		return n != "" && (Slugify(n) == slug || Slugify(n) == Slugify(name))
+	}
+	rows, err := tx.Query(ctx, `SELECT key, result FROM enrich_cache`)
+	if err != nil {
+		return err
+	}
+	type entry struct {
+		key string
+		raw []byte
+	}
+	var all []entry
+	for rows.Next() {
+		var en entry
+		if err := rows.Scan(&en.key, &en.raw); err != nil {
+			rows.Close()
+			return err
+		}
+		all = append(all, en)
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	for _, en := range all {
+		var it enrichItem
+		if json.Unmarshal(en.raw, &it) != nil {
+			continue
+		}
+		hit := it.IngredientSlug == slug || slices.Contains(it.ExtraIngredientSlugs, slug) || creates(it)
+		if !hit {
+			continue
+		}
+		if replacement == "" {
+			if _, err := tx.Exec(ctx, `DELETE FROM enrich_cache WHERE key = $1`, en.key); err != nil {
+				return err
+			}
+			continue
+		}
+		if it.IngredientSlug == slug || creates(it) {
+			it.IngredientSlug, it.NewIngredient = replacement, newIngr{Aliases: []string{}}
+		}
+		for i, x := range it.ExtraIngredientSlugs {
+			if x == slug {
+				it.ExtraIngredientSlugs[i] = replacement
+			}
+		}
+		raw, _ := json.Marshal(it)
+		if _, err := tx.Exec(ctx, `UPDATE enrich_cache SET result = $2 WHERE key = $1`, en.key, raw); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -40,7 +40,7 @@ func ProductsMatching(ctx context.Context, q dbq.DBTX, household, ingredientID u
 		SELECT p.id, p.name, p.brand FROM product p
 		WHERE p.household_id = $1 AND p.deleted_at IS NULL
 		  AND (p.ingredient_id IN (SELECT id FROM kinds) OR p.extra_ingredient_ids && ARRAY(SELECT id FROM kinds))
-		  AND EXISTS (SELECT 1 FROM stock_item s WHERE s.product_id = p.id AND s.deleted_at IS NULL AND (s.quantity IS NULL OR s.quantity > 0))
+		  AND EXISTS (SELECT 1 FROM stock_item s WHERE s.product_id = p.id AND s.deleted_at IS NULL AND (s.quantity IS NULL OR s.quantity > 0) AND (s.amount_kind <> 'portions' OR s.portions > 0))
 		ORDER BY lower(p.name), p.id`, household, ingredientID)
 	if err != nil {
 		return nil, err

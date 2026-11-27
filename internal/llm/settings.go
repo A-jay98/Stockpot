@@ -199,7 +199,7 @@ var (
 		Key:         "llm.background_reserve_pct",
 		Default:     40,
 		Validate:    settings.Between(0, 100),
-		Description: "Percent of each daily LLM quota (per provider and global) kept for interactive features. Background jobs such as catalog enrichment only run while more than this is left.",
+		Description: "Percent of each daily LLM quota (per provider and global) kept for interactive features. Background jobs such as catalog enrichment only run while more than this is left. Only providers with a daily cap (and the global cap) are held back; a provider with no cap of its own is not.",
 	})
 	// SettingUsageTZ is the zone of the global cap's day and of usage reports.
 	SettingUsageTZ = settings.Define(settings.Def[string]{
