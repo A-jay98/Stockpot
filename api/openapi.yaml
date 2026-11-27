@@ -42,6 +42,8 @@ tags:
     description: Ingredients, matching and the household catalog.
   - name: sync
     description: Offline sync engine - commands, pulls and change events.
+  - name: blobs
+    description: Photo upload and download (content-addressed).
   - name: notifications
     description: Inbox, alert preferences and Telegram linking.
 paths:
@@ -1503,6 +1505,80 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AdminFoodRules"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/blobs:
+    post:
+      operationId: uploadBlob
+      summary: Upload a photo for the household
+      description: |
+        Raw image bytes: JPEG, PNG or WebP (the type is read from the
+        bytes), at most 8 MB and 4096 px per side. The ref is the SHA-256 of the bytes, so clients compute it
+        before uploading and reference it in commands while offline.
+        Uploading bytes that already exist only grants this household access.
+      tags: [blobs]
+      x-roles: [user]
+      x-max-body-bytes: 8388608
+      requestBody:
+        required: true
+        content:
+          image/*:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "201":
+          description: Stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlobUploaded"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/blobs/{ref}:
+    get:
+      operationId: getBlob
+      summary: A photo the household uploaded, or a resized copy
+      description: |
+        404 unless the active household uploaded `ref`. Responses are
+        immutable (the ref is a content hash). `w` serves a JPEG at that
+        width, built on first request; a width at or above the original's
+        serves the original.
+      tags: [blobs]
+      x-roles: [user]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-f]{64}$"
+        - name: w
+          in: query
+          schema:
+            type: integer
+            enum: [256, 512, 1024]
+        - name: If-None-Match
+          in: header
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The image
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+            ETag:
+              schema:
+                type: string
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        "304":
+          description: Not modified (the ETag matched)
         default:
           $ref: "#/components/responses/Problem"
 components:
@@ -4355,3 +4431,19 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AdminFoodRule"
+    BlobUploaded:
+      type: object
+      required: [ref, size, contentType, width, height]
+      properties:
+        ref:
+          type: string
+          description: Lower-case hex SHA-256 of the bytes.
+        size:
+          type: integer
+          format: int64
+        contentType:
+          type: string
+        width:
+          type: integer
+        height:
+          type: integer

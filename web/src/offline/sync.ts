@@ -1,8 +1,9 @@
 import { v7 } from 'uuid'
 import { api } from '../api/client'
+import { clearBlobCache, uploadPendingBlobs } from '../lib/photos'
 import { db, type MetaRow, type OutboxRow, type StockpotDB } from './db'
 import { syncHooks } from './outbox'
-import { applyReducer, reducerTargets } from './reducers'
+import { applyReducer, commandBlobRefs, reducerTargets } from './reducers'
 import { camelizeRow, replicaTables } from './replica'
 
 const REV = 'sync.rev'
@@ -31,11 +32,12 @@ async function getMeta<T>(database: StockpotDB, key: string, fallback: T): Promi
 const setMeta = (database: StockpotDB, key: string, value: unknown) =>
   database.meta.put({ key, value } satisfies MetaRow)
 
-/** Empties the replica, the outbox and the cursors (sign-out). */
+/** Empties the replica, the outbox, pending photos and the cursors (sign-out). */
 export async function resetReplica(database: StockpotDB = db): Promise<void> {
   await database.transaction('rw', database.tables, async () => {
     await Promise.all(database.tables.map((t) => t.clear()))
   })
+  await clearBlobCache()
 }
 
 /**
@@ -52,6 +54,7 @@ export async function adoptHousehold(householdId: string, database: StockpotDB =
     await setMeta(database, HOUSEHOLD, householdId)
     await replayPending(database, householdId, 'all')
   })
+  if (current !== null) await clearBlobCache()
 }
 
 /** Commands still waiting to be sent, in order, for the household the replica shows. */
@@ -117,10 +120,11 @@ const MAX_ATTEMPTS = 5
 const refusal = (detail: string) => JSON.stringify({ code: 'invalid', detail })
 
 /**
- * Sends this household's pending commands in `seq` order, in batches. Network failures stop the
- * flush (commands stay pending). A command the server can't process (400, or 5xx five times in a
- * row when sent alone) is set aside as rejected so it never blocks the ones behind it. Rejected
- * commands stay for the "Couldn't sync" sheet.
+ * Sends this household's pending commands in `seq` order, in batches, each batch after the
+ * photos it references are uploaded. Network failures stop the flush (commands stay pending). A
+ * command the server can't process (400, or 5xx five times in a row when sent alone) is set aside
+ * as rejected so it never blocks the ones behind it. Rejected commands stay for the "Couldn't
+ * sync" sheet.
  */
 export async function flushOutbox(database: StockpotDB = db): Promise<FlushResult> {
   const household = await getMeta<string | null>(database, HOUSEHOLD, null)
@@ -130,6 +134,10 @@ export async function flushOutbox(database: StockpotDB = db): Promise<FlushResul
   for (;;) {
     const rows = (await pendingFor(database, household)).slice(0, size)
     if (rows.length === 0) return rejected ? 'rejected' : 'done'
+    // Photos first: the server only accepts a command whose blob refs it already has.
+    const refs = rows.flatMap((r) => commandBlobRefs(r.type, r.payload))
+    if (refs.length > 0 && (await uploadPendingBlobs(refs, database)) === 'offline')
+      return 'offline'
     const out = await send(household, rows)
     if (out === 'offline') return bump(database, rows, 'offline')
     if (out === 'bad_request' || out === 'server_error') {

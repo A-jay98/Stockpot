@@ -20,6 +20,7 @@ require (
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.51.2
 	github.com/riverqueue/river/rivertype v0.51.2
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
+	golang.org/x/image v0.48.0
 	golang.org/x/sync v0.25.0
 )
 

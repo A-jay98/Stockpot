@@ -29,6 +29,12 @@ export type OutboxRow = {
   error?: string
 }
 
+/**
+ * A photo prepared on this device (downscaled JPEG) that the server may not have yet. Commands
+ * reference `ref` (its SHA-256) at once; the outbox uploads it before sending them. Local only.
+ */
+export type PendingBlob = { ref: string; blob: Blob; createdAt: string }
+
 type Replica = { [K in keyof ReplicaTables]: EntityTable<ReplicaTables[K], 'id'> }
 
 export class StockpotDB extends Dexie {
@@ -45,6 +51,7 @@ export class StockpotDB extends Dexie {
   stock_event!: Replica['stock_event']
   shopping_list!: Replica['shopping_list']
   shopping_item!: Replica['shopping_item']
+  pending_blob!: EntityTable<PendingBlob, 'ref'>
 
   constructor(name = 'stockpot') {
     super(name)
@@ -65,6 +72,10 @@ export class StockpotDB extends Dexie {
       stock_event: 'id, stockItemId',
       shopping_list: 'id, sort',
       shopping_item: 'id, listId, productId, checkedAt',
+    })
+    // v3 (M2): recipe tables, plus local-only photos waiting for upload.
+    this.version(3).stores({
+      pending_blob: 'ref',
     })
   }
 }

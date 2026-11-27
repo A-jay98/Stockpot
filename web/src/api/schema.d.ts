@@ -1229,6 +1229,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/blobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a photo for the household
+         * @description Raw image bytes: JPEG, PNG or WebP (the type is read from the
+         *     bytes), at most 8 MB and 4096 px per side. The ref is the SHA-256 of the bytes, so clients compute it
+         *     before uploading and reference it in commands while offline.
+         *     Uploading bytes that already exist only grants this household access.
+         */
+        post: operations["uploadBlob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/blobs/{ref}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A photo the household uploaded, or a resized copy
+         * @description 404 unless the active household uploaded `ref`. Responses are
+         *     immutable (the ref is a content hash). `w` serves a JPEG at that
+         *     width, built on first request; a width at or above the original's
+         *     serves the original.
+         */
+        get: operations["getBlob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2806,6 +2852,15 @@ export interface components {
         AdminFoodRules: {
             defaults: components["schemas"]["FoodRule"][];
             overrides: components["schemas"]["AdminFoodRule"][];
+        };
+        BlobUploaded: {
+            /** @description Lower-case hex SHA-256 of the bytes. */
+            ref: string;
+            /** Format: int64 */
+            size: number;
+            contentType: string;
+            width: number;
+            height: number;
         };
     };
     responses: {
@@ -4491,6 +4546,67 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AdminFoodRules"];
                 };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    uploadBlob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "image/*": string;
+            };
+        };
+        responses: {
+            /** @description Stored */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlobUploaded"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getBlob: {
+        parameters: {
+            query?: {
+                w?: 256 | 512 | 1024;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path: {
+                ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The image */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": string;
+                };
+            };
+            /** @description Not modified (the ETag matched) */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             default: components["responses"]["Problem"];
         };
