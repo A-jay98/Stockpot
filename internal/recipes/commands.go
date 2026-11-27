@@ -369,6 +369,8 @@ func (h *Handlers) delete(ctx context.Context, tx pgx.Tx, p Delete) error {
 	if err != nil || tag.RowsAffected() == 0 {
 		return err // already deleted: nothing to do
 	}
+	// TODO(m2-4, m2-5, m2-6): also tombstone the recipe's imports, recipe-specific
+	// substitutions and cook sessions once those threads write them (and in the client reducer).
 	for _, t := range []string{"recipe_version", "recipe_photo"} {
 		if _, err := tx.Exec(ctx, `UPDATE `+t+` SET deleted_at = now() WHERE recipe_id = $1 AND household_id = $2 AND deleted_at IS NULL`, p.ID, hh); err != nil {
 			return err

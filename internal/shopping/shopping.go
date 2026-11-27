@@ -297,12 +297,18 @@ func (h *handlers) itemAdd(ctx context.Context, tx pgx.Tx, p ItemAdd) error {
 		return commands.Gone("list no longer exists")
 	}
 	if p.RecipeID != nil {
-		ok, err := exists(ctx, tx, `SELECT 1 FROM recipe WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL`, *p.RecipeID, hh)
-		if err != nil {
-			return err
-		}
-		if !ok {
+		// A recipe deleted meanwhile (another device) only drops the link, so the
+		// queued item isn't lost; another household's recipe is refused.
+		var owner uuid.UUID
+		var deleted bool
+		err := tx.QueryRow(ctx, `SELECT household_id, deleted_at IS NOT NULL FROM recipe WHERE id = $1`, *p.RecipeID).Scan(&owner, &deleted)
+		switch {
+		case errors.Is(err, pgx.ErrNoRows) || (err == nil && owner != hh):
 			return commands.Invalid("unknown recipe")
+		case err != nil:
+			return err
+		case deleted:
+			p.RecipeID = nil
 		}
 	}
 	cols, args := itemCols(&p.ItemFields, []any{p.ID, hh, p.ListID})

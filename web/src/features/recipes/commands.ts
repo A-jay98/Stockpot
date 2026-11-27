@@ -21,7 +21,11 @@ async function base(db: StockpotDB, id: string, clientTime: string) {
   }
 }
 
-/** Raw lines as shown before the server parses them: headers ("For the rice:") group what follows. */
+/**
+ * Raw lines as shown before the server parses them: headers ("For the rice:") group what follows.
+ * These line ids are client-only (the server assigns its own), so `recipe.line.set_ingredient`
+ * must only target versions that came back from a pull (`rev > 0`).
+ */
 export function rawLines(raws: string[]): RecipeLine[] {
   const out: RecipeLine[] = []
   let group: string | undefined

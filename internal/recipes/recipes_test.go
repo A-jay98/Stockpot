@@ -361,6 +361,14 @@ func TestShoppingItemRemembersRecipe(t *testing.T) {
 	if res := e.do(t, "shopping.item.add", map[string]any{"id": uuid.New(), "listId": list, "text": "x", "recipeId": uuid.New()}); res.Status != commands.StatusRejected {
 		t.Fatal("unknown recipe accepted")
 	}
+	// A recipe deleted meanwhile drops the link, not the item.
+	e.mustDo(t, "recipe.delete", map[string]any{"id": r})
+	late := uuid.New()
+	e.mustDo(t, "shopping.item.add", map[string]any{"id": late, "listId": list, "text": "rice", "recipeId": r})
+	_ = e.pool.QueryRow(t.Context(), `SELECT recipe_id FROM shopping_item WHERE id = $1`, late).Scan(&got)
+	if got != nil {
+		t.Fatalf("link to a deleted recipe kept: %v", got)
+	}
 }
 
 func TestRecipeTablesSync(t *testing.T) {

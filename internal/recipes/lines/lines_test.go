@@ -39,6 +39,11 @@ func TestParse(t *testing.T) {
 		{"2 lb ground beef", "2", "", "lb", "ground beef", "", false},
 		{"500 ml stock", "500", "", "ml", "stock", "", false},
 		{"Rice", "", "", "", "Rice", "", false},
+		{"4 t-bone steaks", "4", "", "ea", "t-bone steaks", "", false},
+		{"1 tsp salt (or to taste)", "1", "", "tsp", "salt", "to taste", true},
+		{"1,5 kg potatoes", "1.5", "", "kg", "potatoes", "", false},
+		{"2 x 400g cans tomatoes", "2", "", "can", "tomatoes", "400g", false},
+		{"2 c flour", "2", "", "cup", "flour", "", false},
 	}
 	for _, tc := range tests {
 		t.Run(tc.raw, func(t *testing.T) {

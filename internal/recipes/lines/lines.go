@@ -83,6 +83,21 @@ func Parse(raw string) Parsed {
 	// Bullets and list markers.
 	s = strings.TrimLeft(s, "-*•·– ")
 
+	// Parentheses holding an optional marker ("(or to taste)") go as a whole.
+	s = markerParen.ReplaceAllStringFunc(s, func(g string) string {
+		for _, m := range optionalMarkers {
+			if m.re.MatchString(g) {
+				p.Optional = true
+				if m.note != "" {
+					notes = append(notes, m.note)
+				}
+				return " "
+			}
+		}
+		return g
+	})
+	s = strings.Join(strings.Fields(s), " ")
+
 	// Optional markers anywhere in the line.
 	for _, m := range optionalMarkers {
 		if loc := m.re.FindStringIndex(s); loc != nil {
@@ -118,9 +133,13 @@ func Parse(raw string) Parsed {
 		s = strings.TrimSpace(s[len(m[0]):])
 	}
 
-	// Parenthetical size right after the quantity: "1 (400 mL) can".
+	// Parenthetical size right after the quantity: "1 (400 mL) can", or a
+	// multiplied one: "2 x 400g cans".
 	if p.Qty != nil {
-		if m := leadingParen.FindStringSubmatch(s); m != nil {
+		if m := timesSize.FindStringSubmatch(s); m != nil {
+			notes = append(notes, m[1])
+			s = strings.TrimSpace(s[len(m[0]):])
+		} else if m := leadingParen.FindStringSubmatch(s); m != nil {
 			notes = append(notes, strings.TrimSpace(m[1]))
 			s = strings.TrimSpace(s[len(m[0]):])
 		}
@@ -185,22 +204,29 @@ var optionalMarkers = []marker{
 
 // number is a fraction, a decimal, or a whole number and a fraction
 // ("1 1/2"); fractions come first because alternation is leftmost-first.
-const number = `\d+/\d+|\d+(?:\.\d+)?(?: \d+/\d+)?`
+// A comma with one or two digits after it is a decimal comma ("1,5 kg").
+const number = `\d+/\d+|\d+(?:[.,]\d{1,2}\b|\.\d+)?(?: \d+/\d+)?`
 
 var (
 	qtyStart     = regexp.MustCompile(`^(` + number + `)(?:\s*(?:-|to)\s*(` + number + `))?`)
 	article      = regexp.MustCompile(`(?i)^an?\s+`)
 	partOf       = regexp.MustCompile(`(?i)^(juice|zest|zest and juice|juice and zest)\s+of\s+(.+)$`)
 	leadingParen = regexp.MustCompile(`^\(([^)]*)\)\s*`)
+	timesSize    = regexp.MustCompile(`^[x×]\s*(\d+(?:\.\d+)?\s*[a-zA-Z]+)\s+`)
+	markerParen  = regexp.MustCompile(`\([^)]*\)`)
 	anyParen     = regexp.MustCompile(`\(([^)]*)\)`)
 )
 
 // firstWord splits off the first word, keeping "800g" style attached units:
-// qtyStart leaves the unit letters at the start of s.
+// qtyStart leaves the unit letters at the start of s. A word not followed by
+// whitespace or the end ("t-bone") is no unit, so it comes back empty.
 func firstWord(s string) (word, rest string) {
 	i := strings.IndexFunc(s, func(r rune) bool { return !unicode.IsLetter(r) && r != '.' })
 	if i < 0 {
 		return s, ""
+	}
+	if !unicode.IsSpace(rune(s[i])) {
+		return "", s
 	}
 	return s[:i], strings.TrimSpace(s[i:])
 }
@@ -216,7 +242,7 @@ var units = func() map[string]string {
 	}
 	add("tbsp", "tbsp", "tbsp.", "tbs", "tbl", "tablespoon", "tablespoons")
 	add("tsp", "tsp", "tsp.", "teaspoon", "teaspoons")
-	add("cup", "cup", "cups", "c.")
+	add("cup", "cup", "cups", "c", "c.")
 	add("g", "g", "gr", "gram", "grams", "gramme", "grammes")
 	add("kg", "kg", "kilo", "kilos", "kilogram", "kilograms")
 	add("ml", "ml", "millilitre", "millilitres", "milliliter", "milliliters")
@@ -286,7 +312,7 @@ func normalize(s string) string {
 // rounded to 3 places for thirds.
 func parseNumber(s string) (string, bool) {
 	total := new(big.Rat)
-	for _, part := range strings.Fields(s) {
+	for _, part := range strings.Fields(strings.ReplaceAll(s, ",", ".")) {
 		r, ok := new(big.Rat).SetString(part)
 		if !ok {
 			return "", false

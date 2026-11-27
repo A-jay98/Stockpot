@@ -210,7 +210,7 @@ func validate(in *VersionInput) error {
 	if len(in.Steps) > maxSteps {
 		return commands.Invalid("at most %d steps", maxSteps)
 	}
-	kept := in.Steps[:0]
+	kept := make([]Step, 0, len(in.Steps)) // never reuse the caller's array
 	for _, s := range in.Steps {
 		s.Text = strings.TrimSpace(s.Text)
 		if s.Text == "" {
