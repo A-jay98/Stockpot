@@ -2,13 +2,15 @@ import { LogOut, Monitor, Moon, Shield, Sun } from 'lucide-react'
 import type { ReactElement } from 'react'
 import { Link } from 'react-router'
 import { useMe, useSignOut, useSwitchHousehold } from '../features/auth/session'
-import { Button, Segmented, Sheet, SheetContent, SheetTrigger } from '../ui'
+import { Button, Segmented, Sheet, SheetContent, SheetTrigger, Switch } from '../ui'
+import { FoodIcon, useColourfulIcons } from '../ui/food-icons'
 import { ServerStatus } from './ServerStatus'
 import { type ThemePreference, useTheme } from './theme'
 
 /** Account menu: who is signed in, household switch, theme, admin entry, sign out, server version. */
 export function AccountSheet({ trigger }: { trigger: ReactElement }) {
   const [theme, setTheme] = useTheme()
+  const [colourful, setColourful] = useColourfulIcons()
   const me = useMe().data
   const switchHousehold = useSwitchHousehold()
   const signOut = useSignOut()
@@ -71,6 +73,13 @@ export function AccountSheet({ trigger }: { trigger: ReactElement }) {
             ]}
           />
         </div>
+        <div className="flex items-center justify-between gap-3">
+          <label htmlFor="colourful-icons" className="flex items-center gap-2">
+            <FoodIcon k="tangerine" size={20} />
+            <span className="t-label text-ink-muted">Colourful food icons</span>
+          </label>
+          <Switch id="colourful-icons" checked={colourful} onCheckedChange={setColourful} />
+        </div>
         {me?.user.systemRole === 'admin' && (
           <Button variant="secondary" asChild>
             <Link to="/admin">
@@ -84,6 +93,14 @@ export function AccountSheet({ trigger }: { trigger: ReactElement }) {
           Sign out
         </Button>
         <ServerStatus />
+        <a
+          href="/licenses.txt"
+          target="_blank"
+          rel="noreferrer"
+          className="t-body-sm text-ink-muted underline"
+        >
+          Open-source licences
+        </a>
       </SheetContent>
     </Sheet>
   )

@@ -58,9 +58,9 @@ migration: ## Create a migration file (make migration NAME=add_items)
 	@[ -n "$(NAME)" ] || { echo "usage: make migration NAME=add_items"; exit 1; }
 	goose -s create "$(NAME)" sql
 
-gen: ## Regenerate code: Go server (oapi-codegen), queries (sqlc), TypeScript types
+gen: ## Regenerate code: Go server, queries, TypeScript types, icon sprites and registry copy
 	go generate ./...
-	cd web && pnpm -s gen
+	cd web && pnpm -s gen && pnpm -s icons
 
 serve: migrate ## Run the API on 127.0.0.1:8080
 	STOCKPOT_LISTEN=127.0.0.1:8080 go run ./cmd/stockpot serve

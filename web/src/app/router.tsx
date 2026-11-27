@@ -11,13 +11,20 @@ import { HomePage } from '../features/home/HomePage'
 import { InventoryPage } from '../features/inventory/InventoryPage'
 import { RecipesPage } from '../features/recipes/RecipesPage'
 import { ShoppingPage } from '../features/shopping/ShoppingPage'
+import { IconGallery } from '../ui/food-icons/IconGallery'
 import { AppShell } from './AppShell'
 import { ErrorPage } from './ErrorPage'
+
+// Dev builds only: tree-shaken out of production.
+const devRoutes: RouteObject[] = import.meta.env.DEV
+  ? [{ path: 'dev/icons', Component: IconGallery }]
+  : []
 
 export const routes: RouteObject[] = [
   {
     ErrorBoundary: ErrorPage,
     children: [
+      ...devRoutes,
       { path: 'login', Component: LoginPage },
       { path: 'setup', Component: SetupPage },
       { path: 'invite', Component: InvitePage },
