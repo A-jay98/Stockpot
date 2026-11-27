@@ -116,6 +116,16 @@ type Category struct {
 	Sort        int32
 }
 
+type FoodRule struct {
+	ID           uuid.UUID
+	HouseholdID  *uuid.UUID
+	IngredientID *uuid.UUID
+	CategoryID   *uuid.UUID
+	ShelfLife    []byte
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
 type Household struct {
 	ID        uuid.UUID
 	Name      string
@@ -266,6 +276,16 @@ type ProductStat struct {
 	TypicalUnit        *string
 	MedianIntervalDays *float32
 	LastQty            pgtype.Numeric
+}
+
+type PurchaseLog struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	ProductID   uuid.UUID
+	StoreID     *uuid.UUID
+	Qty         pgtype.Numeric
+	Unit        *string
+	BoughtAt    time.Time
 }
 
 type Session struct {
