@@ -33,20 +33,25 @@ func (f *fakeAlerts) List(_ context.Context, u uuid.UUID, p alerts.ListParams) (
 		Payload: json.RawMessage(`{"expired":[{"name":"Milk"}]}`), CreatedAt: time.Now(),
 	}}, 3, nil
 }
+
 func (f *fakeAlerts) MarkRead(_ context.Context, _ uuid.UUID, ids []uuid.UUID) error {
 	f.read, f.readCall = ids, f.readCall+1
 	return nil
 }
+
 func (f *fakeAlerts) GetPrefs(context.Context, uuid.UUID) (alerts.Prefs, error) { return f.prefs, nil }
+
 func (f *fakeAlerts) SetPrefs(_ context.Context, _ uuid.UUID, p alerts.Prefs) error {
 	if f.setErr == nil {
 		f.prefs = p
 	}
 	return f.setErr
 }
+
 func (f *fakeAlerts) Telegram(context.Context, uuid.UUID) (alerts.TelegramState, error) {
 	return alerts.TelegramState{Available: true, BotUsername: "bot", Linked: true, Enabled: true, Username: "kim"}, nil
 }
+
 func (f *fakeAlerts) StartLink(context.Context, uuid.UUID) (alerts.Link, error) {
 	return alerts.Link{URL: "https://t.me/bot?start=abc", ExpiresAt: time.Now().Add(time.Minute)}, f.linkErr
 }
