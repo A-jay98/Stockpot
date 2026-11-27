@@ -7,6 +7,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -342,7 +343,7 @@ func TestRunLockAndStaleRecovery(t *testing.T) {
 	if _, err := startRun(ctx, e.pool, TriggerManual, nil, time.Now()); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := startRun(ctx, e.pool, TriggerManual, nil, time.Now()); err != ErrAlreadyRunning {
+	if _, err := startRun(ctx, e.pool, TriggerManual, nil, time.Now()); !errors.Is(err, ErrAlreadyRunning) {
 		t.Fatalf("second start = %v", err)
 	}
 	if err := e.svc.Run(ctx, TriggerManual, nil); err != nil {
@@ -359,7 +360,7 @@ func TestNotConfigured(t *testing.T) {
 	if err := e.store.Reset(t.Context(), SettingChatID.Key()); err != nil {
 		t.Fatal(err)
 	}
-	if err := e.svc.Run(t.Context(), TriggerManual, nil); err != ErrNotConfigured {
+	if err := e.svc.Run(t.Context(), TriggerManual, nil); !errors.Is(err, ErrNotConfigured) {
 		t.Fatalf("err = %v", err)
 	}
 	if rs, _ := recentRuns(t.Context(), e.pool, 10); len(rs) != 0 {

@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/riverqueue/river"
@@ -42,7 +43,7 @@ func TestRunNowQueuesAJob(t *testing.T) {
 	if err := e.store.Reset(t.Context(), SettingAgeRecipient.Key()); err != nil {
 		t.Fatal(err)
 	}
-	if err := e.svc.RunNow(t.Context()); err != ErrNotConfigured {
+	if err := e.svc.RunNow(t.Context()); !errors.Is(err, ErrNotConfigured) {
 		t.Fatalf("err = %v", err)
 	}
 }

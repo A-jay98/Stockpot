@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"filippo.io/age"
@@ -83,7 +84,7 @@ func Restore(ctx context.Context, o RestoreOptions) error {
 		if work, err = os.MkdirTemp("", "stockpot-restore-*"); err != nil {
 			return err
 		}
-		defer os.RemoveAll(work)
+		defer func() { _ = os.RemoveAll(work) }()
 	}
 	staged := map[string][]string{}
 	for _, name := range []string{ArtifactDB, ArtifactBlobs} {
@@ -119,9 +120,9 @@ func stage(ctx context.Context, src PartSource, p Part, dir string) (string, err
 	if err != nil {
 		return "", err
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 	path := filepath.Join(dir, filepath.Base(p.Filename))
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600)
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o600) //nolint:gosec // path is inside our own staging dir, basename of a manifest name
 	if err != nil {
 		return "", err
 	}
@@ -147,12 +148,12 @@ func (o RestoreOptions) plaintext(paths []string) (io.Reader, func(), error) {
 	var files []*os.File
 	closeAll := func() {
 		for _, f := range files {
-			f.Close()
+			_ = f.Close()
 		}
 	}
 	var readers []io.Reader
 	for _, p := range paths {
-		f, err := os.Open(p)
+		f, err := os.Open(p) //nolint:gosec // staged by stage() inside the work dir
 		if err != nil {
 			closeAll()
 			return nil, nil, err
@@ -187,7 +188,7 @@ func (o RestoreOptions) restoreDB(ctx context.Context, paths []string) error {
 	if o.DatabaseURL != "" {
 		args = append(args, "--dbname="+o.DatabaseURL)
 	}
-	cmd := exec.CommandContext(ctx, bin, args...)
+	cmd := exec.CommandContext(ctx, bin, args...) //nolint:gosec // operator-supplied binary and target
 	var stderr limitedBuffer
 	cmd.Stdin, cmd.Stderr = r, &stderr
 	if err := cmd.Run(); err != nil {
@@ -237,9 +238,9 @@ func writeAtomic(dst string, r io.Reader) error {
 	if err != nil {
 		return err
 	}
-	defer os.Remove(tmp.Name())
+	defer func() { _ = os.Remove(tmp.Name()) }()
 	if _, err := io.Copy(tmp, r); err != nil {
-		tmp.Close()
+		_ = tmp.Close()
 		return err
 	}
 	if err := tmp.Close(); err != nil {
@@ -253,7 +254,7 @@ func writeAtomic(dst string, r io.Reader) error {
 // channel via client.
 func LoadManifest(ctx context.Context, ref string, client *telegram.Client) (Manifest, error) {
 	if !strings.HasPrefix(ref, "https://t.me/") && !strings.HasPrefix(ref, "t.me/") {
-		b, err := os.ReadFile(ref)
+		b, err := os.ReadFile(ref) //nolint:gosec // the operator names the manifest file
 		if err != nil {
 			return Manifest{}, err
 		}
@@ -284,7 +285,7 @@ func LoadManifest(ctx context.Context, ref string, client *telegram.Client) (Man
 	if err != nil {
 		return Manifest{}, err
 	}
-	defer rc.Close()
+	defer func() { _ = rc.Close() }()
 	b, err := io.ReadAll(io.LimitReader(rc, 16<<20))
 	if err != nil {
 		return Manifest{}, err
@@ -301,7 +302,9 @@ func ParseMessageLink(link string) (telegram.ChatID, int64, error) {
 	if m == nil {
 		return "", 0, fmt.Errorf("not a private-channel message link (https://t.me/c/<id>/<message>): %q", link)
 	}
-	var id int64
-	fmt.Sscanf(m[2], "%d", &id)
+	id, err := strconv.ParseInt(m[2], 10, 64)
+	if err != nil {
+		return "", 0, fmt.Errorf("bad message id in %q", link)
+	}
 	return telegram.ChatID("-100" + m[1]), id, nil
 }

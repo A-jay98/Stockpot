@@ -71,11 +71,11 @@ func runRestore(ctx context.Context, args []string, out io.Writer) error {
 	default:
 		return errors.New("need --bot-token (download from Telegram) or --parts-dir (files already downloaded)")
 	}
-	fmt.Fprintf(out, "backup %s from %s (app %s, schema v%d, %d parts)\n",
+	_, _ = fmt.Fprintf(out, "backup %s from %s (app %s, schema v%d, %d parts)\n",
 		m.RunID, m.CreatedAt.Format("2006-01-02 15:04 MST"), m.AppVersion, m.SchemaVersion, m.PartCount())
 	return backup.Restore(ctx, backup.RestoreOptions{
 		Manifest: m, Identities: ids, Source: src, DatabaseURL: *dbURL, BlobDir: *blobDir,
 		PGRestore: *pgRest, WorkDir: *workDir,
-		Logf: func(f string, a ...any) { fmt.Fprintf(out, f+"\n", a...) },
+		Logf: func(f string, a ...any) { _, _ = fmt.Fprintf(out, f+"\n", a...) },
 	})
 }

@@ -5,8 +5,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/google/uuid"
-
 	"github.com/a-jay98/stockpot/internal/backup"
 	"github.com/a-jay98/stockpot/internal/telegram"
 )
@@ -66,7 +64,7 @@ func (s *Server) GetAdminBackups(ctx context.Context, _ GetAdminBackupsRequestOb
 	out.Channel.Detail = optString(st.Channel.Detail)
 	for _, r := range st.Runs {
 		out.Runs = append(out.Runs, AdminBackupRun{
-			Id: uuid.UUID(r.ID), Trigger: AdminBackupRunTrigger(r.Trigger), Status: AdminBackupRunStatus(r.Status),
+			Id: r.ID, Trigger: AdminBackupRunTrigger(r.Trigger), Status: AdminBackupRunStatus(r.Status),
 			StartedAt: r.StartedAt, FinishedAt: r.FinishedAt, SizeBytes: r.SizeBytes, Parts: r.Parts,
 			AppVersion: optString(r.AppVersion), SchemaVersion: r.SchemaVersion, Error: r.Error,
 			Pruned: r.PrunedAt != nil, DeleteNote: r.DeleteNote,

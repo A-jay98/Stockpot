@@ -3,6 +3,7 @@ package backup
 import (
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 	_ "time/tzdata" // the schedule's zone must resolve inside the confined (chroot) service
@@ -81,8 +82,8 @@ func NextRun(hhmm string, t time.Time) time.Time {
 	}
 	h, m := 3, 30
 	if parts := strings.Split(hhmm, ":"); len(parts) == 2 && timePattern.MatchString(hhmm) {
-		fmt.Sscanf(parts[0], "%d", &h)
-		fmt.Sscanf(parts[1], "%d", &m)
+		h, _ = strconv.Atoi(parts[0])
+		m, _ = strconv.Atoi(parts[1])
 	}
 	lt := t.In(loc)
 	next := time.Date(lt.Year(), lt.Month(), lt.Day(), h, m, 0, 0, loc)

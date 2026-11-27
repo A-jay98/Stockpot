@@ -29,7 +29,7 @@ type Args struct {
 // Kind names the job in River's tables.
 func (Args) Kind() string { return "backup.run" }
 
-// InsertOpts: a failed backup is retried once; never two queued at once.
+// InsertOpts retries a failed backup once and never queues two at once.
 func (Args) InsertOpts() river.InsertOpts {
 	return river.InsertOpts{
 		MaxAttempts: 2,

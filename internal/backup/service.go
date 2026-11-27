@@ -284,7 +284,7 @@ func (s *Service) dumpDatabase(ctx context.Context, w io.Writer) error {
 	if s.d.DatabaseURL != "" {
 		args = append(args, "--dbname="+s.d.DatabaseURL)
 	}
-	cmd := exec.CommandContext(ctx, s.d.PGDump, args...)
+	cmd := exec.CommandContext(ctx, s.d.PGDump, args...) //nolint:gosec // binary from our own config, no shell
 	var stderr limitedBuffer
 	cmd.Stdout, cmd.Stderr = w, &stderr
 	if err := cmd.Run(); err != nil {
@@ -335,7 +335,7 @@ func addFile(tw *tar.Writer, path, name string) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	st, err := f.Stat()
 	if err != nil {
 		return err

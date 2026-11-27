@@ -4,6 +4,7 @@ package telegramtest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -220,7 +221,7 @@ func (s *Server) sendDocument(w http.ResponseWriter, r *http.Request) {
 	}
 	for {
 		p, err := mr.NextPart()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

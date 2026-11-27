@@ -172,7 +172,7 @@ func (c *Client) do(req *http.Request, method string, out any) error {
 	if err != nil {
 		return redact(err, c.token())
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 8<<20))
 	if err != nil {
 		return redact(err, c.token())
