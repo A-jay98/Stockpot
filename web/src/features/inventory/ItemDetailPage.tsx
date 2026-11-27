@@ -232,7 +232,7 @@ function Detail({ row }: { row: StockRow }) {
         </div>
       </section>
 
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(68px,1fr))] gap-2">
         {!item.openedOn && (
           <ActionButton
             icon={<PackageOpen aria-hidden />}

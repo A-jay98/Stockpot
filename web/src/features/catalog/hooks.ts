@@ -9,7 +9,12 @@ import './commands' // registers the optimistic reducers
 const byName = <T extends { name: string }>(a: T, b: T) => a.name.localeCompare(b.name)
 
 export const useCategories = (): Category[] =>
-  useLiveQuery(() => db.category.orderBy('sort').toArray(), [], [] as Category[])
+  useLiveQuery(
+    // `sort` isn't an index on category, so order in memory (a few dozen rows).
+    async () => (await db.category.toArray()).sort((a, b) => a.sort - b.sort),
+    [],
+    [] as Category[],
+  )
 
 export const useIngredients = (): Ingredient[] =>
   useLiveQuery(() => db.ingredient.toArray(), [], [] as Ingredient[])
