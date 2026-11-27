@@ -84,11 +84,11 @@ func TestSyncEventsStream(t *testing.T) {
 	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, srv.URL+"/api/v1/sync/events", nil)
 	req.Header.Set("Origin", identityOrigin)
 	req.AddCookie(&http.Cookie{Name: identity.SessionCookie, Value: admin.cookie})
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req) //nolint:bodyclose // closed by the deferred func below
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	if resp.StatusCode != 200 || resp.Header.Get("Content-Type") != "text/event-stream" || resp.Header.Get("X-Accel-Buffering") != "no" {
 		t.Fatalf("status %d headers %v", resp.StatusCode, resp.Header)
 	}

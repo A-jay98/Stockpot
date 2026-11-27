@@ -141,7 +141,7 @@ func optStr(s *setter, col string, o Opt[string]) {
 	}
 }
 
-func clean(field string, o Opt[string], max int, required bool) error {
+func clean(field string, o Opt[string], maxLen int, required bool) error {
 	if !o.Set {
 		return nil
 	}
@@ -152,8 +152,8 @@ func clean(field string, o Opt[string], max int, required bool) error {
 		return nil
 	}
 	v := strings.TrimSpace(*o.Value)
-	if (required && v == "") || len(v) > max {
-		return commands.Invalid("%s must be 1-%d characters", field, max)
+	if (required && v == "") || len(v) > maxLen {
+		return commands.Invalid("%s must be 1-%d characters", field, maxLen)
 	}
 	*o.Value = v
 	return nil
