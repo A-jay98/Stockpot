@@ -367,8 +367,10 @@ func TestOpenOnlyShortens(t *testing.T) {
 	}
 	// A use-by sooner than the opened estimate stays.
 	soon := uuid.New()
-	e.ok(t, "inventory.stock.add", map[string]any{"id": soon, "productId": milk, "locationId": e.loc["fridge"], "amountKind": "exact", "quantity": "1", "unit": "l",
-		"source": "manual", "on": today(), "expiresOn": plus(2), "expiryKind": "use_by"})
+	e.ok(t, "inventory.stock.add", map[string]any{
+		"id": soon, "productId": milk, "locationId": e.loc["fridge"], "amountKind": "exact", "quantity": "1", "unit": "l",
+		"source": "manual", "on": today(), "expiresOn": plus(2), "expiryKind": "use_by",
+	})
 	e.ok(t, "inventory.stock.open", map[string]any{"id": soon, "on": today()})
 	if s := e.stock(t, soon); *s.Expires != plus(2) || *s.ExpiryKind != "use_by" {
 		t.Fatalf("open overrode a nearer use-by: %v %v", *s.Expires, *s.ExpiryKind)
