@@ -116,6 +116,28 @@ type Category struct {
 	Sort        int32
 }
 
+type EnrichCache struct {
+	Key       string
+	Result    []byte
+	CreatedAt time.Time
+}
+
+type EnrichRun struct {
+	ID         uuid.UUID
+	Trigger    string
+	JobID      *int64
+	StartedAt  time.Time
+	FinishedAt *time.Time
+	Outcome    string
+	Items      int32
+	Applied    int32
+	Failed     int32
+	Cached     int32
+	Calls      int32
+	Provider   *string
+	Reason     *string
+}
+
 type Household struct {
 	ID        uuid.UUID
 	Name      string
