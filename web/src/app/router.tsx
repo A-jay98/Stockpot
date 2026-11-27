@@ -9,6 +9,7 @@ import { RequireSession } from '../features/auth/RequireSession'
 import { SetupPage } from '../features/auth/SetupPage'
 import { HomePage } from '../features/home/HomePage'
 import { InventoryPage } from '../features/inventory/InventoryPage'
+import { NotificationSettingsPage } from '../features/notifications/NotificationSettingsPage'
 import { RecipesPage } from '../features/recipes/RecipesPage'
 import { LocationsPage } from '../features/settings/LocationsPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
@@ -52,6 +53,7 @@ export const routes: RouteObject[] = [
           { path: 'settings', Component: SettingsPage },
           { path: 'settings/stores', Component: StoresPage },
           { path: 'settings/locations', Component: LocationsPage },
+          { path: 'settings/notifications', Component: NotificationSettingsPage },
         ],
       },
     ],

@@ -4,6 +4,7 @@ import { ApiError } from '../api/problem'
 import { Badge, Button, Field, Input, Switch, Textarea, toast } from '../ui'
 import { AuditTable } from './AuditPage'
 import { type Setting, useResetSetting, useSaveSetting, useSettings } from './api'
+import { useAdminTelegram } from './telegram-api'
 import { useAuditEvents } from './trail-api'
 import { AdminPage, ErrorNote, formatTime, LoadMore } from './ui'
 
@@ -24,6 +25,7 @@ export function SettingsPage() {
       intro="Changes apply immediately in every server process and are recorded in the audit log."
     >
       {error && <ErrorNote error={error} />}
+      <TelegramStatus />
       {flags.length > 0 && (
         <Section title="Feature flags">
           {flags.map((s) => (
@@ -42,9 +44,53 @@ export function SettingsPage() {
   )
 }
 
+/** Bot health: token check, linked chats and whether the poller is running. */
+function TelegramStatus() {
+  const { data } = useAdminTelegram()
+  if (!data) return null
+  const tone = data.status === 'ok' ? 'fresh' : data.status === 'error' ? 'expired' : 'neutral'
+  return (
+    <section aria-label="Telegram bot" className="flex flex-col gap-2">
+      <h2 className="t-label m-0 text-ink-muted">Telegram bot</h2>
+      <div className="flex flex-col gap-1.5 rounded-lg bg-surface p-3.5 shadow-card">
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge tone={tone}>
+            {data.status === 'ok'
+              ? `@${data.botUsername}`
+              : data.status === 'error'
+                ? 'Token rejected'
+                : 'Not configured'}
+          </Badge>
+          <span className="t-body-sm text-ink-muted">
+            {data.linkedChats} linked {data.linkedChats === 1 ? 'chat' : 'chats'}
+          </span>
+          {data.status === 'ok' && (
+            <Badge tone={data.polling ? 'fresh' : 'soon'}>
+              {data.polling ? 'Listening for messages' : 'Not listening'}
+            </Badge>
+          )}
+        </div>
+        {data.detail && <p className="t-body-sm m-0 text-ink-muted">{data.detail}</p>}
+        {data.lastError && (
+          <p className="t-body-sm m-0 text-expired">Last poll error: {data.lastError}</p>
+        )}
+        {data.lastPollAt && (
+          <p className="t-body-sm m-0 text-ink-muted">Last poll {formatTime(data.lastPollAt)}</p>
+        )}
+      </div>
+    </section>
+  )
+}
+
 const sectionTitle = (group: string) =>
-  ({ log: 'Logging', retention: 'Data retention', auth: 'Sign-in', llm: 'AI providers' })[group] ??
-  group.charAt(0).toUpperCase() + group.slice(1)
+  ({
+    log: 'Logging',
+    alerts: 'Alerts',
+    telegram: 'Telegram',
+    retention: 'Data retention',
+    auth: 'Sign-in',
+    llm: 'AI providers',
+  })[group] ?? group.charAt(0).toUpperCase() + group.slice(1)
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (

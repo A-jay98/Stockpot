@@ -30,6 +30,8 @@ type Deps struct {
 	// Workers registers feature workers (backups, alerts, …) before the
 	// client is built.
 	Workers []func(*river.Workers) error
+	// Periodic adds feature periodic jobs (alerts, …) to the retention job.
+	Periodic []*river.PeriodicJob
 }
 
 // New builds a client with every worker and periodic job registered. Call
@@ -52,13 +54,13 @@ func New(d Deps) (*Client, error) {
 		// Longer than the longest job (a backup may take up to 3 h), or River
 		// would start a second copy of it while the first is still running.
 		RescueStuckJobsAfter: 4 * time.Hour,
-		PeriodicJobs: []*river.PeriodicJob{
+		PeriodicJobs: append([]*river.PeriodicJob{
 			river.NewPeriodicJob(
 				river.PeriodicInterval(24*time.Hour),
 				func() (river.JobArgs, *river.InsertOpts) { return RetentionArgs{}, nil },
 				&river.PeriodicJobOpts{ID: "retention", RunOnStart: true},
 			),
-		},
+		}, d.Periodic...),
 		Logger: d.Logger,
 	})
 	if err != nil {
