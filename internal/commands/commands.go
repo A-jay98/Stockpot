@@ -187,7 +187,7 @@ func (s *Service) applyOne(ctx context.Context, hh, user uuid.UUID, c Command) (
 	if err != nil {
 		return Result{}, err
 	}
-	after, err := h(ctx, sp, c.Payload)
+	after, err := h(withClientTime(ctx, c.ClientTime), sp, c.Payload)
 	var rej *Error
 	var pgErr *pgconn.PgError
 	switch {
@@ -296,4 +296,29 @@ func CheckOwned(ctx context.Context, tx pgx.Tx, table string, id, household uuid
 		return Invalid("id already in use")
 	}
 	return nil
+}
+
+type clientTimeKey struct{}
+
+func withClientTime(ctx context.Context, t time.Time) context.Context {
+	return context.WithValue(ctx, clientTimeKey{}, t)
+}
+
+// maxClientSkew bounds how far back a client's clock is trusted: an offline
+// shopping trip syncs within days, anything older is treated as unreliable.
+const maxClientSkew = 7 * 24 * time.Hour
+
+// ClientTime is when the user performed the command being applied, clamped to
+// [now - 7 days, now]; it is the time of application when the client sent
+// none. Handlers use it for events that happened offline (a purchase).
+func ClientTime(ctx context.Context) time.Time {
+	now := time.Now()
+	t, _ := ctx.Value(clientTimeKey{}).(time.Time)
+	if t.IsZero() || t.After(now) {
+		return now
+	}
+	if t.Before(now.Add(-maxClientSkew)) {
+		return now.Add(-maxClientSkew)
+	}
+	return t
 }
