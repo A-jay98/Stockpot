@@ -67,6 +67,15 @@ type StockConsume struct {
 	Reason   *string   `json:"reason"`
 }
 
+// StockRestock is inventory.stock.restock: a positive delta (the + stepper).
+type StockRestock struct {
+	ID       uuid.UUID `json:"id"`
+	EventID  uuid.UUID `json:"eventId"`
+	Quantity *string   `json:"quantity"`
+	Unit     *string   `json:"unit"`
+	Portions *int      `json:"portions"`
+}
+
 // StockAdjust is inventory.stock.adjust: set the amount (zero finishes the item).
 type StockAdjust struct {
 	ID       uuid.UUID `json:"id"`
@@ -154,6 +163,7 @@ func Register(r *commands.Registry, res catalog.Resolver) {
 	h := &handlers{createProduct: catalog.CreateProduct(res)}
 	commands.Register(r, "inventory.stock.add", h.add)
 	commands.Register(r, "inventory.stock.consume", h.consume)
+	commands.Register(r, "inventory.stock.restock", h.restock)
 	commands.Register(r, "inventory.stock.adjust", h.adjust)
 	commands.Register(r, "inventory.stock.set_level", h.setLevel)
 	commands.Register(r, "inventory.stock.mark_low", h.mark(true))
@@ -453,7 +463,13 @@ func (h *handlers) add(ctx context.Context, tx pgx.Tx, p StockAdd) error {
 		if err != nil {
 			return err
 		}
-		if d, ok := Estimate(c, OpAdd, loc, on); ok {
+		d, ok := Estimate(c, OpAdd, loc, on)
+		if opened != nil && loc != Freezer {
+			if o, ook := Estimate(c, OpOpen, loc, *opened); ook && (!ok || o.Before(d)) {
+				d, ok = o, true
+			}
+		}
+		if ok {
 			expires, kind = &d, ptr("estimated")
 		}
 	}
@@ -547,6 +563,46 @@ func (h *handlers) consume(ctx context.Context, tx pgx.Tx, p StockConsume) error
 			return err
 		}
 		ev.Delta = delta(true, nil, &taken)
+	default:
+		return commands.Invalid("a rough-level item changes by set_level")
+	}
+	return writeEvent(ctx, tx, hh, ev)
+}
+
+func (h *handlers) restock(ctx context.Context, tx pgx.Tx, p StockRestock) error {
+	hh, err := identity.HouseholdID(ctx)
+	if err != nil {
+		return err
+	}
+	it, err := load(ctx, tx, hh, p.ID)
+	if err != nil {
+		return err
+	}
+	ev := event{ID: p.EventID, Item: p.ID, Kind: "adjust", Unit: it.Unit, To: it.LocationID}
+	switch it.Kind {
+	case "exact":
+		if p.Quantity == nil || p.Portions != nil {
+			return commands.Invalid("restock a quantity onto an exact amount")
+		}
+		q, err := units.ParseQuantity(*p.Quantity)
+		if err != nil || isZero(q) {
+			return commands.Invalid("quantity must be above zero")
+		}
+		if p.Unit != nil && *p.Unit != *it.Unit {
+			return commands.Invalid("unit must be %s", *it.Unit)
+		}
+		if _, err := tx.Exec(ctx, `UPDATE stock_item SET quantity = quantity + $2::text::numeric WHERE id = $1`, p.ID, q); err != nil {
+			return err
+		}
+		ev.Delta = delta(false, &q, nil)
+	case "portions":
+		if p.Portions == nil || p.Quantity != nil || *p.Portions <= 0 {
+			return commands.Invalid("restock a number of portions")
+		}
+		if _, err := tx.Exec(ctx, `UPDATE stock_item SET portions = portions + $2 WHERE id = $1`, p.ID, *p.Portions); err != nil {
+			return err
+		}
+		ev.Delta = delta(false, nil, p.Portions)
 	default:
 		return commands.Invalid("a rough-level item changes by set_level")
 	}
@@ -673,7 +729,9 @@ func (h *handlers) relocate(ctx context.Context, tx pgx.Tx, hh uuid.UUID, it *it
 		args = append(args, on)
 		set += fmt.Sprintf(", thawed_on = $%d", len(args))
 	}
-	if crosses || it.ExpiryKind == nil || *it.ExpiryKind == "estimated" {
+	// A plain move never re-estimates an existing date: the clock does not
+	// restart, so a move can only keep an expiry, never lengthen it.
+	if crosses || it.ExpiresOn == nil {
 		c, err := h.chain(ctx, tx, hh, it.ProductID)
 		if err != nil {
 			return "", err
@@ -702,11 +760,10 @@ func (h *handlers) move(ctx context.Context, tx pgx.Tx, p StockMove) error {
 	if err != nil {
 		return err
 	}
-	if it.LocationID != nil && *it.LocationID == p.LocationID {
-		return nil
-	}
-	if _, err := h.relocate(ctx, tx, hh, it, p.LocationID, nil, on); err != nil {
-		return err
+	if it.LocationID == nil || *it.LocationID != p.LocationID {
+		if _, err := h.relocate(ctx, tx, hh, it, p.LocationID, nil, on); err != nil {
+			return err
+		}
 	}
 	return writeEvent(ctx, tx, hh, event{ID: p.EventID, Item: p.ID, Kind: "move", From: it.LocationID, To: &p.LocationID})
 }
@@ -759,21 +816,20 @@ func (h *handlers) open(ctx context.Context, tx pgx.Tx, p StockOpen) error {
 	if err != nil {
 		return err
 	}
-	if it.OpenedOn != nil {
-		return nil // already open: opening again changes nothing
-	}
-	set, args := "opened_on = $2", []any{p.ID, on}
-	c, err := h.chain(ctx, tx, hh, it.ProductID)
-	if err != nil {
-		return err
-	}
-	// Opening only shortens: a nearer date the user gave, or one already estimated, stays.
-	if d, ok := Estimate(c, OpOpen, it.LocKind, on); ok && (it.ExpiresOn == nil || d.Before(*it.ExpiresOn)) {
-		args = append(args, d)
-		set += ", expires_on = $3, expiry_kind = 'estimated'"
-	}
-	if _, err := tx.Exec(ctx, "UPDATE stock_item SET "+set+" WHERE id = $1", args...); err != nil {
-		return err
+	if it.OpenedOn == nil { // already open: opening again only logs the event
+		set, args := "opened_on = $2", []any{p.ID, on}
+		c, err := h.chain(ctx, tx, hh, it.ProductID)
+		if err != nil {
+			return err
+		}
+		// Opening only shortens: a nearer date the user gave, or one already estimated, stays.
+		if d, ok := Estimate(c, OpOpen, it.LocKind, on); ok && (it.ExpiresOn == nil || d.Before(*it.ExpiresOn)) {
+			args = append(args, d)
+			set += ", expires_on = $3, expiry_kind = 'estimated'"
+		}
+		if _, err := tx.Exec(ctx, "UPDATE stock_item SET "+set+" WHERE id = $1", args...); err != nil {
+			return err
+		}
 	}
 	return writeEvent(ctx, tx, hh, event{ID: p.EventID, Item: p.ID, Kind: "open", From: it.LocationID})
 }
@@ -852,11 +908,10 @@ func (h *handlers) update(ctx context.Context, tx pgx.Tx, p StockUpdate) error {
 		set("portions", "", a.Portions)
 		set("level", "", a.Level)
 	}
-	if len(cols) == 0 {
-		return nil
-	}
-	if _, err := tx.Exec(ctx, "UPDATE stock_item SET "+join(cols)+" WHERE id = $1", args...); err != nil {
-		return err
+	if len(cols) > 0 {
+		if _, err := tx.Exec(ctx, "UPDATE stock_item SET "+join(cols)+" WHERE id = $1", args...); err != nil {
+			return err
+		}
 	}
 	return writeEvent(ctx, tx, hh, event{ID: p.EventID, Item: p.ID, Kind: "adjust", Reason: ptr("edit")})
 }

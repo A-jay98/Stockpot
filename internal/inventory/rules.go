@@ -36,8 +36,8 @@ type IngredientLayer struct {
 
 // Chain is everything an estimate needs about one product, most specific
 // first. Days resolves a key through it:
-// product override → per ingredient (self, then each ancestor): household
-// rule, seed → category: household rule, Stockpot default.
+// product override → household ingredient rules (self, then ancestors) →
+// household category rule → seed ingredient values → Stockpot category default.
 type Chain struct {
 	Product           ShelfLife         `json:"product"`
 	Ingredients       []IngredientLayer `json:"ingredients"`
@@ -47,11 +47,17 @@ type Chain struct {
 
 // Days is the shelf life for key, if any layer knows it.
 func (c Chain) Days(key string) (int, bool) {
+	// A household's own rule always beats a Stockpot seed value, so a
+	// Settings edit takes effect whatever level it was made at.
 	layers := []ShelfLife{c.Product}
 	for _, i := range c.Ingredients {
-		layers = append(layers, i.Household, i.Seed)
+		layers = append(layers, i.Household)
 	}
-	layers = append(layers, c.CategoryHousehold, c.CategoryDefault)
+	layers = append(layers, c.CategoryHousehold)
+	for _, i := range c.Ingredients {
+		layers = append(layers, i.Seed)
+	}
+	layers = append(layers, c.CategoryDefault)
 	for _, l := range layers {
 		if d, ok := l[key]; ok && d > 0 {
 			return d, true
@@ -86,7 +92,7 @@ const (
 const DateLayout = "2006-01-02"
 
 // Estimate returns the estimated expiry date (on + days) for op, if the chain
-// knows a shelf life. loc matters for OpAdd only (where it is stored).
+// knows a shelf life. loc is where it is stored (OpAdd, and OpOpen, which does nothing in a freezer).
 func Estimate(c Chain, op Op, loc LocationKind, on time.Time) (time.Time, bool) {
 	var days int
 	var ok bool
@@ -107,6 +113,9 @@ func Estimate(c Chain, op Op, loc LocationKind, on time.Time) (time.Time, bool) 
 			days, ok = c.Days(KeyFridge)
 		}
 	case OpOpen:
+		if loc == Freezer {
+			return time.Time{}, false // opened in the freezer: the frozen date still stands
+		}
 		days, ok = c.Days(KeyOpenedFridge)
 	}
 	if !ok {

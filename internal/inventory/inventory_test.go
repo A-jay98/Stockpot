@@ -338,9 +338,9 @@ func TestFreezeAndThawRestartTheClock(t *testing.T) {
 	if s := e.stock(t, other); *s.Expires != plus(3) || *s.ExpiryKind != "best_before" {
 		t.Fatalf("given date changed on a fridge → pantry move: %v %v", *s.Expires, *s.ExpiryKind)
 	}
-	e.ok(t, "inventory.stock.move", map[string]any{"id": other, "locationId": e.loc["pantry"]}) // same place: no-op
-	if got := e.events(t, other); len(got) != 2 {
-		t.Fatalf("a move to the same location wrote an event: %v", got)
+	e.ok(t, "inventory.stock.move", map[string]any{"id": other, "locationId": e.loc["pantry"]}) // same place: nothing changes
+	if s := e.stock(t, other); *s.Expires != plus(3) {
+		t.Fatalf("a move to the same location changed the date: %v", *s.Expires)
 	}
 }
 
@@ -360,10 +360,11 @@ func TestOpenOnlyShortens(t *testing.T) {
 	if *s.OpenedOn != today() || *s.Expires != plus(5) || *s.ExpiryKind != "estimated" { // dairy default: 5 days once opened
 		t.Fatalf("after open: %+v expires=%v", s, *s.Expires)
 	}
+	// Opening twice changes nothing but still records the event the client logged.
 	n := len(e.events(t, item))
-	e.ok(t, "inventory.stock.open", map[string]any{"id": item, "on": today()})
-	if len(e.events(t, item)) != n {
-		t.Fatal("opening twice wrote another event")
+	e.ok(t, "inventory.stock.open", map[string]any{"id": item, "on": today(), "eventId": uuid.New()})
+	if s2 := e.stock(t, item); *s2.Expires != plus(5) || len(e.events(t, item)) != n+1 {
+		t.Fatalf("second open: %v, %d events", *s2.Expires, len(e.events(t, item)))
 	}
 	// A use-by sooner than the opened estimate stays.
 	soon := uuid.New()
@@ -584,5 +585,60 @@ func TestFoodRuleService(t *testing.T) {
 	_ = e.pool.QueryRow(t.Context(), `SELECT count(*) FROM audit_event WHERE action LIKE 'inventory.food_rule.%'`).Scan(&audits)
 	if audits != 3 {
 		t.Fatalf("audit events = %d, want 3 (set, set, reset)", audits)
+	}
+}
+
+func TestRestockIsADeltaThatCommutesWithConsume(t *testing.T) {
+	e := newEnv(t)
+	item, _ := e.addMandarins(t, "fridge", map[string]any{"quantity": "12", "unit": "ea"})
+	// Offline + (restock 1) and a concurrent consume of 6 land in either order.
+	e.ok(t, "inventory.stock.consume", map[string]any{"id": item, "quantity": "6"})
+	e.ok(t, "inventory.stock.restock", map[string]any{"id": item, "quantity": "1"})
+	if s := e.stock(t, item); *s.Qty != "7" {
+		t.Fatalf("12 - 6 + 1 = %s", *s.Qty)
+	}
+	e.rejected(t, "inventory.stock.restock", map[string]any{"id": item, "quantity": "0"}, "invalid")
+	e.rejected(t, "inventory.stock.restock", map[string]any{"id": item, "portions": 1}, "invalid")
+}
+
+func TestMoveNeverLengthensExpiry(t *testing.T) {
+	e := newEnv(t)
+	item, _ := e.addMandarins(t, "fridge", map[string]any{"quantity": "3"})
+	e.ok(t, "inventory.stock.open", map[string]any{"id": item, "on": today()})
+	before := *e.stock(t, item).Expires
+	e.ok(t, "inventory.stock.move", map[string]any{"id": item, "locationId": e.loc["pantry"], "on": today()})
+	if s := e.stock(t, item); *s.Expires != before {
+		t.Fatalf("move changed expiry %s -> %s", before, *s.Expires)
+	}
+	// Moving to where it already is still records the event.
+	n := len(e.events(t, item))
+	e.ok(t, "inventory.stock.move", map[string]any{"id": item, "locationId": e.loc["pantry"], "eventId": uuid.New()})
+	if len(e.events(t, item)) != n+1 {
+		t.Fatal("no-op move wrote no event")
+	}
+}
+
+func TestOpenInFreezerKeepsDate(t *testing.T) {
+	e := newEnv(t)
+	item, _ := e.addMandarins(t, "freezer", nil)
+	before := *e.stock(t, item).Expires
+	e.ok(t, "inventory.stock.open", map[string]any{"id": item, "on": today()})
+	if s := e.stock(t, item); *s.Expires != before || s.OpenedOn == nil {
+		t.Fatalf("open in freezer: %+v", s)
+	}
+}
+
+func TestHouseholdCategoryRuleBeatsSeedIngredient(t *testing.T) {
+	e := newEnv(t)
+	var cat uuid.UUID
+	if err := e.pool.QueryRow(e.ctx, `SELECT category_id FROM ingredient WHERE slug = 'mandarin'`).Scan(&cat); err != nil {
+		t.Fatal(err)
+	}
+	if err := inventory.NewRuleService(e.pool).Put(e.ctx, "category", cat, inventory.ShelfLife{"fridge": 4}); err != nil {
+		t.Fatal(err)
+	}
+	item, _ := e.addMandarins(t, "fridge", nil)
+	if s := e.stock(t, item); *s.Expires != plus(4) {
+		t.Fatalf("category rule ignored: %s", *s.Expires)
 	}
 }

@@ -2267,6 +2267,7 @@ components:
         - $ref: "#/components/schemas/CmdCatalogIngredientCreate"
         - $ref: "#/components/schemas/CmdInventoryStockAdd"
         - $ref: "#/components/schemas/CmdInventoryStockConsume"
+        - $ref: "#/components/schemas/CmdInventoryStockRestock"
         - $ref: "#/components/schemas/CmdInventoryStockAdjust"
         - $ref: "#/components/schemas/CmdInventoryStockSetLevel"
         - $ref: "#/components/schemas/CmdInventoryStockMarkLow"
@@ -2294,6 +2295,7 @@ components:
           catalog.ingredient.create: "#/components/schemas/CmdCatalogIngredientCreate"
           inventory.stock.add: "#/components/schemas/CmdInventoryStockAdd"
           inventory.stock.consume: "#/components/schemas/CmdInventoryStockConsume"
+          inventory.stock.restock: "#/components/schemas/CmdInventoryStockRestock"
           inventory.stock.adjust: "#/components/schemas/CmdInventoryStockAdjust"
           inventory.stock.set_level: "#/components/schemas/CmdInventoryStockSetLevel"
           inventory.stock.mark_low: "#/components/schemas/CmdInventoryStockMarkLow"
@@ -2865,6 +2867,42 @@ components:
             reason:
               type: string
               maxLength: 200
+    CmdInventoryStockRestock:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.restock]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            quantity:
+              type: string
+              pattern: '^[0-9]+(\.[0-9]+)?$'
+              description: "Decimal string."
+            unit:
+              type: string
+              maxLength: 16
+            portions:
+              type: integer
+              minimum: 1
+              maximum: 100000
     CmdInventoryStockAdjust:
       type: object
       required: [id, type, payload, clientTime]

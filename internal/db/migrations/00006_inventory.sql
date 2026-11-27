@@ -22,7 +22,9 @@ CREATE UNIQUE INDEX food_rule_category ON food_rule (coalesce(household_id, '000
 
 -- Stockpot defaults per category. Ingredient seeds carry the specific
 -- fridge/freezer/pantry days; these cover everything the seed leaves out,
--- including the opened and thawed rules that the seed has none of.
+-- including the opened and thawed rules that the seed has none of. Dry
+-- pantry and baking goods have no opened rule: opening only shortens, and
+-- unknown means no shortening.
 INSERT INTO food_rule (category_id, shelf_life)
 SELECT c.id, v.shelf_life::jsonb
 FROM (VALUES
@@ -34,8 +36,8 @@ FROM (VALUES
     ('seafood',           '{"fridge":2,"freezer":120,"opened_fridge":1,"thawed_fridge":1}'),
     ('deli',              '{"fridge":5,"freezer":60,"opened_fridge":3,"thawed_fridge":2}'),
     ('bakery',            '{"fridge":7,"freezer":90,"pantry":4,"opened_fridge":4,"thawed_fridge":2}'),
-    ('pantry',            '{"fridge":365,"freezer":365,"pantry":365,"opened_fridge":7,"thawed_fridge":3}'),
-    ('baking',            '{"fridge":365,"freezer":365,"pantry":365,"opened_fridge":180,"thawed_fridge":3}'),
+    ('pantry',            '{"fridge":365,"freezer":365,"pantry":365,"thawed_fridge":3}'),
+    ('baking',            '{"fridge":365,"freezer":365,"pantry":365,"thawed_fridge":3}'),
     ('spices-condiments', '{"fridge":365,"freezer":365,"pantry":365,"opened_fridge":90,"thawed_fridge":7}'),
     ('oils-sauces',       '{"fridge":365,"freezer":180,"pantry":365,"opened_fridge":60,"thawed_fridge":3}'),
     ('frozen',            '{"fridge":3,"freezer":180,"opened_fridge":3,"thawed_fridge":2}'),

@@ -30,7 +30,7 @@ import {
 import { FoodIcon } from '../../ui/food-icons'
 import { useIngredients, useLocations } from '../catalog/hooks'
 import { today as todayOf } from './dates'
-import { add, splitEvenly } from './decimal'
+import { splitEvenly } from './decimal'
 import { type StockRow, useStockEvents, useStockRow } from './hooks'
 import { amountLabel, expiryLabel, foodState, kindLabel, levelLabel, unitLabel } from './status'
 
@@ -139,10 +139,11 @@ function Detail({ row }: { row: StockRow }) {
     if (item.amountKind === 'exact' && item.quantity) {
       if (dir < 0)
         send('inventory.stock.consume', { quantity: step, unit: item.unit ?? undefined } as never)
-      else send('inventory.stock.adjust', { quantity: add(item.quantity, step) } as never)
+      else
+        send('inventory.stock.restock', { quantity: step, unit: item.unit ?? undefined } as never)
     } else if (item.amountKind === 'portions') {
       if (dir < 0) send('inventory.stock.consume', { portions: 1 } as never)
-      else send('inventory.stock.adjust', { portions: (item.portions ?? 0) + 1 } as never)
+      else send('inventory.stock.restock', { portions: 1 } as never)
     }
   }
 
@@ -308,7 +309,12 @@ function Detail({ row }: { row: StockRow }) {
             <li key={e.id} className="flex flex-col">
               <span>{eventText(e, locName)}</span>
               <span className="text-[12.5px] text-ink-muted">
-                {new Date(e.createdAt).toLocaleString()}
+                {new Date(e.createdAt).toLocaleString(undefined, {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
               </span>
             </li>
           ))}

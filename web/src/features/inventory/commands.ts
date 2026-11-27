@@ -11,7 +11,7 @@ import { buildChain } from './foodRules'
  * Optimistic reducers for the inventory commands. Each mirrors its server handler
  * (`internal/inventory/commands.go`); the next pull overwrites the result with server truth.
  * Event rows use the payload's `eventId`, so a replay after a pull rewrites the same row.
- * Amount deltas (consume, split) declare their targets, so they apply exactly once on top of
+ * Amount deltas (consume, restock, split) declare their targets, so they apply exactly once on top of
  * whatever the pull wrote.
  */
 
@@ -85,7 +85,10 @@ registerReducer(
     let expiresOn = p.expiresOn ?? null
     let expiryKind: StockItem['expiryKind'] = p.expiresOn ? (p.expiryKind ?? 'best_before') : null
     if (!expiresOn) {
-      expiresOn = estimate(await buildChain(db, product), 'add', loc, on)
+      const chain = await buildChain(db, product)
+      expiresOn = estimate(chain, 'add', loc, on)
+      const opened = p.openedOn ? estimate(chain, 'open', loc, p.openedOn) : null
+      if (opened && (!expiresOn || opened < expiresOn)) expiresOn = opened
       if (expiresOn) expiryKind = 'estimated'
     }
     await db.stock_item.put({
@@ -117,6 +120,28 @@ registerReducer(
 
 /** Removes a finished item the way the server's tombstone does. */
 const finishItem = (db: StockpotDB, id: string) => db.stock_item.delete(id)
+
+registerReducer(
+  'inventory.stock.restock',
+  async (db, p, { clientTime }) => {
+    const it = await db.stock_item.get(p.id)
+    if (!it) return
+    if (it.amountKind === 'exact' && p.quantity && it.quantity) {
+      await db.stock_item.put({ ...it, quantity: add(it.quantity, p.quantity) })
+    } else if (it.amountKind === 'portions' && p.portions && it.portions != null) {
+      await db.stock_item.put({ ...it, portions: it.portions + p.portions })
+    } else return
+    await logEvent(db, clientTime, {
+      id: p.eventId,
+      stockItemId: it.id,
+      kind: 'adjust',
+      delta: deltaOf(p.quantity, p.portions),
+      unit: it.unit,
+      toLocationId: it.locationId,
+    })
+  },
+  byId,
+)
 
 registerReducer(
   'inventory.stock.consume',
@@ -226,7 +251,8 @@ async function relocate(
   const out: StockItem = { ...it, locationId: to }
   if (next === 'freeze') out.frozenOn = on
   if (next === 'thaw') out.thawedOn = on
-  if (crosses || it.expiryKind === null || it.expiryKind === 'estimated') {
+  // A plain move keeps an existing date: the clock never restarts, so it never lengthens.
+  if (crosses || it.expiresOn === null) {
     const product = await db.product.get(it.productId)
     const date = product ? estimate(await buildChain(db, product), next, kind, on) : null
     if (date) Object.assign(out, { expiresOn: date, expiryKind: 'estimated' })
@@ -366,34 +392,37 @@ registerReducer(
     let sumQ = '0'
     let sumP = 0
     for (const part of p.parts) {
-      await db.stock_item.put({
-        ...(await base(db, part.id, clientTime)),
-        productId: it.productId,
-        locationId: to,
-        amountKind: it.amountKind,
-        quantity: it.amountKind === 'exact' ? (part.quantity ?? null) : null,
-        unit: it.amountKind === 'exact' ? it.unit : null,
-        portions: it.amountKind === 'portions' ? (part.portions ?? null) : null,
-        level: null,
-        low: false,
-        expiresOn,
-        expiryKind,
-        openedOn: it.openedOn,
-        thawedOn: null,
-        frozenOn,
-        source: 'split',
-        parentItemId: it.id,
-        note: it.note,
-      })
-      await logEvent(db, clientTime, {
-        id: part.eventId,
-        stockItemId: part.id,
-        kind: 'split',
-        delta: deltaOf(part.quantity, part.portions),
-        unit: it.amountKind === 'exact' ? it.unit : null,
-        fromLocationId: it.locationId,
-        toLocationId: to,
-      })
+      // A replay must not rewrite a part that a later queued command already changed.
+      if (!(await db.stock_item.get(part.id))) {
+        await db.stock_item.put({
+          ...(await base(db, part.id, clientTime)),
+          productId: it.productId,
+          locationId: to,
+          amountKind: it.amountKind,
+          quantity: it.amountKind === 'exact' ? (part.quantity ?? null) : null,
+          unit: it.amountKind === 'exact' ? it.unit : null,
+          portions: it.amountKind === 'portions' ? (part.portions ?? null) : null,
+          level: null,
+          low: false,
+          expiresOn,
+          expiryKind,
+          openedOn: it.openedOn,
+          thawedOn: null,
+          frozenOn,
+          source: 'split',
+          parentItemId: it.id,
+          note: it.note,
+        })
+        await logEvent(db, clientTime, {
+          id: part.eventId,
+          stockItemId: part.id,
+          kind: 'split',
+          delta: deltaOf(part.quantity, part.portions),
+          unit: it.amountKind === 'exact' ? it.unit : null,
+          fromLocationId: it.locationId,
+          toLocationId: to,
+        })
+      }
       if (part.quantity) {
         sumQ = add(sumQ, part.quantity)
         leftQ = subClamped(leftQ ?? '0', part.quantity)

@@ -420,3 +420,48 @@ test('a queued consume replays on each newer copy of its item, still only once o
   await pull(db)
   expect((await db.stock_item.get(ids(9).id))?.quantity).toBe('2') // 3 from the server, minus our 1
 })
+
+test('restock adds a delta and logs it', async () => {
+  await seed()
+  await db.stock_item.put(exact({ quantity: '5' }))
+  await dispatch(
+    'inventory.stock.restock',
+    { id: ids(9).id, eventId: ids(1).eventId, quantity: '1' },
+    db,
+  )
+  expect((await db.stock_item.get(ids(9).id))?.quantity).toBe('6')
+  expect(await db.stock_event.get(ids(1).eventId)).toMatchObject({ kind: 'adjust', delta: '1' })
+})
+
+test('a plain move never lengthens an expiry, an opened one stays shortened', async () => {
+  await seed()
+  await db.stock_item.put(exact({ expiresOn: '2026-11-30', openedOn: ON }))
+  await dispatch(
+    'inventory.stock.move',
+    { id: ids(9).id, eventId: ids(1).eventId, locationId: 'l-pantry', on: ON },
+    db,
+  )
+  expect(await db.stock_item.get(ids(9).id)).toMatchObject({
+    locationId: 'l-pantry',
+    expiresOn: '2026-11-30',
+  })
+})
+
+test('a replayed split leaves parts that already exist alone', async () => {
+  await seed()
+  const part = '0190a1b2-0000-7000-8000-000000000501'
+  await db.stock_item.put(exact({ quantity: '1.5', unit: 'kg' }))
+  await db.stock_item.put(exact({ id: part, quantity: '0.2', unit: 'kg', parentItemId: ids(9).id }))
+  await dispatch(
+    'inventory.stock.split',
+    {
+      id: ids(9).id,
+      eventId: ids(8).eventId,
+      parts: [{ ...ids(1), id: part, quantity: '0.5' }],
+      locationId: 'l-freezer',
+      on: ON,
+    },
+    db,
+  )
+  expect((await db.stock_item.get(part))?.quantity).toBe('0.2')
+})

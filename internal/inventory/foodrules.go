@@ -156,15 +156,12 @@ func (s *RuleService) Put(ctx context.Context, kind string, subject uuid.UUID, s
 		}
 		var before []byte
 		_ = tx.QueryRow(ctx, fmt.Sprintf(`SELECT shelf_life FROM food_rule WHERE household_id = $1 AND %s = $2`, col), hh, subject).Scan(&before)
-		// The unique index is on an expression, so upsert by hand: update, else insert.
-		tag, err := tx.Exec(ctx, fmt.Sprintf(`UPDATE food_rule SET shelf_life = $3, updated_at = now() WHERE household_id = $1 AND %s = $2`, col), hh, subject, b)
-		if err != nil {
+		// Atomic upsert: Postgres infers the expression index, so concurrent first Puts cannot collide.
+		if _, err := tx.Exec(ctx, fmt.Sprintf(`
+			INSERT INTO food_rule (household_id, %[1]s, shelf_life) VALUES ($1, $2, $3)
+			ON CONFLICT ((coalesce(household_id, '00000000-0000-0000-0000-000000000000'::uuid)), %[1]s) WHERE %[1]s IS NOT NULL
+			DO UPDATE SET shelf_life = EXCLUDED.shelf_life, updated_at = now()`, col), hh, subject, b); err != nil {
 			return err
-		}
-		if tag.RowsAffected() == 0 {
-			if _, err := tx.Exec(ctx, fmt.Sprintf(`INSERT INTO food_rule (household_id, %s, shelf_life) VALUES ($1, $2, $3)`, col), hh, subject, b); err != nil {
-				return err
-			}
 		}
 		return audit.Record(ctx, tx, "inventory.food_rule.set", audit.Target{Type: kind, ID: subject.String()}, json.RawMessage(nilIfEmpty(before)), sl)
 	})
