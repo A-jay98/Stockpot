@@ -456,3 +456,48 @@ test('a keystroke over 2,000 entries stays within the 5 ms budget', () => {
   expect(median ?? 99).toBeLessThan(8) // budget is 5 ms; measured ~3 ms locally, slack for shared CI runners
   expect(p95 ?? 99).toBeLessThan(30)
 })
+
+// --- review regressions ---
+
+test('a prefix match beats a staple that only matches through the typo budget', () => {
+  const data: SuggestData = {
+    stores,
+    ingredients: [ing('i-pear', 'Pear')],
+    products: [prod('p-pb', 'Peanut Butter')],
+    stats: [stat('p-pb', null, 12, 1)], // bought a dozen times, yesterday
+  }
+  const [first] = top('pear', data)
+  expect(first.entry.name).toBe('Pear')
+  expect(first.tier).toBe(0)
+  // Peanut Butter is one typo away, so it may be listed, but never ahead of Pear.
+  const names = top('pear', data).map((s) => s.entry.name)
+  expect(names.indexOf('Pear')).toBeLessThan(
+    names.indexOf('Peanut Butter') >= 0 ? names.indexOf('Peanut Butter') : 99,
+  )
+})
+
+test('a word that starts a store name stays in the item unless the whole name is typed', () => {
+  const sts = [store('s-wf', 'Whole Foods'), store('s-fb', 'Farm Boy'), store('s-bb', 'Bulk Barn')]
+  expect(parseQuery('whole milk', sts)).toMatchObject({
+    storeId: undefined,
+    tokens: ['whole', 'milk'],
+  })
+  expect(parseQuery('farm eggs', sts)).toMatchObject({
+    storeId: undefined,
+    tokens: ['farm', 'eggs'],
+  })
+  expect(parseQuery('bulk rice', sts).storeId).toBeUndefined()
+  expect(parseQuery('milk whole foods', sts)).toMatchObject({ storeId: 's-wf', tokens: ['milk'] })
+  expect(parseQuery('milk @whole', sts)).toMatchObject({ storeId: 's-wf', tokens: ['milk'] })
+  expect(parseQuery('milk from farm', sts)).toMatchObject({ storeId: 's-fb', tokens: ['milk'] })
+})
+
+test('history without a store keeps its weight when a store row exists', () => {
+  const data: SuggestData = {
+    stores,
+    ingredients: [],
+    products: [prod('a', 'Bread white'), prod('b', 'Bread rye')],
+    stats: [stat('a', null, 20, 2), stat('a', 's-costco', 1, 2), stat('b', null, 3, 2)],
+  }
+  expect(top('bread', data)[0].entry.name).toBe('Bread white')
+})

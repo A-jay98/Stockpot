@@ -1,5 +1,6 @@
+import type { CommandPayloads } from '../../offline/commands'
 import { registerReducer } from '../../offline/reducers'
-import type { ShoppingItem, ShoppingList } from '../../offline/replica'
+import type { ShoppingItem, ShoppingList, StockItem } from '../../offline/replica'
 
 // Optimistic shopping reducers. Each one sets fields (never adds), so replaying them after a
 // pull is harmless. The server derives product links and purchase stats; the next pull brings them.
@@ -75,13 +76,74 @@ registerReducer('shopping.item.reorder', async (db, p) => {
   )
 })
 
+const shelfKey = {
+  fridge: 'fridge',
+  freezer: 'freezer',
+  pantry: 'pantry',
+  other: 'pantry',
+} as const
+
+/**
+ * Put-away offline: the stock item the server will create, so the item never vanishes between
+ * leaving the list and the next sync. Expiry is the typed date, else a shelf-life estimate from
+ * the product, its ingredient or the ingredient's parent (the server computes the same).
+ */
+async function optimisticStock(
+  db: import('../../offline/db').StockpotDB,
+  item: ShoppingItem,
+  m: NonNullable<CommandPayloads['shopping.item.check']['inventory']>,
+  clientTime: string,
+) {
+  if (await db.stock_item.get(m.stockItemId)) return
+  const product = item.productId ? await db.product.get(item.productId) : undefined
+  const locations = await db.location.orderBy('sort').toArray()
+  const loc =
+    locations.find((l) => l.id === m.locationId) ??
+    (m.locationId
+      ? undefined
+      : (locations.find((l) => l.kind === product?.defaultLocationKind) ?? locations[0]))
+  const ingredient = product?.ingredientId
+    ? await db.ingredient.get(product.ingredientId)
+    : undefined
+  const parent = ingredient?.parentId ? await db.ingredient.get(ingredient.parentId) : undefined
+  const key = shelfKey[loc?.kind ?? 'other']
+  const days = product?.shelfLife?.[key] ?? ingredient?.shelfLife[key] ?? parent?.shelfLife[key]
+  const day = (offset: number) => {
+    const d = new Date(clientTime)
+    d.setDate(d.getDate() + offset)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+  const row: StockItem = {
+    ...(await base(db, m.stockItemId, clientTime)),
+    productId: item.productId ?? '',
+    locationId: loc?.id ?? null,
+    amountKind: 'exact',
+    quantity: m.quantity ?? item.qty,
+    unit: m.unit ?? item.unit,
+    portions: null,
+    level: null,
+    low: false,
+    expiresOn: m.expiresOn ?? (days ? day(days) : null),
+    expiryKind: m.expiresOn ? 'best_before' : days ? 'estimated' : null,
+    openedOn: null,
+    thawedOn: null,
+    frozenOn: loc?.kind === 'freezer' ? day(0) : null,
+    source: 'shopping',
+    parentItemId: null,
+    note: null,
+  }
+  await db.stock_item.put(row)
+}
+
 registerReducer('shopping.item.check', async (db, p, { clientTime }) => {
   const row = await db.shopping_item.get(p.id)
   if (!row) return
+  const putAway = p.inventory && !row.stockItemId
+  if (p.inventory && putAway) await optimisticStock(db, row, p.inventory, clientTime)
   await db.shopping_item.put({
     ...row,
     checkedAt: row.checkedAt ?? clientTime,
-    stockItemId: p.inventory ? (row.stockItemId ?? p.inventory.stockItemId) : row.stockItemId,
+    stockItemId: putAway && p.inventory ? p.inventory.stockItemId : row.stockItemId,
   })
 })
 

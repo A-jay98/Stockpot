@@ -13,7 +13,7 @@ import (
 
 // EnsureProduct returns the household product called name, creating it (and
 // letting res link it to an ingredient) when none exists. Matching is by
-// case-insensitive name, preferring the brand-less product, so a free-text
+// case-insensitive name, then by resolved ingredient (brand-less product), so a free-text
 // "mandarins" lands on the product the household already buys instead of a
 // duplicate. The caller holds the household write lock (command handlers do).
 func EnsureProduct(ctx context.Context, tx pgx.Tx, res Resolver, hh uuid.UUID, name string) (uuid.UUID, error) {
@@ -33,6 +33,20 @@ func EnsureProduct(ctx context.Context, tx pgx.Tx, res Resolver, hh uuid.UUID, n
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
 		return uuid.Nil, err
+	}
+	// "mandarin" for the household's "Mandarins": the same ingredient, no brand, is the same product.
+	if m, err := res.Resolve(ctx, tx, hh, name, nil); err != nil {
+		return uuid.Nil, err
+	} else if m != nil && m.Confidence >= 0.85 {
+		err := tx.QueryRow(ctx, `SELECT id FROM product
+			WHERE household_id = $1 AND deleted_at IS NULL AND ingredient_id = $2 AND brand IS NULL
+			ORDER BY created_at LIMIT 1`, hh, m.IngredientID).Scan(&id)
+		if err == nil {
+			return id, nil
+		}
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return uuid.Nil, err
+		}
 	}
 	id = uuid.New()
 	if _, err := tx.Exec(ctx, `INSERT INTO product (id, household_id, name) VALUES ($1, $2, $3)`, id, hh, name); err != nil {

@@ -441,18 +441,19 @@ func (h *handlers) itemCheck(ctx context.Context, tx pgx.Tx, p ItemCheck) error 
 			}
 			product = &id
 		}
+		at := commands.ClientTime(ctx) // when it was ticked, which may be hours before it synced
 		var by *uuid.UUID
 		if pr != nil {
 			by = &pr.UserID
 		}
-		if _, err := tx.Exec(ctx, `UPDATE shopping_item SET checked_at = now(), checked_by = $2, product_id = $3 WHERE id = $1`, p.ID, by, product); err != nil {
+		if _, err := tx.Exec(ctx, `UPDATE shopping_item SET checked_at = $4, checked_by = $2, product_id = $3 WHERE id = $1`, p.ID, by, product, at); err != nil {
 			return err
 		}
 		store := p.StoreID
 		if store == nil && len(stores) == 1 {
 			store = &stores[0]
 		}
-		if err := RecordPurchase(ctx, tx, hh, *product, store, p.ID, qty, unit); err != nil {
+		if err := RecordPurchase(ctx, tx, hh, *product, store, p.ID, at, qty, unit); err != nil {
 			return err
 		}
 	}
@@ -517,13 +518,13 @@ func (h *handlers) addToInventory(ctx context.Context, tx pgx.Tx, hh, item, prod
 			return err
 		}
 		if days != nil {
-			t := time.Now().UTC().Truncate(24*time.Hour).AddDate(0, 0, *days)
+			t := today(ctx).AddDate(0, 0, *days)
 			expires, kind = &t, "estimated"
 		}
 	}
 	var frozen *time.Time
 	if locKind == "freezer" {
-		t := time.Now().UTC().Truncate(24 * time.Hour)
+		t := today(ctx)
 		frozen = &t
 	}
 	var expiry, kindArg any
@@ -549,4 +550,10 @@ func (h *handlers) addToInventory(ctx context.Context, tx pgx.Tx, hh, item, prod
 	}
 	_, err = tx.Exec(ctx, `UPDATE shopping_item SET stock_item_id = $2 WHERE id = $1`, item, m.StockItemID)
 	return err
+}
+
+// today is the household-local date the command was performed, as a UTC-midnight date value.
+func today(ctx context.Context) time.Time {
+	y, m, d := commands.ClientTime(ctx).In(HouseholdZone).Date()
+	return time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
 }

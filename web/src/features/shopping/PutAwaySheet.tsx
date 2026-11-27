@@ -9,15 +9,16 @@ type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   rows: Row[]
-  listId: string
   locations: Location[]
+  /** The store being shopped at (the active filter), so purchases teach the right store. */
+  storeId?: string | null
 }
 
 /**
  * "Move N checked to inventory": a location and an optional expiry per item. Leaving the date
  * empty lets the server estimate it from the ingredient's shelf life.
  */
-export function PutAwaySheet({ open, onOpenChange, rows, listId, locations }: Props) {
+export function PutAwaySheet({ open, onOpenChange, rows, locations, storeId }: Props) {
   const [loc, setLoc] = useState<Record<string, string>>({})
   const [expiry, setExpiry] = useState<Record<string, string>>({})
 
@@ -26,6 +27,7 @@ export function PutAwaySheet({ open, onOpenChange, rows, listId, locations }: Pr
       const locationId = loc[r.id] ?? defaultLocation(r, locations)?.id
       await dispatch('shopping.item.check', {
         id: r.id,
+        ...(storeId ? { storeId } : {}),
         inventory: {
           stockItemId: uuidv7(),
           ...(locationId ? { locationId } : {}),
@@ -33,7 +35,8 @@ export function PutAwaySheet({ open, onOpenChange, rows, listId, locations }: Pr
         },
       })
     }
-    await dispatch('shopping.item.clear_checked', { listId })
+    // Only the items just moved leave the list; one the server rejects stays visible.
+    for (const r of rows) await dispatch('shopping.item.delete', { id: r.id })
     onOpenChange(false)
   }
 

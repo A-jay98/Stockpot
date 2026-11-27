@@ -345,3 +345,54 @@ func TestListAndItemLifecycle(t *testing.T) {
 	e.mustDo(t, "shopping.list.rename", map[string]any{"id": extra, "name": "Costco"})
 	e.mustDo(t, "shopping.list.delete", map[string]any{"id": extra})
 }
+
+func TestPurchaseUsesClientTimeClamped(t *testing.T) {
+	e := newEnv(t)
+	pid := uuid.New()
+	e.mustDo(t, "catalog.product.create", map[string]any{"id": pid, "name": "Milk"})
+	tick := func(ago time.Duration) time.Time {
+		id := e.addItem(t, map[string]any{"productId": pid, "text": "Milk"})
+		b, _ := json.Marshal(map[string]any{"id": id})
+		when := time.Now().Add(-ago)
+		rs, err := e.svc.Apply(e.ctx, e.hh, []commands.Command{{ID: uuid.New(), Type: "shopping.item.check", Payload: b, ClientTime: when}})
+		if err != nil || rs[0].Status != commands.StatusApplied {
+			t.Fatalf("check: %v %+v", err, rs)
+		}
+		var got time.Time
+		_ = e.pool.QueryRow(t.Context(), `SELECT bought_at FROM purchase WHERE shopping_item_id = $1`, id).Scan(&got)
+		return got
+	}
+	// Ticked offline two days ago: recorded two days ago, not at sync time.
+	if got := tick(48 * time.Hour); time.Since(got) < 47*time.Hour || time.Since(got) > 49*time.Hour {
+		t.Fatalf("bought_at %v, want ~2 days ago", got)
+	}
+	// A wildly old clock is clamped to a week; a future one to now.
+	if got := tick(90 * 24 * time.Hour); time.Since(got) > 8*24*time.Hour {
+		t.Fatalf("old client time not clamped: %v", got)
+	}
+	if got := tick(-time.Hour); time.Since(got) > time.Minute {
+		t.Fatalf("future client time not clamped: %v", got)
+	}
+}
+
+func TestFreeTextMatchesSameIngredientProduct(t *testing.T) {
+	e := newEnv(t)
+	pid := uuid.New()
+	e.mustDo(t, "catalog.product.create", map[string]any{"id": pid, "name": "Mandarins"})
+	id := e.addItem(t, map[string]any{"text": "mandarin"})
+	e.mustDo(t, "shopping.item.check", map[string]any{"id": id})
+	var linked uuid.UUID
+	_ = e.pool.QueryRow(t.Context(), `SELECT product_id FROM shopping_item WHERE id = $1`, id).Scan(&linked)
+	var n int
+	_ = e.pool.QueryRow(t.Context(), `SELECT count(*) FROM product WHERE household_id = $1`, e.hh).Scan(&n)
+	if linked != pid || n != 1 {
+		t.Fatalf("linked %v (want %v), %d products", linked, pid, n)
+	}
+}
+
+func TestTypicalQtyIgnoresPurchasesWithoutQuantity(t *testing.T) {
+	s := shopping.ComputeStat([]shopping.Purchase{{At: at(20)}, {At: at(13), Qty: "2", Unit: "lb"}, {At: at(6), Qty: "2", Unit: "lb"}})
+	if s.TypicalQty != "2" || s.TypicalUnit != "lb" {
+		t.Fatalf("%+v", s)
+	}
+}

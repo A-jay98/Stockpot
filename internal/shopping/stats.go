@@ -5,10 +5,21 @@ import (
 	"errors"
 	"sort"
 	"time"
+	_ "time/tzdata" // the static release binary has no zoneinfo
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 )
+
+// HouseholdZone buckets purchases into days and dates expiry estimates. Households are in
+// Canada (architecture §8 uses the same zone for the digest); a per-household setting can
+// replace it later.
+var HouseholdZone = func() *time.Location {
+	if l, err := time.LoadLocation("America/Toronto"); err == nil {
+		return l
+	}
+	return time.UTC
+}()
 
 // statWindow is how many recent purchases typical quantity and interval use.
 const statWindow = 10
@@ -46,7 +57,9 @@ func ComputeStat(ps []Purchase) Stat {
 	type pair struct{ qty, unit string }
 	counts := map[pair]int{}
 	for _, p := range recent {
-		counts[pair{p.Qty, p.Unit}]++
+		if p.Qty != "" { // purchases without a quantity say nothing about the usual one
+			counts[pair{p.Qty, p.Unit}]++
+		}
 	}
 	var best pair
 	bestN := 0
@@ -60,7 +73,8 @@ func ComputeStat(ps []Purchase) Stat {
 
 	var days []time.Time
 	for _, p := range recent {
-		d := p.At.UTC().Truncate(24 * time.Hour)
+		y, m, dd := p.At.In(HouseholdZone).Date()
+		d := time.Date(y, m, dd, 0, 0, 0, 0, time.UTC)
 		if len(days) == 0 || !days[len(days)-1].Equal(d) {
 			days = append(days, d)
 		}
@@ -141,18 +155,18 @@ func upsertStat(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, store *uu
 	return err
 }
 
-// RecordPurchase logs that product was bought (qty/unit/store optional) and
+// RecordPurchase logs that product was bought at `at` (qty/unit/store optional) and
 // refreshes its product_stat rows. item links the purchase to a shopping item
 // so ticking twice, or unticking, stays consistent; uuid.Nil for none.
 // Inventory adds from outside the shopping list can call it too.
-func RecordPurchase(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, store *uuid.UUID, item uuid.UUID, qty, unit *string) error {
+func RecordPurchase(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, store *uuid.UUID, item uuid.UUID, at time.Time, qty, unit *string) error {
 	var itemID *uuid.UUID
 	if item != uuid.Nil {
 		itemID = &item
 	}
-	if _, err := tx.Exec(ctx, `INSERT INTO purchase (household_id, product_id, store_id, shopping_item_id, qty, unit)
-		VALUES ($1, $2, $3, $4, $5::text::numeric, $6) ON CONFLICT (shopping_item_id) WHERE shopping_item_id IS NOT NULL DO NOTHING`,
-		hh, product, store, itemID, qty, unit); err != nil {
+	if _, err := tx.Exec(ctx, `INSERT INTO purchase (household_id, product_id, store_id, shopping_item_id, qty, unit, bought_at)
+		VALUES ($1, $2, $3, $4, $5::text::numeric, $6, $7) ON CONFLICT (shopping_item_id) WHERE shopping_item_id IS NOT NULL DO NOTHING`,
+		hh, product, store, itemID, qty, unit, at); err != nil {
 		return err
 	}
 	return recompute(ctx, tx, hh, product)

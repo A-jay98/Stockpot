@@ -30,6 +30,8 @@ export type Entry = {
   /** Epoch ms. */
   lastBoughtAt: number | null
   defaultStoreId?: string
+  /** Share of the product's purchases made at this entry's store (tie-break between stores). */
+  storeShare?: number
   /** Normalised name, for the exact-phrase bonus and coverage. */
   nameNorm: string
 }
@@ -43,6 +45,11 @@ export type Index = {
 }
 
 const DAY = 86_400_000
+
+const latest = (...rows: (ProductStat | undefined)[]): number | null => {
+  const t = rows.flatMap((r) => (r?.lastBoughtAt ? [Date.parse(r.lastBoughtAt)] : []))
+  return t.length ? Math.max(...t) : null
+}
 
 /** Build the index once per replica change; searching is then allocation-light. */
 export function buildIndex({ products, ingredients, stats, stores }: SuggestData): Index {
@@ -87,8 +94,10 @@ export function buildIndex({ products, ingredients, stats, stores }: SuggestData
       unit: st?.typicalUnit ?? p.defaultUnit ?? undefined,
       categoryId: p.categoryId ?? ing?.categoryId ?? undefined,
       icon: p.icon ?? ing?.icon ?? undefined,
-      timesBought: st?.timesBought ?? 0,
-      lastBoughtAt: st?.lastBoughtAt ? Date.parse(st.lastBoughtAt) : null,
+      // Popularity is the product's, across stores; the store row only tells which store.
+      timesBought: all?.timesBought ?? st?.timesBought ?? 0,
+      lastBoughtAt: latest(all, st),
+      storeShare: st && all && all.timesBought > 0 ? st.timesBought / all.timesBought : 0,
       defaultStoreId: p.defaultStoreId ?? undefined,
       nameNorm: normalize(p.name),
     })
@@ -130,6 +139,8 @@ export type Suggestion = {
   /** 0..1.2 text match quality; >= 0.85 means every word matched by prefix or within typo budget. */
   text: number
   rank: number
+  /** Match tier: 0 every word a prefix, 1 within the typo budget, 2 trigram only. Lower always wins. */
+  tier: 0 | 1 | 2
   /** Safe to accept on Enter. */
   confident: boolean
   /** What to show greyed after the caret when the typed text is a prefix of the name. */
@@ -172,9 +183,17 @@ export function toPicked(
   return item
 }
 
-/** Score every base against the query words: all must match, the score is their mean. */
-function textScore(tokens: string[], ws: string[], memo: Map<string, number>): number {
+/**
+ * Score a base against the query words: every word must match; `mean` ranks, `min` decides the
+ * match tier (all prefix > within typo budget > trigram only).
+ */
+function textScore(
+  tokens: string[],
+  ws: string[],
+  memo: Map<string, number>,
+): { mean: number; min: number } {
   let sum = 0
+  let min = Number.POSITIVE_INFINITY
   for (const t of tokens) {
     let best = 0
     for (const w of ws) {
@@ -189,10 +208,11 @@ function textScore(tokens: string[], ws: string[], memo: Map<string, number>): n
         if (best === 1) break
       }
     }
-    if (best === 0) return 0
+    if (best === 0) return { mean: 0, min: 0 }
     sum += best
+    min = Math.min(min, best)
   }
-  return sum / tokens.length
+  return { mean: sum / tokens.length, min }
 }
 
 /**
@@ -229,25 +249,31 @@ export function search(index: Index, raw: string, now = Date.now()): SearchResul
   const queryNorm = tokens.join(' ')
   const out: Suggestion[] = []
   for (const base of index.bases) {
-    const text = textScore(tokens, base.words, memo)
+    const { mean: text, min } = textScore(tokens, base.words, memo)
     if (text === 0) continue
+    const tier = min >= 1 ? 0 : min >= CONFIDENT ? 1 : 2
     for (const e of entriesFor(base, parsed.storeId, now)) {
       let t = text
       const coverage = Math.min(1, queryNorm.length / Math.max(1, e.nameNorm.length))
       t *= 0.85 + 0.15 * coverage
       if (e.nameNorm === queryNorm) t *= 1.2
       let rank = t * frecency(e.timesBought, e.lastBoughtAt, now) * (e.kind === 'product' ? 1 : 0.6)
+      rank *= 1 + 0.2 * (e.storeShare ?? 0)
       if (parsed.storeId && e.storeId === parsed.storeId) rank *= 1.5
       out.push({
         entry: e,
         text: t,
         rank,
-        confident: text >= CONFIDENT,
+        tier,
+        confident: tier <= 1,
         item: toPicked(e, parsed),
       })
     }
   }
-  out.sort((a, b) => b.rank - a.rank || a.entry.name.length - b.entry.name.length)
+  // Match quality first, so a staple can never outrank an exact or prefix match through frecency.
+  out.sort(
+    (a, b) => a.tier - b.tier || b.rank - a.rank || a.entry.name.length - b.entry.name.length,
+  )
   const top = out.slice(0, MAX_RESULTS)
   const first = top[0]
   if (first?.confident) first.ghost = ghostFor(first.entry.name, parsed, raw)

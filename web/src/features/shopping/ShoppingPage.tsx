@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { v7 as uuidv7 } from 'uuid'
 import { Page } from '../../app/Page'
 import { dispatch } from '../../offline/outbox'
+import type { Product } from '../../offline/replica'
 import { Button, cn, Segmented, Sheet, SheetContent, toast } from '../../ui'
 import { categoryIconKey, FoodIcon, resolveFoodIcon } from '../../ui/food-icons'
 import {
@@ -14,11 +15,19 @@ import {
 } from '../catalog/hooks'
 import { type PickedItem, ProductPicker } from '../catalog/ProductPicker'
 import { formatQty, guessList } from '../catalog/suggest'
+import { normalize } from '../catalog/suggest/text'
 import { ManageList } from '../settings/ManageList'
 import { useAllShoppingItems, useShoppingItems, useShoppingLists, useStockItems } from './hooks'
 import { ItemSheet } from './ItemSheet'
 import { groupRows, type Row, toRows } from './items'
 import { PutAwaySheet } from './PutAwaySheet'
+
+/** Name key for matching typed text to products: case, accents and a plural s/es ignored. */
+const sameName = (name: string) =>
+  normalize(name)
+    .split(' ')
+    .map((w) => (w.length > 3 ? w.replace(/(es|s)$/, '') : w))
+    .join(' ')
 
 export function ShoppingPage() {
   const lists = useShoppingLists()
@@ -39,6 +48,11 @@ export function ShoppingPage() {
   const [putAway, setPutAway] = useState(false)
   const [managing, setManaging] = useState(false)
 
+  const productByName = useMemo(() => {
+    const m = new Map<string, Product>()
+    for (const p of products) if (!p.brand && !m.has(sameName(p.name))) m.set(sameName(p.name), p)
+    return m
+  }, [products])
   const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products])
   const rows = useMemo(() => toRows(items, productById), [items, productById])
   const categoryIcon = useMemo(
@@ -56,8 +70,14 @@ export function ShoppingPage() {
     [products, stats, stock, allItems],
   )
 
-  const add = (p: PickedItem) => {
+  const add = (picked: PickedItem) => {
+    let p = picked
     if (!list) return
+    // Free text that names a product the household already has uses that product.
+    if (!p.productId && !p.ingredientId) {
+      const known = productByName.get(sameName(p.name))
+      if (known) p = { ...p, productId: known.id, name: known.name }
+    }
     const dupe = items.find(
       (i) =>
         !i.checkedAt &&
@@ -80,7 +100,12 @@ export function ShoppingPage() {
   }
 
   const toggle = (r: Row) =>
-    void dispatch(r.checkedAt ? 'shopping.item.uncheck' : 'shopping.item.check', { id: r.id })
+    void (r.checkedAt
+      ? dispatch('shopping.item.uncheck', { id: r.id })
+      : dispatch('shopping.item.check', {
+          id: r.id,
+          ...(storeFilter ? { storeId: storeFilter } : {}),
+        }))
 
   const iconFor = (r: Row) =>
     resolveFoodIcon({
@@ -236,8 +261,8 @@ export function ShoppingPage() {
           open={putAway}
           onOpenChange={setPutAway}
           rows={cart}
-          listId={list.id}
           locations={locations}
+          storeId={storeFilter}
         />
       )}
       <Sheet open={managing} onOpenChange={setManaging}>

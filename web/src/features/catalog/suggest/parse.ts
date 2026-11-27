@@ -73,19 +73,24 @@ export function parseQuery(raw: string, stores: StoreRef[]): ParsedQuery {
       drop(at, 1)
     }
   }
-  // Words naming a store at position i: the whole (multi-word) name, else one word of it.
-  const storeAt = (i: number): { id: string; len: number } | undefined => {
+  // Words naming a store at position i. Explicit markers (@, from) accept any word of a name;
+  // a bare word only counts as the whole store name, so "whole milk" is not Whole Foods.
+  const storeAt = (i: number, bare: boolean): { id: string; len: number } | undefined => {
     for (const s of prepared) {
       if (s.words.length > 1 && s.words.every((w, k) => toks[i + k] === w))
         return { id: s.id, len: s.words.length }
     }
-    const hit = prepared.find((s) => s.words.some((w) => storeWordMatches(toks[i] ?? '', w)))
+    const hit = prepared.find((s) =>
+      bare
+        ? s.words.length === 1 && s.words.some((w) => storeWordMatches(toks[i] ?? '', w))
+        : s.words.some((w) => storeWordMatches(toks[i] ?? '', w)),
+    )
     return hit && { id: hit.id, len: 1 }
   }
   // "from <store>": needs a store after it
   if (!storeId) {
     const i = toks.indexOf('from')
-    const hit = i >= 0 ? storeAt(i + 1) : undefined
+    const hit = i >= 0 ? storeAt(i + 1, false) : undefined
     if (hit) {
       storeId = hit.id
       drop(i, 1 + hit.len)
@@ -94,7 +99,7 @@ export function parseQuery(raw: string, stores: StoreRef[]): ParsedQuery {
   // A bare store name in the query, if something else remains to search for.
   if (!storeId) {
     for (let i = 0; i < toks.length && !storeId; i++) {
-      const hit = storeAt(i)
+      const hit = storeAt(i, true)
       if (hit && toks.length > hit.len) {
         storeId = hit.id
         drop(i, hit.len)

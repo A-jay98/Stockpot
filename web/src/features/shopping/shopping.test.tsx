@@ -202,10 +202,18 @@ test('ticking items offers to move them to inventory', async () => {
       'shopping.item.add',
       'shopping.item.check',
       'shopping.item.check',
-      'shopping.item.clear_checked',
+      'shopping.item.delete',
     ]),
   )
   const put = (await db.outbox.toArray())[2]?.payload as { inventory: { locationId: string } }
   expect(put.inventory.locationId).toBe('loc-fridge')
   await waitFor(() => expect(screen.queryByRole('checkbox')).not.toBeInTheDocument())
+  // Offline, the stock item exists locally at once, so nothing vanishes before the next sync.
+  const stock = await db.stock_item.toArray()
+  expect(stock).toHaveLength(1)
+  expect(stock[0]).toMatchObject({
+    productId: 'p-milk',
+    locationId: 'loc-fridge',
+    source: 'shopping',
+  })
 })
