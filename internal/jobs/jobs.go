@@ -49,6 +49,9 @@ func New(d Deps) (*Client, error) {
 			river.QueueDefault: {MaxWorkers: 4},
 		},
 		Workers: workers,
+		// Longer than the longest job (a backup may take up to 3 h), or River
+		// would start a second copy of it while the first is still running.
+		RescueStuckJobsAfter: 4 * time.Hour,
 		PeriodicJobs: []*river.PeriodicJob{
 			river.NewPeriodicJob(
 				river.PeriodicInterval(24*time.Hour),

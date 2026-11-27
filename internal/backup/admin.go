@@ -58,16 +58,40 @@ func (s *Service) Status(ctx context.Context) (Status, error) {
 	case st.ChatID == "":
 		st.Channel = ChannelStatus{Status: "not_configured", Detail: "No chat id set (backup.telegram_chat_id)."}
 	default:
-		cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
-		u, err := s.d.Telegram.GetMe(cctx)
-		if err != nil {
-			st.Channel = ChannelStatus{Status: "error", Detail: err.Error()}
-		} else {
-			st.Channel = ChannelStatus{Status: "ok", BotUsername: u.Username}
-		}
+		st.Channel = s.checkBot(ctx, telegram.SettingBotToken.Get(s.d.Settings)+"|"+st.ChatID)
 	}
 	return st, nil
+}
+
+// channelCacheTTL spares Telegram (and the page) a getMe per poll.
+const channelCacheTTL = time.Minute
+
+// checkBot runs getMe, cached for a minute per token and chat.
+func (s *Service) checkBot(ctx context.Context, key string) ChannelStatus {
+	s.mu.Lock()
+	c := s.chanCache
+	s.mu.Unlock()
+	if c.key == key && s.d.Now().Sub(c.at) < channelCacheTTL {
+		return c.status
+	}
+	cctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	var st ChannelStatus
+	if u, err := s.d.Telegram.GetMe(cctx); err != nil {
+		st = ChannelStatus{Status: "error", Detail: err.Error()}
+	} else {
+		st = ChannelStatus{Status: "ok", BotUsername: u.Username}
+	}
+	s.mu.Lock()
+	s.chanCache = channelCache{key: key, at: s.d.Now(), status: st}
+	s.mu.Unlock()
+	return st
+}
+
+type channelCache struct {
+	key    string
+	at     time.Time
+	status ChannelStatus
 }
 
 // TestChannel posts a message to the backup channel, proving the bot may

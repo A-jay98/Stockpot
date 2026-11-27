@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"filippo.io/age"
+	"github.com/jackc/pgx/v5"
 	"github.com/klauspost/compress/zstd"
 
 	"github.com/a-jay98/stockpot/internal/telegram"
@@ -56,8 +57,9 @@ type RestoreOptions struct {
 	Manifest   Manifest
 	Identities []age.Identity
 	Source     PartSource
-	// DatabaseURL is the (empty, migrated or not) database to restore into;
-	// empty means libpq's PG* variables.
+	// DatabaseURL is the database to restore into: freshly created and NOT
+	// migrated (pg_restore creates the schema; migrate afterwards, or just
+	// start the app). Empty means libpq's PG* variables.
 	DatabaseURL string
 	// BlobDir receives the blobs.
 	BlobDir string
@@ -103,15 +105,45 @@ func Restore(ctx context.Context, o RestoreOptions) error {
 	}
 	logf("all %d parts verified", o.Manifest.PartCount())
 
+	// Blobs first: writing them is idempotent (atomic, content-addressed), so
+	// a failure leaves the database untouched and the command can be re-run.
+	logf("restoring blobs")
+	if err := o.restoreBlobs(ctx, staged[ArtifactBlobs], logf); err != nil {
+		return fmt.Errorf("blobs: %w", err)
+	}
 	logf("restoring database")
 	if err := o.restoreDB(ctx, staged[ArtifactDB]); err != nil {
 		return fmt.Errorf("database: %w", err)
 	}
-	logf("restoring blobs")
-	if err := o.restoreBlobs(ctx, staged[ArtifactBlobs]); err != nil {
-		return fmt.Errorf("blobs: %w", err)
+	// The dump contains the backup run that made it, still "running". Close
+	// it, or the restored instance shows a phantom backup in progress.
+	if err := o.closePhantomRun(ctx); err != nil {
+		logf("warning: could not clear the in-progress backup recorded in the dump: %v", err)
 	}
 	return nil
+}
+
+// closePhantomRun fails backup runs left "running" by the dump and cancels
+// their queued River jobs, so a restored instance doesn't resume them.
+func (o RestoreOptions) closePhantomRun(ctx context.Context) error {
+	conn, err := pgx.Connect(ctx, o.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = conn.Close(ctx) }()
+	tx, err := conn.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+	if _, err := tx.Exec(ctx, `UPDATE backup_run SET status = 'failed', finished_at = now(),
+		error = 'restored from a backup taken while this run was in progress' WHERE status = 'running'`); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `DELETE FROM river_job WHERE kind = 'backup.run' AND state NOT IN ('completed', 'discarded', 'cancelled')`); err != nil {
+		return err
+	}
+	return tx.Commit(ctx)
 }
 
 // stage downloads a part into dir and checks its size and SHA-256.
@@ -199,7 +231,7 @@ func (o RestoreOptions) restoreDB(ctx context.Context, paths []string) error {
 
 var blobName = regexp.MustCompile(`^[0-9a-f]{2}/[0-9a-f]{2}/[0-9a-f]{64}$`)
 
-func (o RestoreOptions) restoreBlobs(ctx context.Context, paths []string) error {
+func (o RestoreOptions) restoreBlobs(ctx context.Context, paths []string, logf func(string, ...any)) error {
 	r, done, err := o.plaintext(paths)
 	if err != nil {
 		return err
@@ -221,7 +253,12 @@ func (o RestoreOptions) restoreBlobs(ctx context.Context, paths []string) error 
 			return err
 		}
 		if h.Typeflag != tar.TypeReg || !blobName.MatchString(h.Name) {
-			return fmt.Errorf("unexpected archive entry %q", h.Name)
+			// Never extract anything but well-formed blob paths (this also
+			// rules out "..", absolute paths and links); skip the rest.
+			if h.Typeflag != tar.TypeDir {
+				logf("skipping unexpected archive entry %q", h.Name)
+			}
+			continue
 		}
 		dst := filepath.Join(o.BlobDir, filepath.FromSlash(h.Name))
 		if err := os.MkdirAll(filepath.Dir(dst), 0o700); err != nil {

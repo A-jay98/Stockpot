@@ -22,6 +22,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"filippo.io/age"
@@ -42,6 +43,9 @@ const DefaultPartSize = 19 << 20
 
 // uploadAttempts bounds retries of one part on rate limits and outages.
 const uploadAttempts = 6
+
+// uploadTimeout bounds one upload attempt, so a stalled connection becomes a retry.
+const uploadTimeout = 5 * time.Minute
 
 // Deps are what the service needs.
 type Deps struct {
@@ -65,8 +69,10 @@ type Deps struct {
 
 // Service runs backups and applies retention.
 type Service struct {
-	client *jobs.Client
-	d      Deps
+	mu        sync.Mutex
+	chanCache channelCache
+	client    *jobs.Client
+	d         Deps
 }
 
 // NewService returns a service.
@@ -225,10 +231,11 @@ func (r *runState) artifact(ctx context.Context, name string, produce func(conte
 	if err != nil {
 		return a, err
 	}
-	zw, err := zstd.NewWriter(enc)
+	zw, err := zstd.NewWriter(enc, zstd.WithEncoderConcurrency(1))
 	if err != nil {
 		return a, err
 	}
+	defer func() { _ = zw.Close() }() // releases the encoder on failure; a second Close is a no-op
 	if err := produce(ctx, zw); err != nil {
 		return a, err
 	}
@@ -244,7 +251,9 @@ func (r *runState) artifact(ctx context.Context, name string, produce func(conte
 func (r *runState) upload(ctx context.Context, filename, caption string, data []byte) (telegram.Message, error) {
 	var lastErr error
 	for attempt := 1; attempt <= uploadAttempts; attempt++ {
-		msg, err := r.s.d.Telegram.SendDocument(ctx, r.tg.chat, filename, caption, bytes.NewReader(data))
+		actx, cancel := context.WithTimeout(ctx, uploadTimeout)
+		msg, err := r.s.d.Telegram.SendDocument(actx, r.tg.chat, filename, caption, bytes.NewReader(data))
+		cancel()
 		if err == nil {
 			r.ids = append(r.ids, msg.MessageID)
 			if err := addMessage(ctx, r.s.d.Pool, r.id, msg.MessageID); err != nil {
@@ -311,12 +320,17 @@ func (s *Service) tarBlobs(ctx context.Context, w io.Writer) error {
 			if err := ctx.Err(); err != nil {
 				return err
 			}
-			if !e.Type().IsRegular() || strings.HasPrefix(e.Name(), ".") { // skips in-flight .upload-* temp files
+			if !e.Type().IsRegular() {
 				return nil
 			}
 			rel, err := filepath.Rel(root, path)
 			if err != nil {
 				return err
+			}
+			// Only well-formed blobs (<ab>/<cd>/<sha256>): skips in-flight
+			// .upload-* temp files and anything else restore would not accept.
+			if !blobName.MatchString(filepath.ToSlash(rel)) {
+				return nil
 			}
 			return addFile(tw, path, filepath.ToSlash(rel))
 		})

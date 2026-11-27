@@ -21,15 +21,21 @@ downloaded by hand.
 3. Create a private Telegram channel, add the bot as an administrator, and
    set `backup.telegram_chat_id` (the numeric id, `-100…`) and the bot token
    (`telegram.bot_token`).
-4. Turn on `flag.backups`. Press **Back up now** on Admin → Backups once and
+4. Copy the server's **secret key** (`STOCKPOT_SECRET_KEY_FILE`, e.g.
+   `/var/lib/credentials/stockpot/secret-key`) next to the age key, off the
+   server. It is *not* in the backup: without it the encrypted settings
+   (`telegram.bot_token`, LLM API keys) cannot be read after a restore and
+   would have to be re-entered.
+5. Turn on `flag.backups`. Press **Back up now** on Admin → Backups once and
    check a run appears. Do a trial restore (below) into a scratch database.
 
 ## Restore onto a fresh server
 
 1. Install the same Stockpot release and `postgresql` (client tools
    `pg_restore` of the same major version as the dump).
-2. Create an **empty** database and role, e.g.
-   `createdb stockpot` (with the owner the app will use). Restore refuses to
+2. Create an **empty, unmigrated** database and role, e.g.
+   `createdb stockpot` (with the owner the app will use). Do not run
+   `stockpot migrate` first: the restore brings the schema. Restore refuses to
    overwrite: it runs `pg_restore` in a single transaction without `--clean`,
    so a non-empty database fails and is left unchanged.
 3. Get the manifest: open the channel, download the newest
@@ -48,12 +54,14 @@ downloaded by hand.
    It downloads and verifies every part (size and SHA-256) before touching
    anything, then decrypts, restores the database and unpacks the blobs.
    `--manifest` also accepts a message link (`https://t.me/c/<id>/<n>`).
-5. Point the new install at the database (`STOCKPOT_DATABASE_URL`, the same
-   `STOCKPOT_SECRET_KEY_FILE` as before: encrypted settings such as API keys
-   can only be read with the old key), start it; `stockpot migrate` runs on
+5. Point the new install at the database (`STOCKPOT_DATABASE_URL`, and the
+   saved `STOCKPOT_SECRET_KEY_FILE`: encrypted settings such as API keys can
+   only be read with the old key; otherwise re-enter them), start it; `stockpot migrate` runs on
    start and applies any migrations newer than the backup's `schema_version`.
-6. Check Admin → Overview, then re-enable `flag.backups` (a restored database
-   carries the old settings).
+6. Check Admin → Overview. A restored database carries the old settings, so
+   `flag.backups` is **still on** and the chat id unchanged: before starting a
+   trial or second instance against a restored copy, turn `flag.backups` off
+   (or the copy will post backups to the same channel).
 
 ## If the bot or its token is gone
 

@@ -115,8 +115,14 @@ func (e *env) seed(t *testing.T, rows, blobs int) map[string]bool {
 		hashes[h] = true
 	}
 	// An in-flight upload must not be archived.
-	if err := os.WriteFile(filepath.Join(e.blobDir, ".upload-123"), []byte("partial"), 0o600); err != nil {
-		t.Fatal(err)
+	for _, stray := range []string{".upload-123", "notes.txt", "ab/stray"} {
+		p := filepath.Join(e.blobDir, stray)
+		if err := os.MkdirAll(filepath.Dir(p), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte("not a blob"), 0o600); err != nil {
+			t.Fatal(err)
+		}
 	}
 	return hashes
 }
@@ -199,9 +205,13 @@ func TestBackupRestoreEndToEnd(t *testing.T) {
 	if orig != got {
 		t.Fatalf("data differs: %s vs %s", orig, got)
 	}
-	// Settings (and their encrypted secret) came along too.
-	if err := rp.QueryRow(t.Context(), `SELECT count(*) FROM backup_run WHERE status = 'ok'`).Scan(&n); err != nil {
-		t.Fatal(err)
+	// The dump held its own run as "running"; restore closes it.
+	if err := rp.QueryRow(t.Context(), `SELECT count(*) FROM backup_run WHERE status = 'running'`).Scan(&n); err != nil || n != 0 {
+		t.Fatalf("running runs after restore = %d, %v", n, err)
+	}
+	var phantom string
+	if err := rp.QueryRow(t.Context(), `SELECT status || ': ' || error FROM backup_run`).Scan(&phantom); err != nil || !strings.Contains(phantom, "restored") {
+		t.Fatalf("phantom run = %q, %v", phantom, err)
 	}
 	seen := map[string]bool{}
 	err = filepath.WalkDir(restoredBlobs, func(p string, d os.DirEntry, err error) error {
