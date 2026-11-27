@@ -9,14 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/a-jay98/stockpot/internal/inventory"
-
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/a-jay98/stockpot/internal/catalog"
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/identity"
+	"github.com/a-jay98/stockpot/internal/inventory"
 	"github.com/a-jay98/stockpot/internal/units"
 )
 
