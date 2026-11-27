@@ -2024,7 +2024,7 @@ export interface components {
          *     UUIDv7). Fields typed nullable clear the column when sent as null;
          *     absent fields are left unchanged.
          */
-        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"] | components["schemas"]["CmdRecipeCreate"] | components["schemas"]["CmdRecipeVersionCreate"] | components["schemas"]["CmdRecipeVersionRestore"] | components["schemas"]["CmdRecipeUpdate"] | components["schemas"]["CmdRecipeDelete"] | components["schemas"]["CmdRecipeLineSetIngredient"];
+        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"] | components["schemas"]["CmdRecipeCreate"] | components["schemas"]["CmdRecipeVersionCreate"] | components["schemas"]["CmdRecipeVersionRestore"] | components["schemas"]["CmdRecipeUpdate"] | components["schemas"]["CmdRecipeDelete"] | components["schemas"]["CmdRecipeLineSetIngredient"] | components["schemas"]["CmdRecipePhotoAdd"] | components["schemas"]["CmdRecipePhotoRemove"];
         CmdCatalogProductCreate: {
             /** Format: uuid */
             id: string;
@@ -2560,6 +2560,48 @@ export interface components {
              * @enum {string}
              */
             type: "recipe.delete";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        /**
+         * @description Attach an uploaded photo (POST /v1/blobs) to a recipe, optionally to
+         *     one cook. Rejected (invalid) unless the household owns the blob.
+         */
+        CmdRecipePhotoAdd: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.photo.add";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                recipeId: string;
+                blobRef: string;
+                /** Format: uuid */
+                cookSessionId?: string | null;
+                /** Format: date */
+                takenOn?: string | null;
+                caption?: string | null;
+            };
+        };
+        CmdRecipePhotoRemove: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.photo.remove";
             /** Format: date-time */
             clientTime: string;
             payload: {

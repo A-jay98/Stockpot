@@ -2953,6 +2953,8 @@ components:
         - $ref: "#/components/schemas/CmdRecipeUpdate"
         - $ref: "#/components/schemas/CmdRecipeDelete"
         - $ref: "#/components/schemas/CmdRecipeLineSetIngredient"
+        - $ref: "#/components/schemas/CmdRecipePhotoAdd"
+        - $ref: "#/components/schemas/CmdRecipePhotoRemove"
       discriminator:
         propertyName: type
         mapping:
@@ -2997,6 +2999,8 @@ components:
           recipe.update: "#/components/schemas/CmdRecipeUpdate"
           recipe.delete: "#/components/schemas/CmdRecipeDelete"
           recipe.line.set_ingredient: "#/components/schemas/CmdRecipeLineSetIngredient"
+          recipe.photo.add: "#/components/schemas/CmdRecipePhotoAdd"
+          recipe.photo.remove: "#/components/schemas/CmdRecipePhotoRemove"
     CmdCatalogProductCreate:
       type: object
       required: [id, type, payload, clientTime]
@@ -3999,6 +4003,71 @@ components:
         type:
           type: string
           enum: [recipe.delete]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdRecipePhotoAdd:
+      description: |
+        Attach an uploaded photo (POST /v1/blobs) to a recipe, optionally to
+        one cook. Rejected (invalid) unless the household owns the blob.
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.photo.add]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, recipeId, blobRef]
+          properties:
+            id:
+              type: string
+              format: uuid
+            recipeId:
+              type: string
+              format: uuid
+            blobRef:
+              type: string
+              pattern: '^[0-9a-f]{64}$'
+            cookSessionId:
+              type: string
+              format: uuid
+              nullable: true
+            takenOn:
+              type: string
+              format: date
+              nullable: true
+            caption:
+              type: string
+              maxLength: 300
+              nullable: true
+    CmdRecipePhotoRemove:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.photo.remove]
         clientTime:
           type: string
           format: date-time

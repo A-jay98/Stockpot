@@ -102,6 +102,8 @@ func Register(r *commands.Registry, res catalog.Resolver) *Handlers {
 	commands.Register(r, "recipe.update", h.update)
 	commands.Register(r, "recipe.delete", h.delete)
 	commands.Register(r, "recipe.line.set_ingredient", h.lineSetIngredient)
+	commands.Register(r, "recipe.photo.add", h.photoAdd)
+	commands.Register(r, "recipe.photo.remove", h.photoRemove)
 	return h
 }
 
@@ -321,8 +323,10 @@ func (h *Handlers) update(ctx context.Context, tx pgx.Tx, p Update) error {
 		}
 	}
 	if p.CoverBlob.Set {
-		if v := p.CoverBlob.Value; v != nil && !validRef(*v) {
-			return commands.Invalid("cover must be a blob ref")
+		if v := p.CoverBlob.Value; v != nil {
+			if err := requireBlob(ctx, tx, hh, *v); err != nil {
+				return err
+			}
 		}
 		add("cover_blob", p.CoverBlob.Value)
 	}
