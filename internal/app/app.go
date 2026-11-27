@@ -36,6 +36,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/llm/openaicompat"
 	"github.com/a-jay98/stockpot/internal/logging"
 	"github.com/a-jay98/stockpot/internal/settings"
+	"github.com/a-jay98/stockpot/internal/shopping"
 	"github.com/a-jay98/stockpot/internal/syncdb"
 	"github.com/a-jay98/stockpot/internal/telegram"
 )
@@ -138,6 +139,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	// its handlers here (one line per area).
 	cmdRegistry := commands.NewRegistry()
 	catalog.Register(cmdRegistry, resolve.Resolver{})
+	shopping.Register(cmdRegistry, resolve.Resolver{})
 	syncStore, err := syncdb.New(ctx, pool)
 	if err != nil {
 		return err

@@ -330,6 +330,17 @@ type ProductStat struct {
 	LastQty            pgtype.Numeric
 }
 
+type Purchase struct {
+	ID             uuid.UUID
+	HouseholdID    uuid.UUID
+	ProductID      uuid.UUID
+	StoreID        *uuid.UUID
+	ShoppingItemID *uuid.UUID
+	Qty            pgtype.Numeric
+	Unit           *string
+	BoughtAt       time.Time
+}
+
 type Session struct {
 	ID          uuid.UUID
 	TokenHash   []byte
