@@ -9,6 +9,7 @@ const REV = 'sync.rev'
 const REV_GLOBAL = 'sync.revGlobal'
 const HOUSEHOLD = 'sync.household'
 const REBUILD = 'sync.rebuild'
+const SETTLE = 'sync.settle'
 const BATCH = 50
 const PAGE = 1000
 
@@ -154,7 +155,8 @@ export async function flushOutbox(database: StockpotDB = db): Promise<FlushResul
     }
     size = BATCH
     const byId = new Map(out.results.map((r) => [r.id, r]))
-    await database.transaction('rw', database.outbox, async () => {
+    await database.transaction('rw', database.outbox, database.meta, async () => {
+      if (out.results.some((r) => r.status !== 'rejected')) await setMeta(database, SETTLE, true)
       for (const row of rows) {
         const r = byId.get(row.id)
         if (!r) continue
@@ -214,6 +216,7 @@ export async function pull(database: StockpotDB = db): Promise<boolean> {
     await applyPage(database, page)
     if (!page.more) {
       if (await getMeta(database, REBUILD, false)) await purgeGhosts(database)
+      else if (await getMeta(database, SETTLE, false)) await settle(database)
       return true
     }
   }
@@ -264,6 +267,23 @@ async function purgeGhosts(database: StockpotDB) {
     await database.meta.delete(REBUILD)
     // Rows the re-pull rewrote were already replayed; bring back what only exists optimistically.
     await replayPending(database, await getMeta<string | null>(database, HOUSEHOLD, null), purged)
+  })
+}
+
+/**
+ * After sent commands are pulled back, optimistic rows the server chose not to create (a free-text
+ * check that matched an existing product instead of the proposed one) are left with rev 0. Once
+ * nothing is queued, every rev-0 row is such a ghost: drop them.
+ */
+async function settle(database: StockpotDB) {
+  await database.transaction('rw', database.tables, async () => {
+    const household = await getMeta<string | null>(database, HOUSEHOLD, null)
+    if ((await pendingFor(database, household)).length > 0) return
+    for (const t of replicaTables) {
+      const table = database.table(t)
+      await table.bulkDelete(await table.filter((r) => r.rev === 0).primaryKeys())
+    }
+    await database.meta.delete(SETTLE)
   })
 }
 

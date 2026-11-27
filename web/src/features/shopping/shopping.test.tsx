@@ -217,3 +217,22 @@ test('ticking items offers to move them to inventory', async () => {
     source: 'shopping',
   })
 })
+
+test('a typed-in item put away offline gets a product, not an empty link', async () => {
+  const user = userEvent.setup()
+  renderApp('/shopping')
+  await waitFor(async () =>
+    expect((await db.meta.get('sync.household'))?.value).toBe(adminMe.activeHouseholdId),
+  )
+  await seed()
+  await user.type(await screen.findByLabelText('Item name'), 'Quince{Enter}')
+  await user.click(await screen.findByRole('checkbox', { name: 'Check Quince' }))
+  await user.click(await screen.findByRole('button', { name: 'Move 1 to inventory' }))
+  await user.click(await screen.findByRole('button', { name: 'Add to inventory' }))
+  await waitFor(async () => expect(await db.stock_item.count()).toBe(1))
+  const tick = (await db.outbox.toArray())[1]?.payload as { newProductId: string }
+  // The tick proposes the product id; the server creates it under that id when nothing matches.
+  expect(tick.newProductId).toBeTruthy()
+  expect(await db.product.get(tick.newProductId)).toMatchObject({ name: 'Quince', rev: 0 })
+  expect((await db.stock_item.toArray())[0]?.productId).toBe(tick.newProductId)
+})

@@ -81,11 +81,14 @@ type InventoryMove struct {
 }
 
 // ItemCheck is shopping.item.check: tick the item (learning from the
-// purchase) and optionally add it to inventory.
+// purchase) and optionally add it to inventory. NewProductID names the
+// product created for a free-text item, so an offline client can show it
+// before syncing.
 type ItemCheck struct {
-	ID        uuid.UUID      `json:"id"`
-	StoreID   *uuid.UUID     `json:"storeId"`
-	Inventory *InventoryMove `json:"inventory"`
+	ID           uuid.UUID      `json:"id"`
+	StoreID      *uuid.UUID     `json:"storeId"`
+	NewProductID *uuid.UUID     `json:"newProductId"`
+	Inventory    *InventoryMove `json:"inventory"`
 }
 
 // ListClear is shopping.item.clear_checked.
@@ -436,7 +439,11 @@ func (h *handlers) itemCheck(ctx context.Context, tx pgx.Tx, p ItemCheck) error 
 			if strings.TrimSpace(text) == "" {
 				return commands.Invalid("the item has no name")
 			}
-			id, err := catalog.EnsureProduct(ctx, tx, h.res, hh, text)
+			var want uuid.UUID
+			if p.NewProductID != nil {
+				want = *p.NewProductID
+			}
+			id, err := catalog.EnsureProduct(ctx, tx, h.res, hh, text, want)
 			if err != nil {
 				return err
 			}

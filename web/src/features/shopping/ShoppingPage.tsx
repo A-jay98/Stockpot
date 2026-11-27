@@ -105,6 +105,7 @@ export function ShoppingPage() {
       : dispatch('shopping.item.check', {
           id: r.id,
           ...(storeFilter ? { storeId: storeFilter } : {}),
+          ...(r.productId ? {} : { newProductId: uuidv7() }),
         }))
 
   const iconFor = (r: Row) =>

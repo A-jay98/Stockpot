@@ -3,7 +3,7 @@ import { applyReducer, registerReducer } from '../../offline/reducers'
 import type { LocationKind, StockEvent, StockItem } from '../../offline/replica'
 import '../catalog/commands' // product create runs inside stock add
 import { today } from './dates'
-import { add, isZero, sub, subClamped } from './decimal'
+import { add, isZero, splitEvenly, sub, subClamped } from './decimal'
 import { estimate, type Op } from './estimate'
 import { buildChain } from './foodRules'
 
@@ -391,7 +391,10 @@ registerReducer(
     let leftP = it.portions
     let sumQ = '0'
     let sumP = 0
-    for (const part of p.parts) {
+    // "All": the parts share what the item holds now (after any pull), as the server does.
+    const parts = p.all ? shareAll(it, p.parts) : p.parts
+    if (!parts) return
+    for (const part of parts) {
       // A replay must not rewrite a part that a later queued command already changed.
       if (!(await db.stock_item.get(part.id))) {
         await db.stock_item.put({
@@ -448,3 +451,21 @@ registerReducer(
   // Takes amounts off the parent, so it is a delta there; its parts are written by id, so a replay rewrites them.
   byId,
 )
+
+type SplitPart = { id: string; eventId: string; quantity?: string; portions?: number }
+
+/** Mirrors the server's shareAll: null when there is too little to give every part some. */
+function shareAll(it: StockItem, parts: SplitPart[]): SplitPart[] | null {
+  const n = parts.length
+  if (it.amountKind === 'exact') {
+    const shares = splitEvenly(it.quantity ?? '0', n)
+    if (shares.some(isZero)) return null
+    return parts.map((part, i) => ({ ...part, quantity: shares[i] }))
+  }
+  const total = it.portions ?? 0
+  if (total < n) return null
+  return parts.map((part, i) => ({
+    ...part,
+    portions: Math.floor(total / n) + (i < total % n ? 1 : 0),
+  }))
+}

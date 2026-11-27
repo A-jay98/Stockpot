@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -116,10 +117,13 @@ type SplitPart struct {
 // StockSplit is inventory.stock.split: cut parts (e.g. a meat pack into
 // freezer portions) out of an item. Parts take the parent's product, expiry
 // and unit; the parent keeps the rest and is finished when nothing is left.
+// With All, the parts carry no amounts and share whatever the item holds when
+// the command applies, so a consume synced first doesn't make it fail.
 type StockSplit struct {
 	ID         uuid.UUID   `json:"id"`
 	EventID    uuid.UUID   `json:"eventId"`
 	Parts      []SplitPart `json:"parts"`
+	All        bool        `json:"all"`
 	LocationID *uuid.UUID  `json:"locationId"`
 	On         *string     `json:"on"`
 }
@@ -960,6 +964,12 @@ func (h *handlers) split(ctx context.Context, tx pgx.Tx, p StockSplit) error {
 		return err
 	}
 
+	if p.All {
+		if err := shareAll(it, p.Parts); err != nil {
+			return err
+		}
+	}
+
 	// Validate every part and total them before writing anything.
 	amounts := make([]Amount, len(p.Parts))
 	sumQ, sumP := "0", 0
@@ -1053,6 +1063,75 @@ func (h *handlers) split(ctx context.Context, tx pgx.Tx, p StockSplit) error {
 		totalP = &sumP
 	}
 	return writeEvent(ctx, tx, hh, event{ID: p.EventID, Item: p.ID, Kind: "split", Delta: delta(true, ptrIf(it.Kind == "exact", total), totalP), Unit: it.Unit, From: it.LocationID, To: to})
+}
+
+// shareAll fills in the parts' amounts: the item's current amount, shared
+// evenly. Every part must get something.
+func shareAll(it *item, parts []SplitPart) error {
+	for _, part := range parts {
+		if part.Quantity != nil || part.Portions != nil {
+			return commands.Invalid("a split of everything takes no part amounts")
+		}
+	}
+	n := len(parts)
+	if it.Kind == "exact" {
+		shares, ok := splitEvenly(*it.Quantity, n, 3)
+		if !ok {
+			return commands.Invalid("too little left to split into %d parts", n)
+		}
+		for i := range parts {
+			parts[i].Quantity = &shares[i]
+		}
+		return nil
+	}
+	total := *it.Portions
+	if total < n {
+		return commands.Invalid("too little left to split into %d parts", n)
+	}
+	for i := range parts {
+		share := total / n
+		if i < total%n {
+			share++
+		}
+		parts[i].Portions = &share
+	}
+	return nil
+}
+
+// splitEvenly cuts the decimal string total into n parts, each rounded down
+// to places decimals, the last taking the rest (the web client's splitEvenly
+// does the same). ok is false when a part would be zero.
+func splitEvenly(total string, n, places int) (parts []string, ok bool) {
+	intPart, frac, _ := strings.Cut(strings.TrimSpace(total), ".")
+	scale := max(len(frac), places)
+	whole, valid := new(big.Int).SetString(intPart+frac+strings.Repeat("0", scale-len(frac)), 10)
+	if !valid || n < 1 {
+		return nil, false
+	}
+	unit := new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(scale-places)), nil)
+	share := new(big.Int).Quo(whole, big.NewInt(int64(n)))
+	share.Quo(share, unit).Mul(share, unit)
+	last := new(big.Int).Sub(whole, new(big.Int).Mul(share, big.NewInt(int64(n-1))))
+	if (n > 1 && share.Sign() <= 0) || last.Sign() <= 0 {
+		return nil, false
+	}
+	for range n - 1 {
+		parts = append(parts, formatScaled(share, scale))
+	}
+	return append(parts, formatScaled(last, scale)), true
+}
+
+// formatScaled prints n / 10^scale without trailing zeros.
+func formatScaled(n *big.Int, scale int) string {
+	digits := n.String()
+	if scale == 0 {
+		return digits
+	}
+	if len(digits) <= scale {
+		digits = strings.Repeat("0", scale-len(digits)+1) + digits
+	}
+	out := strings.TrimRight(digits[:len(digits)-scale]+"."+digits[len(digits)-scale:], "0")
+	return strings.TrimSuffix(out, ".")
 }
 
 func ptrIf(ok bool, s string) *string {

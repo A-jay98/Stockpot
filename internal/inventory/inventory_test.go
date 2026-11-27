@@ -445,6 +445,49 @@ func TestSplitExactAndPortions(t *testing.T) {
 	}
 }
 
+func TestSplitAllSurvivesConcurrentConsume(t *testing.T) {
+	e := newEnv(t)
+	item := uuid.New()
+	e.ok(t, "inventory.stock.add", map[string]any{
+		"id": item, "newProduct": map[string]any{"id": uuid.New(), "name": "Ground beef"},
+		"locationId": e.loc["fridge"], "amountKind": "exact", "quantity": "1", "unit": "kg", "source": "manual", "on": today(),
+	})
+	// Another device's consume syncs first; the split, made when the pack held 1 kg, still applies.
+	e.ok(t, "inventory.stock.consume", map[string]any{"id": item, "eventId": uuid.New(), "quantity": "0.1"})
+	ids := []uuid.UUID{uuid.New(), uuid.New(), uuid.New()}
+	parts := []map[string]any{}
+	for _, id := range ids {
+		parts = append(parts, map[string]any{"id": id, "eventId": uuid.New()})
+	}
+	e.rejected(t, "inventory.stock.split", map[string]any{"id": item, "all": true, "parts": []map[string]any{{"id": uuid.New(), "eventId": uuid.New(), "quantity": "0.3"}}}, "invalid")
+	e.ok(t, "inventory.stock.split", map[string]any{"id": item, "all": true, "parts": parts})
+	if !e.stock(t, item).Deleted {
+		t.Fatal("parent should be finished")
+	}
+	for i, want := range []string{"0.3", "0.3", "0.3"} {
+		if s := e.stock(t, ids[i]); *s.Qty != want {
+			t.Fatalf("part %d: %s want %s", i, *s.Qty, want)
+		}
+	}
+
+	// Portions share as evenly as possible; too few to go round is refused.
+	pk, _ := e.addMandarins(t, "fridge", map[string]any{"amountKind": "portions", "portions": 7, "unit": nil, "quantity": nil, "newProduct": map[string]any{"id": uuid.New(), "name": "Soup"}})
+	three := []map[string]any{}
+	kids := []uuid.UUID{uuid.New(), uuid.New(), uuid.New()}
+	for _, id := range kids {
+		three = append(three, map[string]any{"id": id, "eventId": uuid.New()})
+	}
+	e.ok(t, "inventory.stock.consume", map[string]any{"id": pk, "eventId": uuid.New(), "portions": 5})
+	e.rejected(t, "inventory.stock.split", map[string]any{"id": pk, "all": true, "parts": three}, "invalid")
+	e.ok(t, "inventory.stock.restock", map[string]any{"id": pk, "eventId": uuid.New(), "portions": 5})
+	e.ok(t, "inventory.stock.split", map[string]any{"id": pk, "all": true, "parts": three})
+	for i, want := range []int{3, 2, 2} {
+		if s := e.stock(t, kids[i]); *s.Portions != want {
+			t.Fatalf("portion part %d: %d want %d", i, *s.Portions, want)
+		}
+	}
+}
+
 func TestDiscardAndUpdate(t *testing.T) {
 	e := newEnv(t)
 	item, _ := e.addMandarins(t, "fridge", nil)

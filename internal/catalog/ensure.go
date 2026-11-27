@@ -15,8 +15,10 @@ import (
 // letting res link it to an ingredient) when none exists. Matching is by
 // case-insensitive name, then by resolved ingredient (brand-less product), so a free-text
 // "mandarins" lands on the product the household already buys instead of a
-// duplicate. The caller holds the household write lock (command handlers do).
-func EnsureProduct(ctx context.Context, tx pgx.Tx, res Resolver, hh uuid.UUID, name string) (uuid.UUID, error) {
+// duplicate. A new product gets the id want when it is free (an offline client
+// proposes one to show the product before syncing), else a fresh one. The
+// caller holds the household write lock (command handlers do).
+func EnsureProduct(ctx context.Context, tx pgx.Tx, res Resolver, hh uuid.UUID, name string, want uuid.UUID) (uuid.UUID, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return uuid.Nil, commands.Invalid("name is required")
@@ -48,9 +50,19 @@ func EnsureProduct(ctx context.Context, tx pgx.Tx, res Resolver, hh uuid.UUID, n
 			return uuid.Nil, err
 		}
 	}
-	id = uuid.New()
-	if _, err := tx.Exec(ctx, `INSERT INTO product (id, household_id, name) VALUES ($1, $2, $3)`, id, hh, name); err != nil {
+	id = want
+	if id == uuid.Nil {
+		id = uuid.New()
+	}
+	tag, err := tx.Exec(ctx, `INSERT INTO product (id, household_id, name) VALUES ($1, $2, $3) ON CONFLICT (id) DO NOTHING`, id, hh, name)
+	if err != nil {
 		return uuid.Nil, err
+	}
+	if tag.RowsAffected() == 0 { // the proposed id is taken
+		id = uuid.New()
+		if _, err := tx.Exec(ctx, `INSERT INTO product (id, household_id, name) VALUES ($1, $2, $3)`, id, hh, name); err != nil {
+			return uuid.Nil, err
+		}
 	}
 	if err := (&handlers{res: res}).resolve(ctx, tx, hh, id, name, nil); err != nil {
 		return uuid.Nil, err

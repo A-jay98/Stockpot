@@ -30,7 +30,6 @@ import {
 import { FoodIcon } from '../../ui/food-icons'
 import { useIngredients, useLocations } from '../catalog/hooks'
 import { today as todayOf } from './dates'
-import { splitEvenly } from './decimal'
 import { type StockRow, useStockEvents, useStockRow } from './hooks'
 import { amountLabel, expiryLabel, foodState, kindLabel, levelLabel, unitLabel } from './status'
 
@@ -375,20 +374,14 @@ function SplitSheet({ open, onClose, row }: SheetProps) {
   const { item } = row
   const [n, setN] = useState(2)
   const [loc, setLoc] = useState<string | undefined>(undefined)
-  const total = item.amountKind === 'exact' ? item.quantity : String(item.portions ?? 0)
   const max = item.amountKind === 'portions' ? (item.portions ?? 1) : 12
   const submit = () => {
-    if (!total) return
-    const shares =
-      item.amountKind === 'exact' ? splitEvenly(total, n) : Array.from({ length: n }, () => '1')
-    const parts = shares.map((q) => ({
-      id: uuidv7(),
-      eventId: uuidv7(),
-      ...(item.amountKind === 'exact' ? { quantity: q } : { portions: Number(q) }),
-    }))
+    // Amounts are shared out when the split applies, so a consume synced first can't break it.
+    const parts = Array.from({ length: n }, () => ({ id: uuidv7(), eventId: uuidv7() }))
     void dispatch('inventory.stock.split', {
       id: item.id,
       eventId: uuidv7(),
+      all: true,
       parts,
       locationId: loc ?? item.locationId ?? undefined,
       on: todayOf(),

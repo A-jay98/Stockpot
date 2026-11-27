@@ -237,6 +237,34 @@ func TestFreeTextLinksExistingProductByName(t *testing.T) {
 	}
 }
 
+func TestFreeTextCheckUsesProposedProductID(t *testing.T) {
+	e := newEnv(t)
+	want := uuid.New()
+	id := e.addItem(t, map[string]any{"text": "Pomegranate"})
+	e.mustDo(t, "shopping.item.check", map[string]any{"id": id, "newProductId": want, "inventory": map[string]any{"stockItemId": uuid.New()}})
+	var linked, stocked uuid.UUID
+	_ = e.pool.QueryRow(t.Context(), `SELECT s.product_id, i.product_id FROM shopping_item s JOIN stock_item i ON i.id = s.stock_item_id WHERE s.id = $1`, id).Scan(&linked, &stocked)
+	if linked != want || stocked != want {
+		t.Fatalf("product %v, stock product %v, want %v", linked, stocked, want)
+	}
+
+	// A known product wins over the proposed id.
+	again := e.addItem(t, map[string]any{"text": "pomegranate"})
+	e.mustDo(t, "shopping.item.check", map[string]any{"id": again, "newProductId": uuid.New()})
+	_ = e.pool.QueryRow(t.Context(), `SELECT product_id FROM shopping_item WHERE id = $1`, again).Scan(&linked)
+	if linked != want {
+		t.Fatalf("second item linked %v, want %v", linked, want)
+	}
+
+	// A taken id falls back to a fresh one.
+	third := e.addItem(t, map[string]any{"text": "Quince"})
+	e.mustDo(t, "shopping.item.check", map[string]any{"id": third, "newProductId": want})
+	_ = e.pool.QueryRow(t.Context(), `SELECT product_id FROM shopping_item WHERE id = $1`, third).Scan(&linked)
+	if linked == want || linked == uuid.Nil {
+		t.Fatalf("taken id reused: %v", linked)
+	}
+}
+
 func TestCheckIntoInventory(t *testing.T) {
 	e := newEnv(t)
 	var fridge, freezer uuid.UUID

@@ -28,6 +28,7 @@ export function PutAwaySheet({ open, onOpenChange, rows, locations, storeId }: P
       await dispatch('shopping.item.check', {
         id: r.id,
         ...(storeId ? { storeId } : {}),
+        ...(r.productId ? {} : { newProductId: uuidv7() }),
         inventory: {
           stockItemId: uuidv7(),
           ...(locationId ? { locationId } : {}),

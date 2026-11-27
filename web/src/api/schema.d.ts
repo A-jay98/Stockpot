@@ -2349,6 +2349,11 @@ export interface components {
                 id: string;
                 /** Format: uuid */
                 storeId?: string | null;
+                /**
+                 * Format: uuid
+                 * @description Id for the product the server creates when a free-text item names none the household has. Lets an offline client show the product before it syncs; ignored when the item already has a product or one matches.
+                 */
+                newProductId?: string;
                 inventory?: {
                     /** Format: uuid */
                     stockItemId: string;
@@ -2645,6 +2650,8 @@ export interface components {
                 /** Format: uuid */
                 eventId: string;
                 parts: components["schemas"]["StockSplitPart"][];
+                /** @description Share whatever the item holds when the command applies evenly across the parts (which then carry no amounts), so the split survives consumes synced before it. Exact amounts round down to 3 decimals and the last part takes the rest. */
+                all?: boolean;
                 /** Format: uuid */
                 locationId?: string;
                 /** Format: date */
