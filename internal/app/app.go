@@ -12,6 +12,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"golang.org/x/sync/errgroup"
@@ -36,6 +37,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/llm/openaicompat"
 	"github.com/a-jay98/stockpot/internal/logging"
 	"github.com/a-jay98/stockpot/internal/settings"
+	"github.com/a-jay98/stockpot/internal/shopping"
 	"github.com/a-jay98/stockpot/internal/syncdb"
 	"github.com/a-jay98/stockpot/internal/telegram"
 )
@@ -138,7 +140,10 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	// its handlers here (one line per area).
 	cmdRegistry := commands.NewRegistry()
 	catalog.Register(cmdRegistry, catalog.ExactResolver{})
-	inventory.Register(cmdRegistry, catalog.ExactResolver{})
+	inventory.Register(cmdRegistry, catalog.ExactResolver{}, func(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, store *uuid.UUID, at time.Time, qty, unit *string) error {
+		return shopping.RecordPurchase(ctx, tx, hh, product, store, uuid.Nil, at, qty, unit)
+	})
+	shopping.Register(cmdRegistry, catalog.ExactResolver{})
 	syncStore, err := syncdb.New(ctx, pool)
 	if err != nil {
 		return err

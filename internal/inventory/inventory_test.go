@@ -10,12 +10,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/a-jay98/stockpot/internal/catalog"
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/identity"
 	"github.com/a-jay98/stockpot/internal/inventory"
+	"github.com/a-jay98/stockpot/internal/shopping"
 	"github.com/a-jay98/stockpot/internal/testdb"
 )
 
@@ -37,7 +39,9 @@ func newEnv(t *testing.T) *env {
 	}
 	reg := commands.NewRegistry()
 	catalog.Register(reg, catalog.ExactResolver{})
-	inventory.Register(reg, catalog.ExactResolver{})
+	inventory.Register(reg, catalog.ExactResolver{}, func(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, store *uuid.UUID, at time.Time, qty, unit *string) error {
+		return shopping.RecordPurchase(ctx, tx, hh, product, store, uuid.Nil, at, qty, unit)
+	})
 	e := &env{pool: pool, svc: commands.NewService(pool, reg), loc: map[string]uuid.UUID{}}
 	if err := pool.QueryRow(t.Context(), `INSERT INTO household (id, name) VALUES (gen_random_uuid(), 'Home') RETURNING id`).Scan(&e.hh); err != nil {
 		t.Fatal(err)

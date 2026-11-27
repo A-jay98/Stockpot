@@ -318,14 +318,15 @@ type ProductStat struct {
 	LastQty            pgtype.Numeric
 }
 
-type PurchaseLog struct {
-	ID          uuid.UUID
-	HouseholdID uuid.UUID
-	ProductID   uuid.UUID
-	StoreID     *uuid.UUID
-	Qty         pgtype.Numeric
-	Unit        *string
-	BoughtAt    time.Time
+type Purchase struct {
+	ID             uuid.UUID
+	HouseholdID    uuid.UUID
+	ProductID      uuid.UUID
+	StoreID        *uuid.UUID
+	ShoppingItemID *uuid.UUID
+	Qty            pgtype.Numeric
+	Unit           *string
+	BoughtAt       time.Time
 }
 
 type Session struct {

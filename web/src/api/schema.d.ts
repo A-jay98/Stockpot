@@ -1755,7 +1755,7 @@ export interface components {
          *     UUIDv7). Fields typed nullable clear the column when sent as null;
          *     absent fields are left unchanged.
          */
-        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"];
+        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"];
         CmdCatalogProductCreate: {
             /** Format: uuid */
             id: string;
@@ -1979,6 +1979,244 @@ export interface components {
                 icon?: string | null;
                 aliases?: string[];
             };
+        };
+        CmdShoppingListCreate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "shopping.list.create";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                sort?: number | null;
+            };
+        };
+        CmdShoppingListRename: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "shopping.list.rename";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            };
+        };
+        CmdShoppingListDelete: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "shopping.list.delete";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        CmdShoppingItemAdd: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "shopping.item.add";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                listId: string;
+                sort?: number | null;
+                /** Format: uuid */
+                productId?: string | null;
+                text?: string | null;
+                /** @description Decimal string. */
+                qty?: string | null;
+                unit?: string | null;
+                /** Format: uuid */
+                categoryId?: string | null;
+                storeIds?: string[] | null;
+                note?: string | null;
+            };
+        };
+        CmdShoppingItemUpdate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "shopping.item.update";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                productId?: string | null;
+                text?: string | null;
+                /** @description Decimal string. */
+                qty?: string | null;
+                unit?: string | null;
+                /** Format: uuid */
+                categoryId?: string | null;
+                storeIds?: string[] | null;
+                note?: string | null;
+            };
+        };
+        CmdShoppingItemDelete: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "shopping.item.delete";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        CmdShoppingItemReorder: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "shopping.item.reorder";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                listId: string;
+                ids: string[];
+            };
+        };
+        CmdShoppingItemCheck: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "shopping.item.check";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                storeId?: string | null;
+                inventory?: {
+                    /** Format: uuid */
+                    stockItemId: string;
+                    /** Format: uuid */
+                    locationId?: string | null;
+                    /** Format: date */
+                    expiresOn?: string | null;
+                    /** @description Decimal string. */
+                    quantity?: string | null;
+                    unit?: string | null;
+                } | null;
+            };
+        };
+        CmdShoppingItemUncheck: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "shopping.item.uncheck";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        CmdShoppingItemClearChecked: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "shopping.item.clear_checked";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                listId: string;
+            };
+        };
+        CommandBatch: {
+            /**
+             * Format: uuid
+             * @description The household the commands were queued under. The server answers 409
+             *     `household_mismatch` and applies nothing when the session's active
+             *     household is another one.
+             */
+            householdId: string;
+            commands: components["schemas"]["Command"][];
+        };
+        CommandResult: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "applied" | "duplicate" | "rejected";
+            problem?: {
+                /** @enum {string} */
+                code: "gone" | "invalid" | "forbidden";
+                detail: string;
+            };
+        };
+        CommandResults: {
+            results: components["schemas"]["CommandResult"][];
+        };
+        SyncPage: {
+            /** @description Changed rows by table name, snake_case columns, numerics as decimal strings. */
+            rows: {
+                [key: string]: {
+                    [key: string]: unknown;
+                }[];
+            };
+            /** @description Ids of rows deleted since the cursor, by table name. */
+            tombstones: {
+                [key: string]: string[];
+            };
+            /**
+             * Format: int64
+             * @description Household cursor to send as `since` next time.
+             */
+            next: number;
+            /**
+             * Format: int64
+             * @description Global catalog cursor to send as `sinceGlobal` next time.
+             */
+            nextGlobal: number;
+            /** @description Either cursor has more rows; pull again at once. */
+            more: boolean;
         };
         CmdInventoryStockAdd: {
             /** Format: uuid */
@@ -2346,54 +2584,6 @@ export interface components {
         AdminFoodRules: {
             defaults: components["schemas"]["FoodRule"][];
             overrides: components["schemas"]["AdminFoodRule"][];
-        };
-        CommandBatch: {
-            /**
-             * Format: uuid
-             * @description The household the commands were queued under. The server answers 409
-             *     `household_mismatch` and applies nothing when the session's active
-             *     household is another one.
-             */
-            householdId: string;
-            commands: components["schemas"]["Command"][];
-        };
-        CommandResult: {
-            /** Format: uuid */
-            id: string;
-            /** @enum {string} */
-            status: "applied" | "duplicate" | "rejected";
-            problem?: {
-                /** @enum {string} */
-                code: "gone" | "invalid" | "forbidden";
-                detail: string;
-            };
-        };
-        CommandResults: {
-            results: components["schemas"]["CommandResult"][];
-        };
-        SyncPage: {
-            /** @description Changed rows by table name, snake_case columns, numerics as decimal strings. */
-            rows: {
-                [key: string]: {
-                    [key: string]: unknown;
-                }[];
-            };
-            /** @description Ids of rows deleted since the cursor, by table name. */
-            tombstones: {
-                [key: string]: string[];
-            };
-            /**
-             * Format: int64
-             * @description Household cursor to send as `since` next time.
-             */
-            next: number;
-            /**
-             * Format: int64
-             * @description Global catalog cursor to send as `sinceGlobal` next time.
-             */
-            nextGlobal: number;
-            /** @description Either cursor has more rows; pull again at once. */
-            more: boolean;
         };
     };
     responses: {

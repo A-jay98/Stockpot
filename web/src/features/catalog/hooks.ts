@@ -1,6 +1,13 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../offline/db'
-import type { Category, Ingredient, Location, Product, Store } from '../../offline/replica'
+import type {
+  Category,
+  Ingredient,
+  Location,
+  Product,
+  ProductStat,
+  Store,
+} from '../../offline/replica'
 
 // UI reads household data only from the local replica, never the API. Each hook returns
 // [] until the first read finishes; the replica fills as syncing catches up.
@@ -27,3 +34,6 @@ export const useLocations = (): Location[] =>
 
 export const useProducts = (): Product[] =>
   useLiveQuery(async () => (await db.product.toArray()).sort(byName), [], [] as Product[])
+
+export const useProductStats = (): ProductStat[] =>
+  useLiveQuery(() => db.product_stat.toArray(), [], [] as ProductStat[])

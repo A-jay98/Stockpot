@@ -36,10 +36,10 @@ tags:
     description: User approval and management (admin).
   - name: llm
     description: LLM gateway administration (providers, keys, quota, usage).
-  - name: sync
-    description: Offline sync engine - commands, pulls and change events.
   - name: inventory
     description: Shelf-life (food) rules behind expiry estimates.
+  - name: sync
+    description: Offline sync engine - commands, pulls and change events.
   - name: notifications
     description: Inbox, alert preferences and Telegram linking.
 paths:
@@ -2575,6 +2575,16 @@ components:
         - $ref: "#/components/schemas/CmdInventoryStockFreeze"
         - $ref: "#/components/schemas/CmdInventoryStockDiscard"
         - $ref: "#/components/schemas/CmdInventoryStockUpdate"
+        - $ref: "#/components/schemas/CmdShoppingListCreate"
+        - $ref: "#/components/schemas/CmdShoppingListRename"
+        - $ref: "#/components/schemas/CmdShoppingListDelete"
+        - $ref: "#/components/schemas/CmdShoppingItemAdd"
+        - $ref: "#/components/schemas/CmdShoppingItemUpdate"
+        - $ref: "#/components/schemas/CmdShoppingItemDelete"
+        - $ref: "#/components/schemas/CmdShoppingItemReorder"
+        - $ref: "#/components/schemas/CmdShoppingItemCheck"
+        - $ref: "#/components/schemas/CmdShoppingItemUncheck"
+        - $ref: "#/components/schemas/CmdShoppingItemClearChecked"
       discriminator:
         propertyName: type
         mapping:
@@ -2603,6 +2613,16 @@ components:
           inventory.stock.freeze: "#/components/schemas/CmdInventoryStockFreeze"
           inventory.stock.discard: "#/components/schemas/CmdInventoryStockDiscard"
           inventory.stock.update: "#/components/schemas/CmdInventoryStockUpdate"
+          shopping.list.create: "#/components/schemas/CmdShoppingListCreate"
+          shopping.list.rename: "#/components/schemas/CmdShoppingListRename"
+          shopping.list.delete: "#/components/schemas/CmdShoppingListDelete"
+          shopping.item.add: "#/components/schemas/CmdShoppingItemAdd"
+          shopping.item.update: "#/components/schemas/CmdShoppingItemUpdate"
+          shopping.item.delete: "#/components/schemas/CmdShoppingItemDelete"
+          shopping.item.reorder: "#/components/schemas/CmdShoppingItemReorder"
+          shopping.item.check: "#/components/schemas/CmdShoppingItemCheck"
+          shopping.item.uncheck: "#/components/schemas/CmdShoppingItemUncheck"
+          shopping.item.clear_checked: "#/components/schemas/CmdShoppingItemClearChecked"
     CmdCatalogProductCreate:
       type: object
       required: [id, type, payload, clientTime]
@@ -3031,6 +3051,418 @@ components:
                 items:
                   type: string
                 maxItems: 30
+    CmdShoppingListCreate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.list.create]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, name]
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+              minLength: 1
+              maxLength: 100
+            sort:
+              type: integer
+              nullable: true
+    CmdShoppingListRename:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.list.rename]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, name]
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+              minLength: 1
+              maxLength: 100
+    CmdShoppingListDelete:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.list.delete]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdShoppingItemAdd:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.add]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, listId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            listId:
+              type: string
+              format: uuid
+            sort:
+              type: integer
+              nullable: true
+            productId:
+              type: string
+              format: uuid
+              nullable: true
+            text:
+              type: string
+              maxLength: 200
+              nullable: true
+            qty:
+              type: string
+              nullable: true
+              pattern: '^[0-9]+(\.[0-9]+)?$'
+              description: "Decimal string."
+            unit:
+              type: string
+              maxLength: 16
+              nullable: true
+            categoryId:
+              type: string
+              format: uuid
+              nullable: true
+            storeIds:
+              type: array
+              nullable: true
+              items:
+                type: string
+                format: uuid
+            note:
+              type: string
+              maxLength: 1000
+              nullable: true
+    CmdShoppingItemUpdate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.update]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+            productId:
+              type: string
+              format: uuid
+              nullable: true
+            text:
+              type: string
+              maxLength: 200
+              nullable: true
+            qty:
+              type: string
+              nullable: true
+              pattern: '^[0-9]+(\.[0-9]+)?$'
+              description: "Decimal string."
+            unit:
+              type: string
+              maxLength: 16
+              nullable: true
+            categoryId:
+              type: string
+              format: uuid
+              nullable: true
+            storeIds:
+              type: array
+              nullable: true
+              items:
+                type: string
+                format: uuid
+            note:
+              type: string
+              maxLength: 1000
+              nullable: true
+    CmdShoppingItemDelete:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.delete]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdShoppingItemReorder:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.reorder]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [listId, ids]
+          properties:
+            listId:
+              type: string
+              format: uuid
+            ids:
+              type: array
+              maxItems: 500
+              items:
+                type: string
+                format: uuid
+    CmdShoppingItemCheck:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.check]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+            storeId:
+              type: string
+              format: uuid
+              nullable: true
+            inventory:
+              type: object
+              nullable: true
+              additionalProperties: false
+              required: [stockItemId]
+              properties:
+                stockItemId:
+                  type: string
+                  format: uuid
+                locationId:
+                  type: string
+                  format: uuid
+                  nullable: true
+                expiresOn:
+                  type: string
+                  format: date
+                  nullable: true
+                quantity:
+                  type: string
+                  nullable: true
+                  pattern: '^[0-9]+(\.[0-9]+)?$'
+                  description: "Decimal string."
+                unit:
+                  type: string
+                  maxLength: 16
+                  nullable: true
+    CmdShoppingItemUncheck:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.uncheck]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdShoppingItemClearChecked:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.clear_checked]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [listId]
+          properties:
+            listId:
+              type: string
+              format: uuid
+    CommandBatch:
+      type: object
+      required: [householdId, commands]
+      additionalProperties: false
+      properties:
+        householdId:
+          type: string
+          format: uuid
+          description: |
+            The household the commands were queued under. The server answers 409
+            `household_mismatch` and applies nothing when the session's active
+            household is another one.
+        commands:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/Command"
+    CommandResult:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [applied, duplicate, rejected]
+        problem:
+          type: object
+          required: [code, detail]
+          properties:
+            code:
+              type: string
+              enum: [gone, invalid, forbidden]
+            detail:
+              type: string
+    CommandResults:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommandResult"
+    SyncPage:
+      type: object
+      required: [rows, tombstones, next, nextGlobal, more]
+      properties:
+        rows:
+          type: object
+          description: Changed rows by table name, snake_case columns, numerics as decimal strings.
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+        tombstones:
+          type: object
+          description: Ids of rows deleted since the cursor, by table name.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+              format: uuid
+        next:
+          type: integer
+          format: int64
+          description: Household cursor to send as `since` next time.
+        nextGlobal:
+          type: integer
+          format: int64
+          description: Global catalog cursor to send as `sinceGlobal` next time.
+        more:
+          type: boolean
+          description: Either cursor has more rows; pull again at once.
+
     CmdInventoryStockAdd:
       type: object
       required: [id, type, payload, clientTime]
@@ -3638,79 +4070,3 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AdminFoodRule"
-    CommandBatch:
-      type: object
-      required: [householdId, commands]
-      additionalProperties: false
-      properties:
-        householdId:
-          type: string
-          format: uuid
-          description: |
-            The household the commands were queued under. The server answers 409
-            `household_mismatch` and applies nothing when the session's active
-            household is another one.
-        commands:
-          type: array
-          minItems: 1
-          maxItems: 100
-          items:
-            $ref: "#/components/schemas/Command"
-    CommandResult:
-      type: object
-      required: [id, status]
-      properties:
-        id:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: [applied, duplicate, rejected]
-        problem:
-          type: object
-          required: [code, detail]
-          properties:
-            code:
-              type: string
-              enum: [gone, invalid, forbidden]
-            detail:
-              type: string
-    CommandResults:
-      type: object
-      required: [results]
-      properties:
-        results:
-          type: array
-          items:
-            $ref: "#/components/schemas/CommandResult"
-    SyncPage:
-      type: object
-      required: [rows, tombstones, next, nextGlobal, more]
-      properties:
-        rows:
-          type: object
-          description: Changed rows by table name, snake_case columns, numerics as decimal strings.
-          additionalProperties:
-            type: array
-            items:
-              type: object
-              additionalProperties: true
-        tombstones:
-          type: object
-          description: Ids of rows deleted since the cursor, by table name.
-          additionalProperties:
-            type: array
-            items:
-              type: string
-              format: uuid
-        next:
-          type: integer
-          format: int64
-          description: Household cursor to send as `since` next time.
-        nextGlobal:
-          type: integer
-          format: int64
-          description: Global catalog cursor to send as `sinceGlobal` next time.
-        more:
-          type: boolean
-          description: Either cursor has more rows; pull again at once.

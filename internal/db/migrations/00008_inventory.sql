@@ -1,6 +1,6 @@
--- Inventory (m1-2): shelf-life rules and purchase history. Additive only.
--- Neither table is synced: rules reach the client over REST (cached for
--- offline estimates) and the purchase log only feeds product_stat.
+-- Inventory (m1-2): shelf-life rules. Additive only. Not synced: rules reach
+-- the client over REST and are cached for offline estimates. Purchase history
+-- lives in shopping's `purchase` table (00007).
 
 -- +goose Up
 
@@ -48,19 +48,5 @@ FROM (VALUES
 JOIN category c ON c.slug = v.slug AND c.household_id IS NULL
 ON CONFLICT DO NOTHING;
 
--- One row per product purchase (manual stock adds and, in m1-4, checked-off
--- shopping items). product_stat is recomputed from the last 10 of them.
-CREATE TABLE purchase_log (
-    id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-    household_id uuid        NOT NULL REFERENCES household (id) ON DELETE CASCADE,
-    product_id   uuid        NOT NULL REFERENCES product (id),
-    store_id     uuid        REFERENCES store (id),
-    qty          numeric,
-    unit         text,
-    bought_at    timestamptz NOT NULL
-);
-CREATE INDEX purchase_log_product ON purchase_log (household_id, product_id, bought_at DESC);
-
 -- +goose Down
-DROP TABLE purchase_log;
 DROP TABLE food_rule;

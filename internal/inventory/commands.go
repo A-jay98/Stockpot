@@ -159,8 +159,8 @@ type StockUpdate struct {
 
 // Register adds the inventory commands to r. res links products created by
 // name to ingredients.
-func Register(r *commands.Registry, res catalog.Resolver) {
-	h := &handlers{createProduct: catalog.CreateProduct(res)}
+func Register(r *commands.Registry, res catalog.Resolver, rec PurchaseRecorder) {
+	h := &handlers{createProduct: catalog.CreateProduct(res), record: rec}
 	commands.Register(r, "inventory.stock.add", h.add)
 	commands.Register(r, "inventory.stock.consume", h.consume)
 	commands.Register(r, "inventory.stock.restock", h.restock)
@@ -177,8 +177,14 @@ func Register(r *commands.Registry, res catalog.Resolver) {
 	commands.Register(r, "inventory.stock.update", h.update)
 }
 
+// PurchaseRecorder logs a purchase and refreshes product_stat. The shopping
+// package owns that ledger (it imports this one for expiry estimates), so
+// the app injects shopping.RecordPurchase here.
+type PurchaseRecorder func(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, store *uuid.UUID, at time.Time, qty, unit *string) error
+
 type handlers struct {
 	createProduct commands.Handler[catalog.ProductCreate]
+	record        PurchaseRecorder
 }
 
 var (
@@ -491,7 +497,7 @@ func (h *handlers) add(ctx context.Context, tx pgx.Tx, p StockAdd) error {
 		if p.Kind == "exact" {
 			q, u = p.Quantity, p.Unit
 		}
-		return RecordPurchase(ctx, tx, hh, product, p.StoreID, q, u, on.Add(12*time.Hour))
+		return h.record(ctx, tx, hh, product, p.StoreID, commands.ClientTime(ctx), q, u)
 	}
 	return nil
 }

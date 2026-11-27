@@ -199,3 +199,14 @@ func decodeShelf(b []byte) ShelfLife {
 	_ = json.Unmarshal(b, &s) // our own jsonb; unknown shapes read as unknown
 	return s
 }
+
+// EstimateAdd is the expiry estimate for putting a product into a location
+// of the given kind on a day, for callers that insert stock themselves.
+func EstimateAdd(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, loc LocationKind, on time.Time) (time.Time, bool, error) {
+	c, err := LoadChain(ctx, tx, hh, product)
+	if err != nil {
+		return time.Time{}, false, err
+	}
+	d, ok := Estimate(c, OpAdd, loc, on)
+	return d, ok, nil
+}
