@@ -447,7 +447,7 @@ func (e *Enricher) callAndApply(ctx context.Context, items []pending, st *runSta
 		if ferr := e.failGroups(ctx, groups, st); ferr != nil {
 			return ferr
 		}
-		return fmt.Errorf("%w: %v", llm.ErrBadOutput, err)
+		return fmt.Errorf("%w: %w", llm.ErrBadOutput, err)
 	}
 	answers := map[string]enrichItem{}
 	for _, a := range reply.Items {
@@ -562,9 +562,9 @@ func (e *Enricher) inHousehold(ctx context.Context, hh uuid.UUID, fn func(tx pgx
 	return tx.Commit(ctx)
 }
 
-func trimLen(s string, max int) (string, bool) {
+func trimLen(s string, limit int) (string, bool) {
 	s = strings.TrimSpace(s)
-	return s, utf8.RuneCountInString(s) <= max && strings.IndexFunc(s, func(r rune) bool { return r < 0x20 }) < 0
+	return s, utf8.RuneCountInString(s) <= limit && strings.IndexFunc(s, func(r rune) bool { return r < 0x20 }) < 0
 }
 
 // applyOne validates ans against the household's catalog and writes it to

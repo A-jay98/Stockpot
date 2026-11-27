@@ -2,6 +2,7 @@ package catalog_test
 
 import (
 	"encoding/json"
+	"errors"
 	"math"
 	"net/http"
 	"net/http/httptest"
@@ -69,7 +70,7 @@ type enrichEnv struct {
 	store *settings.Store
 }
 
-func newEnrichEnv(t *testing.T, answers map[string]map[string]any, cap int) *enrichEnv {
+func newEnrichEnv(t *testing.T, answers map[string]map[string]any, reqCap int) *enrichEnv {
 	t.Helper()
 	e := newEnv(t)
 	f := newFakeLLM(t, answers)
@@ -244,7 +245,7 @@ func TestEnrichCachesAcrossHouseholds(t *testing.T) {
 
 	// Another household adds the same name: answered from the cache.
 	other := e.household(t, "Other")
-	var b uuid.UUID = uuid.New()
+	b := uuid.New()
 	if _, err := e.pool.Exec(ctx, `INSERT INTO product (id, household_id, name) VALUES ($1, $2, 'kumquats')`, b, other); err != nil {
 		t.Fatal(err)
 	}
@@ -320,7 +321,7 @@ func TestAdminIngredientOps(t *testing.T) {
 		t.Fatalf("status = %+v, %v", st, err)
 	}
 	// Global ingredients can't be touched here.
-	if err := e.en.DeleteIngredient(ctx, orange); err != catalog.ErrNotReviewable {
+	if err := e.en.DeleteIngredient(ctx, orange); !errors.Is(err, catalog.ErrNotReviewable) {
 		t.Fatalf("delete global: %v", err)
 	}
 	if err := e.en.Promote(ctx, kum); err != nil {
@@ -333,7 +334,7 @@ func TestAdminIngredientOps(t *testing.T) {
 		t.Fatalf("promoted: %v %s", hh, src)
 	}
 	// It is no longer an enricher ingredient: merge now refuses.
-	if err := e.en.Merge(ctx, kum, "orange"); err != catalog.ErrNotReviewable {
+	if err := e.en.Merge(ctx, kum, "orange"); !errors.Is(err, catalog.ErrNotReviewable) {
 		t.Fatalf("merge promoted: %v", err)
 	}
 
