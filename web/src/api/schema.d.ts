@@ -863,6 +863,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The user's inbox, newest first, with the unread count */
+        get: operations["listNotifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Mark notifications read
+         * @description With no `ids` (or an empty list) every unread notification is marked.
+         */
+        post: operations["markNotificationsRead"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notifications/preferences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The user's alert preferences (their own, else the system defaults) */
+        get: operations["getNotificationPreferences"];
+        /**
+         * Change the user's alert preferences
+         * @description Only the fields sent change; the rest keep following the system defaults.
+         */
+        put: operations["setNotificationPreferences"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notifications/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Whether the bot is available and this user is connected */
+        get: operations["getTelegramConnection"];
+        put?: never;
+        post?: never;
+        /** Disconnect Telegram */
+        delete: operations["disconnectTelegram"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notifications/telegram/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start connecting Telegram
+         * @description Returns a deep link that opens the bot with a single-use code (valid 15 minutes). Answers 409 `telegram_not_configured` while no working bot token is set.
+         */
+        post: operations["startTelegramLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/notifications/telegram/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a test message to the user's Telegram
+         * @description Answers 409 `telegram_not_connected`, or 502 `telegram_error` with Telegram's reason.
+         */
+        post: operations["testTelegramConnection"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/telegram": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Telegram bot status for Admin → Settings
+         * @description Checks the token with getMe (cached for a minute) and reports linked chats and the poller's health.
+         */
+        get: operations["getAdminTelegram"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/sync": {
         parameters: {
             query?: never;
@@ -1051,6 +1187,78 @@ export interface components {
             appTarget?: number;
             riverVersion?: number;
             riverTarget?: number;
+        };
+        Notification: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            householdId: string;
+            /** @enum {string} */
+            kind: "expiry_digest";
+            title: string;
+            /** @description Plain text, one item per line. */
+            body: string;
+            /** @description Machine-readable content (for `expiry_digest`, `expired`, `expiring` and `low` item lists). */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Format: date-time */
+            createdAt: string;
+            read: boolean;
+        };
+        NotificationList: {
+            items: components["schemas"]["Notification"][];
+            /** @description Unread notifications in total, not only on this page. */
+            unread: number;
+        };
+        NotificationsRead: {
+            ids?: string[];
+        };
+        NotificationPreferences: {
+            /** @description When the daily digest is made, HH:MM (America/Toronto). */
+            digestTime: string;
+            /** @description Items expiring within this many days count as expiring soon. */
+            leadDays: number;
+            /** @description Telegram messages are held between quietStart and quietEnd. Equal values turn quiet hours off. */
+            quietStart: string;
+            quietEnd: string;
+        };
+        NotificationPreferencesUpdate: {
+            digestTime?: string;
+            leadDays?: number;
+            quietStart?: string;
+            quietEnd?: string;
+        };
+        TelegramConnection: {
+            /** @description A working bot token is set, so Connect Telegram can be offered. */
+            available: boolean;
+            botUsername?: string;
+            linked: boolean;
+            /** @description Messages are being sent (false after Telegram refused the chat). */
+            enabled: boolean;
+            /** @description The connected Telegram account, when it has a username. */
+            username?: string;
+            /** Format: date-time */
+            linkedAt?: string;
+            lastError?: string;
+        };
+        TelegramLink: {
+            /** @description t.me deep link that opens the bot with the code. */
+            url: string;
+            /** Format: date-time */
+            expiresAt: string;
+        };
+        AdminTelegram: {
+            /** @enum {string} */
+            status: "ok" | "not_configured" | "error";
+            botUsername?: string;
+            detail?: string;
+            linkedChats: number;
+            /** @description The long-poll worker is running in the server. */
+            polling: boolean;
+            /** Format: date-time */
+            lastPollAt?: string;
+            lastError?: string;
         };
         AdminBackups: {
             /** @description The nightly schedule is on (flag.backups). */
@@ -2958,6 +3166,203 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CommandResults"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    listNotifications: {
+        parameters: {
+            query?: {
+                /** @description Only unread notifications. */
+                unread?: boolean;
+                /** @description Only notifications older than this (the last `createdAt` of the previous page). */
+                before?: string;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of the inbox */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationList"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    markNotificationsRead: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationsRead"];
+            };
+        };
+        responses: {
+            /** @description Marked */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferences"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    setNotificationPreferences: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationPreferencesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Preferences */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPreferences"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getTelegramConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Connection */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelegramConnection"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    disconnectTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Disconnected (also when it was not connected) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    startTelegramLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Link */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TelegramLink"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    testTelegramConnection: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sent */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getAdminTelegram: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bot status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminTelegram"];
                 };
             };
             default: components["responses"]["Problem"];

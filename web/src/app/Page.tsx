@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
+import { useShellActions } from './shell-context'
 
 type PageProps = {
   title: string
@@ -10,6 +11,7 @@ type PageProps = {
 
 /** Title bar + scrolling content column shared by every screen. */
 export function Page({ title, actions, children }: PageProps) {
+  const shellActions = useShellActions()
   useEffect(() => {
     document.title = title === 'Stockpot' ? title : `${title} · Stockpot`
   }, [title])
@@ -18,6 +20,7 @@ export function Page({ title, actions, children }: PageProps) {
       <header className="flex items-center gap-2.5 px-4 pt-3 pb-2.5 md:px-8 md:pt-[22px] md:pb-3">
         <h1 className="t-title-lg m-0 min-w-0 flex-1 text-[26px] leading-8">{title}</h1>
         {actions}
+        {shellActions}
       </header>
       <div className="flex flex-col gap-4 px-4 pb-6 md:px-8 md:pb-8">{children}</div>
     </>
