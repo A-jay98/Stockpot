@@ -609,8 +609,10 @@ func (e *Enricher) applyOne(ctx context.Context, p pending, ans enrichItem) (app
 		actx := reqctx.With(ctx, &reqctx.Info{HouseholdID: p.household})
 		if err := audit.Record(actx, tx, "catalog.enrich.apply", audit.Target{Type: "product", ID: p.id.String()},
 			map[string]any{"ingredient_id": oldIngredient},
-			map[string]any{"actor": EnrichActor, "ingredient_id": v.ingredient, "extra_ingredient_ids": v.extra, "confidence": conf,
-				"new_ingredient": ans.NewIngredient.Name, "category": v.categorySlug, "icon": ans.Icon}); err != nil {
+			map[string]any{
+				"actor": EnrichActor, "ingredient_id": v.ingredient, "extra_ingredient_ids": v.extra, "confidence": conf,
+				"new_ingredient": ans.NewIngredient.Name, "category": v.categorySlug, "icon": ans.Icon,
+			}); err != nil {
 			return err
 		}
 		applied = true

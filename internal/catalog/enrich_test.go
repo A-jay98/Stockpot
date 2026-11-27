@@ -80,13 +80,17 @@ func newEnrichEnv(t *testing.T, answers map[string]map[string]any, cap int) *enr
 	if err := store.Load(t.Context()); err != nil {
 		t.Fatal(err)
 	}
-	raw, _ := json.Marshal([]llm.ProviderConfig{{ID: "fake", Kind: llm.KindOpenAICompat, BaseURL: f.srv.URL, Model: "m", Enabled: true,
-		ResetTZ: "UTC", JSONSchema: true, DailyRequestCap: cap}})
+	raw, _ := json.Marshal([]llm.ProviderConfig{{
+		ID: "fake", Kind: llm.KindOpenAICompat, BaseURL: f.srv.URL, Model: "m", Enabled: true,
+		ResetTZ: "UTC", JSONSchema: true, DailyRequestCap: cap,
+	}})
 	if err := store.Set(t.Context(), llm.SettingProviders.Key(), raw, nil); err != nil {
 		t.Fatal(err)
 	}
-	router := llm.NewRouter(llm.Deps{Pool: e.pool, Settings: store,
-		Factories: map[string]llm.Factory{llm.KindOpenAICompat: openaicompat.Factory(nil)}})
+	router := llm.NewRouter(llm.Deps{
+		Pool: e.pool, Settings: store,
+		Factories: map[string]llm.Factory{llm.KindOpenAICompat: openaicompat.Factory(nil)},
+	})
 	if err := router.SetAPIKey(t.Context(), "fake", "k"); err != nil {
 		t.Fatal(err)
 	}
@@ -133,8 +137,10 @@ func (e *enrichEnv) lastRun(t *testing.T) (outcome string, items, applied, faile
 
 func TestEnrichBatchSuccessInvalidAndIdempotent(t *testing.T) {
 	e := newEnrichEnv(t, map[string]map[string]any{
-		"Zorbo fruit": {"ingredient_slug": "avocado", "category_slug": "produce-fruit", "icon": "avocado", "brand": "Zorbo", "confidence": 0.7,
-			"shelf_life": map[string]any{"fridge": 4, "freezer": 0, "pantry": 0, "opened_fridge": 0}},
+		"Zorbo fruit": {
+			"ingredient_slug": "avocado", "category_slug": "produce-fruit", "icon": "avocado", "brand": "Zorbo", "confidence": 0.7,
+			"shelf_life": map[string]any{"fridge": 4, "freezer": 0, "pantry": 0, "opened_fridge": 0},
+		},
 		"Kumquats":     {"new_ingredient": map[string]any{"name": "Kumquat", "plural": "Kumquats", "parent_slug": "citrus", "category_slug": "", "aliases": []string{"cumquat"}}},
 		"Weird thing":  {"ingredient_slug": "no-such-ingredient"},
 		"Bad icon":     {"ingredient_slug": "milk", "icon": "not-an-icon"},
