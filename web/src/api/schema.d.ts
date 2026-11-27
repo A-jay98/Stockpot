@@ -2281,6 +2281,8 @@ export interface components {
                  * @description The ingredient the user picked for a new product (sets match_source=user).
                  */
                 ingredientId?: string | null;
+                /** @description unit/qty were chosen by hand: save them as the product's default_unit/default_qty. */
+                rememberAmount?: boolean;
                 text?: string | null;
                 /** @description Decimal string. */
                 qty?: string | null;

@@ -349,9 +349,17 @@ test('a known item fills its last hand-picked unit, and a typed unit becomes the
 
   await user.type(screen.getByLabelText('Item name'), '2 l milk{Enter}')
   await waitFor(async () => expect(await sent('shopping.item.add')).toHaveLength(2))
-  expect(await sent('catalog.product.update')).toEqual([
-    { id: 'p-milk', defaultUnit: 'l', defaultQty: '2' },
-  ])
+  expect((await sent('shopping.item.add'))[1]).toMatchObject({
+    productId: 'p-milk',
+    qty: '2',
+    unit: 'l',
+    rememberAmount: true,
+  })
+  expect(await db.product.get('p-milk')).toMatchObject({ defaultUnit: 'l', defaultQty: '2' })
+  // A new item's typed unit is remembered too.
+  await user.type(screen.getByLabelText('Item name'), '3 kg quince{Enter}')
+  await waitFor(async () => expect(await sent('shopping.item.add')).toHaveLength(3))
+  expect((await sent('shopping.item.add'))[2]).toMatchObject({ unit: 'kg', rememberAmount: true })
 })
 
 test('the item sheet adds a store inline and remembers store and unit for next time', async () => {

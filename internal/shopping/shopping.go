@@ -62,6 +62,9 @@ type ItemAdd struct {
 	IngredientID *uuid.UUID `json:"ingredientId"`
 	// RecipeID is the recipe the item is for ("Missing to list").
 	RecipeID *uuid.UUID `json:"recipeId"`
+	// RememberAmount: the unit (and quantity) were chosen by hand, so they
+	// become the product's defaults for the next add.
+	RememberAmount bool `json:"rememberAmount"`
 	ItemFields
 }
 
@@ -292,6 +295,12 @@ func (h *handlers) itemAdd(ctx context.Context, tx pgx.Tx, p ItemAdd) error {
 		return err
 	}
 	hasProduct := p.ProductID.Set && p.ProductID.Value != nil
+	if hasProduct && p.RememberAmount && p.Unit.Set && p.Unit.Value != nil {
+		if _, err := tx.Exec(ctx, `UPDATE product SET default_unit = $3, default_qty = $4::text::numeric
+			WHERE id = $1 AND household_id = $2`, *p.ProductID.Value, hh, *p.Unit.Value, p.Qty.Value); err != nil {
+			return err
+		}
+	}
 	hasText := p.Text.Set && p.Text.Value != nil && *p.Text.Value != ""
 	if !hasProduct && !hasText {
 		return commands.Invalid("an item needs a product or text")
@@ -498,7 +507,9 @@ func (h *handlers) itemCheck(ctx context.Context, tx pgx.Tx, p ItemCheck) error 
 // linkNewProduct creates the product an added item names when the client
 // proposed a new one (an id the household doesn't have, plus text). EnsureProduct
 // may land on an existing product of that name; only a product created here
-// takes the user's ingredient pick.
+// takes the user's ingredient pick. If the proposed id is taken (another
+// household, or soft-deleted), EnsureProduct uses a fresh id and the pick is
+// dropped: the resolver's match stands, which the user can still change.
 func (h *handlers) linkNewProduct(ctx context.Context, tx pgx.Tx, hh uuid.UUID, p *ItemAdd) error {
 	if !p.ProductID.Set || p.ProductID.Value == nil || !p.Text.Set || p.Text.Value == nil || strings.TrimSpace(*p.Text.Value) == "" {
 		return nil

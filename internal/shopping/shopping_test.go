@@ -489,8 +489,29 @@ func TestAddCreatesTheProposedProduct(t *testing.T) {
 		t.Fatalf("existing product changed: %+v", r)
 	}
 
+	// A hand-picked amount becomes the product's default, new product or not.
+	chicken := uuid.New()
+	e.addItem(t, map[string]any{"text": "Chicken thighs", "productId": chicken, "qty": "2", "unit": "kg", "rememberAmount": true})
+	e.addItem(t, map[string]any{"text": "Milk", "productId": milk, "qty": "2", "unit": "l"})
+	for id, want := range map[uuid.UUID][2]string{chicken: {"kg", "2"}, milk: {"", ""}} {
+		var unit, qty *string
+		if err := e.pool.QueryRow(t.Context(), `SELECT default_unit, default_qty::text FROM product WHERE id = $1`, id).Scan(&unit, &qty); err != nil {
+			t.Fatal(err)
+		}
+		if deref(unit) != want[0] || deref(qty) != want[1] {
+			t.Fatalf("defaults = %v %v, want %v", deref(unit), deref(qty), want)
+		}
+	}
+
 	// An unknown ingredient is rejected.
 	if r := e.do(t, "shopping.item.add", map[string]any{"id": uuid.New(), "listId": e.list, "text": "x", "productId": uuid.New(), "ingredientId": uuid.New()}); r.Status == commands.StatusApplied {
 		t.Fatal("unknown ingredient accepted")
 	}
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }

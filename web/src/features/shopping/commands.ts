@@ -59,6 +59,11 @@ registerReducer('shopping.item.add', async (db, p, { clientTime }) => {
       clientTime,
     )
   }
+  if (p.rememberAmount && p.productId && p.unit) {
+    const product = await db.product.get(p.productId)
+    if (product)
+      await db.product.put({ ...product, defaultUnit: p.unit, defaultQty: p.qty ?? null })
+  }
   const siblings = await db.shopping_item.where('listId').equals(p.listId).toArray()
   const row: ShoppingItem = {
     ...(await base(db, p.id, clientTime)),

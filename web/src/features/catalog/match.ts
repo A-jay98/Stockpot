@@ -9,7 +9,7 @@ export const MATCH_CONFIDENT = 0.85
  * - `matched`: the user picked it, or the resolver/LLM is confident;
  * - `checking`: the background LLM hasn't looked yet (`ingredient` is the rule's guess, if any);
  * - `confirm`: the LLM (or a failed/skipped LLM pass) left a low-confidence guess, so ask;
- * - `unmatched`: nothing found.
+ * - `unmatched`: nothing found, or the user chose no match (not shown on the list).
  */
 export type MatchState =
   | { kind: 'matched'; ingredient: Ingredient; extras: Ingredient[] }
@@ -24,7 +24,10 @@ export function matchState(p: Product, ingredients: Map<string, Ingredient>): Ma
     return i ? [i] : []
   })
   if (!ingredient)
-    return p.enrichState === 'pending' ? { kind: 'checking', extras } : { kind: 'unmatched' }
+    // The user saying "no match" is settled, whatever the enricher state.
+    return p.enrichState === 'pending' && p.matchSource !== 'user'
+      ? { kind: 'checking', extras }
+      : { kind: 'unmatched' }
   if (p.matchSource === 'user' || p.matchSource === 'barcode')
     return { kind: 'matched', ingredient, extras }
   if ((p.matchConfidence ?? 0) >= MATCH_CONFIDENT) return { kind: 'matched', ingredient, extras }

@@ -20,7 +20,7 @@ import { formatQty, guessList, usualPick } from '../catalog/suggest'
 import { ManageList } from '../settings/ManageList'
 import { useAllShoppingItems, useShoppingItems, useShoppingLists, useStockItems } from './hooks'
 import { ItemSheet } from './ItemSheet'
-import { groupRows, productNamed, productPick, type Row, sameName, toRows } from './items'
+import { groupRows, productNamed, productPick, type Row, toRows } from './items'
 import { PutAwaySheet } from './PutAwaySheet'
 
 export function ShoppingPage() {
@@ -66,10 +66,10 @@ export function ShoppingPage() {
     if (p.productId) return productById.get(p.productId)
     const named = productNamed(products, p.name)
     if (named) return named
+    // The household already buys this ingredient under another name ("tangerine" → its
+    // "Tangerines (bag)"): use that product rather than a second one.
     if (!p.ingredientId) return undefined
-    return products.find(
-      (x) => !x.brand && x.ingredientId === p.ingredientId && sameName(x.name) === sameName(p.name),
-    )
+    return products.find((x) => !x.brand && x.ingredientId === p.ingredientId)
   }
 
   // Every item is linked to a product: a known one (filling in its usual store and amount), or a
@@ -109,14 +109,9 @@ export function ShoppingPage() {
       ...(p.unit ? { unit: p.unit } : {}),
       ...(p.categoryId ? { categoryId: p.categoryId } : {}),
       ...(p.storeIds.length ? { storeIds: p.storeIds } : {}),
+      // A typed unit ("2 kg chicken") is a hand-picked one: it becomes the item's default.
+      ...(p.unitTyped && p.unit ? { rememberAmount: true } : {}),
     })
-    // A typed unit ("2 kg chicken") is a hand-picked one: it becomes the item's default.
-    if (product && p.unitTyped && p.unit && p.unit !== product.defaultUnit)
-      void dispatch('catalog.product.update', {
-        id: product.id,
-        defaultUnit: p.unit,
-        defaultQty: p.qty ?? null,
-      })
   }
 
   const confirmMatch = (product: Product, m: Extract<MatchState, { kind: 'confirm' }>) =>
@@ -148,19 +143,14 @@ export function ShoppingPage() {
     if (!r.product || done) return null
     const m = matchState(r.product, icons.ingredients)
     // An unsure match gets its own question below the row instead.
-    if (m.kind === 'confirm' || !matchWorthShowing(r.product, m)) return null
+    // Nothing to say for an item with no match (non-food, or the user cleared it).
+    if (m.kind === 'confirm' || m.kind === 'unmatched' || !matchWorthShowing(r.product, m))
+      return null
     const names =
       'ingredient' in m && m.ingredient
         ? [m.ingredient, ...m.extras].map((i) => i.name).join(' + ')
         : ''
-    const text =
-      m.kind === 'unmatched'
-        ? 'Not matched yet'
-        : m.kind === 'checking'
-          ? names
-            ? `${names} (checking)`
-            : 'Matching…'
-          : names
+    const text = m.kind === 'checking' ? (names ? `${names} (checking)` : 'Matching…') : names
     return (
       <span
         className="t-body-sm flex min-w-0 items-center gap-1 text-ink-muted"
