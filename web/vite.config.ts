@@ -51,11 +51,11 @@ export default defineConfig({
       workbox: {
         // Precache the app shell only. API calls are never cached by the service worker:
         // offline data goes through the IndexedDB replica (src/offline).
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest,txt}'],
         // Latin fonts ship with the shell; other scripts load on demand (unicode-range).
         globIgnores: ['**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2'],
         navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api\//],
+        navigateFallbackDenylist: [/^\/api\//, /^\/licenses\.txt$/],
         cleanupOutdatedCaches: true,
       },
     }),

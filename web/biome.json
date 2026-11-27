@@ -7,7 +7,13 @@
     "root": ".."
   },
   "files": {
-    "includes": ["**", "!src/api/schema.d.ts", "!src/styles/tokens.css", "!dev-dist"]
+    "includes": [
+      "**",
+      "!src/api/schema.d.ts",
+      "!src/styles/tokens.css",
+      "!dev-dist",
+      "!src/ui/food-icons/sprites"
+    ]
   },
   "formatter": {
     "indentStyle": "space",
