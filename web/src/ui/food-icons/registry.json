@@ -57,7 +57,7 @@
     "set": "fe",
     "name": "beans",
     "label": "Beans",
-    "tags": ["beans", "kidney", "black", "beans", "legumes"]
+    "tags": ["beans", "kidney", "black", "legumes"]
   },
   "beer-mug": {
     "set": "fe",
@@ -176,110 +176,110 @@
   "cat-bakery": {
     "set": "fe",
     "name": "bread",
-    "label": "bakery",
-    "tags": ["category"]
+    "label": "Bakery",
+    "tags": ["category", "bakery"]
   },
   "cat-baking": {
     "set": "tb",
     "name": "wheat",
-    "label": "baking",
-    "tags": ["category"]
+    "label": "Baking",
+    "tags": ["category", "baking"]
   },
   "cat-dairy-eggs": {
     "set": "fe",
     "name": "glass-of-milk",
-    "label": "dairy-eggs",
-    "tags": ["category"]
+    "label": "Dairy & eggs",
+    "tags": ["category", "dairy", "eggs"]
   },
   "cat-deli": {
     "set": "fe",
     "name": "sandwich",
-    "label": "deli",
-    "tags": ["category"]
+    "label": "Deli",
+    "tags": ["category", "deli"]
   },
   "cat-drinks": {
     "set": "fe",
     "name": "beverage-box",
-    "label": "drinks",
-    "tags": ["category"]
+    "label": "Drinks",
+    "tags": ["category", "drinks"]
   },
   "cat-frozen": {
     "set": "fe",
     "name": "snowflake",
-    "label": "frozen",
-    "tags": ["category"]
+    "label": "Frozen",
+    "tags": ["category", "frozen"]
   },
   "cat-herbs": {
     "set": "fe",
     "name": "herb",
-    "label": "herbs",
-    "tags": ["category"]
+    "label": "Herbs",
+    "tags": ["category", "herbs"]
   },
   "cat-household": {
     "set": "fe",
     "name": "roll-of-paper",
-    "label": "household",
-    "tags": ["category"]
+    "label": "Household",
+    "tags": ["category", "household"]
   },
   "cat-meat": {
     "set": "fe",
     "name": "cut-of-meat",
-    "label": "meat",
-    "tags": ["category"]
+    "label": "Meat",
+    "tags": ["category", "meat"]
   },
   "cat-oils-sauces": {
     "set": "tb",
     "name": "bottle",
-    "label": "oils-sauces",
-    "tags": ["category"]
+    "label": "Oils & sauces",
+    "tags": ["category", "oils", "sauces"]
   },
   "cat-other": {
     "set": "fe",
     "name": "basket",
-    "label": "other",
-    "tags": ["category"]
+    "label": "Other",
+    "tags": ["category", "other"]
   },
   "cat-pantry": {
     "set": "fe",
     "name": "canned-food",
-    "label": "pantry",
-    "tags": ["category"]
+    "label": "Pantry",
+    "tags": ["category", "pantry"]
   },
   "cat-personal-care": {
     "set": "fe",
     "name": "lotion-bottle",
-    "label": "personal-care",
-    "tags": ["category"]
+    "label": "Personal care",
+    "tags": ["category", "personal", "care"]
   },
   "cat-produce-fruit": {
     "set": "fe",
     "name": "red-apple",
-    "label": "produce-fruit",
-    "tags": ["category"]
+    "label": "Fruit",
+    "tags": ["category", "produce", "fruit"]
   },
   "cat-produce-veg": {
     "set": "fe",
     "name": "carrot",
-    "label": "produce-veg",
-    "tags": ["category"]
+    "label": "Vegetables",
+    "tags": ["category", "produce", "veg"]
   },
   "cat-seafood": {
     "set": "fe",
     "name": "fish",
-    "label": "seafood",
-    "tags": ["category"]
+    "label": "Seafood",
+    "tags": ["category", "seafood"]
   },
   "cat-snacks-sweets": {
     "set": "fe",
     "name": "cookie",
-    "label": "snacks-sweets",
-    "tags": ["category"]
+    "label": "Snacks & sweets",
+    "tags": ["category", "snacks", "sweets"]
   },
   "cat-spices-condiments": {
     "set": "fe",
     "name": "salt",
-    "label": "spices-condiments",
-    "tags": ["category"]
+    "label": "Spices & condiments",
+    "tags": ["category", "spices", "condiments"]
   },
   "cheese-wedge": {
     "set": "fe",
@@ -657,7 +657,7 @@
     "set": "fe",
     "name": "pea-pod",
     "label": "Peas / green beans",
-    "tags": ["peas", "green", "beans", "snow", "peas", "edamame"]
+    "tags": ["peas", "green", "beans", "snow", "edamame"]
   },
   "peach": {
     "set": "fe",
@@ -699,7 +699,7 @@
     "set": "fe",
     "name": "pizza",
     "label": "Pizza",
-    "tags": ["pizza", "frozen", "pizza"]
+    "tags": ["pizza", "frozen"]
   },
   "plunger": {
     "set": "fe",
@@ -723,7 +723,7 @@
     "set": "fe",
     "name": "potable-water",
     "label": "Water",
-    "tags": ["water", "bottled", "sparkling", "water"]
+    "tags": ["water", "bottled", "sparkling"]
   },
   "potato": {
     "set": "fe",
@@ -783,7 +783,7 @@
     "set": "fe",
     "name": "roll-of-paper",
     "label": "Paper towels",
-    "tags": ["paper", "towel", "toilet", "paper", "tissue", "kitchen", "roll"]
+    "tags": ["paper", "towel", "toilet", "tissue", "kitchen", "roll"]
   },
   "salt": {
     "set": "fe",
@@ -807,7 +807,7 @@
     "set": "fe",
     "name": "shallow-pan-of-food",
     "label": "Paella / pan meal",
-    "tags": ["paella", "pan", "meal", "ready", "meal"]
+    "tags": ["paella", "pan", "meal", "ready"]
   },
   "shaved-ice": {
     "set": "fe",
@@ -855,7 +855,7 @@
     "set": "fe",
     "name": "soap",
     "label": "Soap / detergent",
-    "tags": ["soap", "detergent", "dish", "soap", "laundry", "hand", "soap"]
+    "tags": ["soap", "detergent", "dish", "laundry", "hand"]
   },
   "soft-ice-cream": {
     "set": "fe",
@@ -961,13 +961,13 @@
   },
   "tb-cereal": {
     "set": "tb",
-    "name": "grain",
+    "name": "box",
     "label": "Cereal box",
     "tags": ["cereal", "cornflakes"]
   },
   "tb-chips": {
     "set": "tb",
-    "name": "bucket",
+    "name": "packages",
     "label": "Chips",
     "tags": ["chips", "crisps", "snack"]
   },
@@ -981,7 +981,7 @@
     "set": "tb",
     "name": "milk",
     "label": "Cream / sour cream",
-    "tags": ["cream", "sour", "cream", "half", "and", "half"]
+    "tags": ["cream", "sour", "half", "and"]
   },
   "tb-diaper": {
     "set": "tb",
@@ -1029,7 +1029,7 @@
     "set": "tb",
     "name": "cookie",
     "label": "Snack bar",
-    "tags": ["granola", "bar", "protein", "bar"]
+    "tags": ["granola", "bar", "protein"]
   },
   "tb-ground-meat": {
     "set": "tb",
@@ -1053,7 +1053,7 @@
     "set": "tb",
     "name": "glass-full",
     "label": "Juice",
-    "tags": ["juice", "orange", "juice"]
+    "tags": ["juice", "orange"]
   },
   "tb-laundry": {
     "set": "tb",
@@ -1077,7 +1077,7 @@
     "set": "tb",
     "name": "droplet",
     "label": "Oil",
-    "tags": ["oil", "olive", "oil", "vegetable", "canola", "sesame"]
+    "tags": ["oil", "olive", "vegetable", "canola", "sesame"]
   },
   "tb-pepper": {
     "set": "tb",
@@ -1093,13 +1093,13 @@
   },
   "tb-plant-milk": {
     "set": "tb",
-    "name": "milk-off",
+    "name": "milk",
     "label": "Plant milk",
     "tags": ["oat", "soy", "almond", "milk"]
   },
   "tb-pumpkin": {
     "set": "tb",
-    "name": "plant",
+    "name": "leaf",
     "label": "Squash / pumpkin",
     "tags": ["squash", "pumpkin", "butternut"]
   },
@@ -1107,13 +1107,13 @@
     "set": "tb",
     "name": "bottle",
     "label": "Sauce",
-    "tags": ["sauce", "ketchup", "mustard", "mayo", "hot", "sauce", "soy", "sauce"]
+    "tags": ["sauce", "ketchup", "mustard", "mayo", "hot", "soy"]
   },
   "tb-sauce-jar": {
     "set": "tb",
     "name": "flask",
     "label": "Sauce jar",
-    "tags": ["pasta", "sauce", "salsa", "tomato", "sauce"]
+    "tags": ["pasta", "sauce", "salsa", "tomato"]
   },
   "tb-sausage": {
     "set": "tb",
@@ -1143,7 +1143,7 @@
     "set": "tb",
     "name": "cube",
     "label": "Sugar",
-    "tags": ["sugar", "sweetener", "brown", "sugar", "icing"]
+    "tags": ["sugar", "sweetener", "brown", "icing"]
   },
   "tb-tofu": {
     "set": "tb",
@@ -1185,7 +1185,7 @@
     "set": "fe",
     "name": "teacup-without-handle",
     "label": "Tea cup",
-    "tags": ["tea", "green", "tea", "matcha"]
+    "tags": ["tea", "green", "matcha"]
   },
   "teapot": {
     "set": "fe",
@@ -1203,7 +1203,7 @@
     "set": "fe",
     "name": "tomato",
     "label": "Tomato",
-    "tags": ["tomato", "cherry", "tomato"]
+    "tags": ["tomato", "cherry"]
   },
   "tooth": {
     "set": "fe",

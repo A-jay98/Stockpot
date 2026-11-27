@@ -93,6 +93,14 @@ export function AccountSheet({ trigger }: { trigger: ReactElement }) {
           Sign out
         </Button>
         <ServerStatus />
+        <a
+          href="/licenses.txt"
+          target="_blank"
+          rel="noreferrer"
+          className="t-body-sm text-ink-muted underline"
+        >
+          Open-source licences
+        </a>
       </SheetContent>
     </Sheet>
   )

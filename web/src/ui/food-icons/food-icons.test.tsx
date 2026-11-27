@@ -27,6 +27,11 @@ const CATEGORY_SLUGS = [
   'other',
 ]
 
+const sprites: [string, string][] = [
+  ['high-contrast', highContrastRaw],
+  ['flat', flatRaw],
+]
+
 describe('registry', () => {
   it('has a category icon for every seeded category and a basket fallback', () => {
     for (const slug of CATEGORY_SLUGS) expect(isIconKey(`cat-${slug}`), slug).toBe(true)
@@ -45,6 +50,23 @@ describe('registry', () => {
     ]) {
       for (const k of Object.keys(iconRegistry))
         expect(svg, `${style}:${k}`).toContain(`id="fi-${k}"`)
+    }
+  })
+})
+
+describe('sprites', () => {
+  it('have no duplicate element ids and no unscoped references', () => {
+    for (const [style, svg] of sprites) {
+      const ids = [...svg.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1])
+      expect(new Set(ids).size, style).toBe(ids.length)
+      for (const m of svg.matchAll(/url\(#([^)]+)\)/g))
+        expect(ids, `${style}:${m[1]}`).toContain(m[1])
+    }
+  })
+  it('labels every icon, including categories', () => {
+    for (const [k, e] of Object.entries(iconRegistry)) {
+      expect(e.label, k).not.toBe(k.replace(/^cat-/, ''))
+      expect(new Set(e.tags).size, k).toBe(e.tags.length)
     }
   })
 })
