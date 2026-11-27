@@ -1,6 +1,7 @@
-import { Keyboard, Receipt, ScanBarcode } from 'lucide-react'
+import { Keyboard, PencilLine, Receipt, ScanBarcode } from 'lucide-react'
 import { Page, Placeholder } from '../../app/Page'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui'
+import { AddItemForm } from '../inventory/AddItemForm'
 
 const ways = [
   {
@@ -26,8 +27,12 @@ const ways = [
 export function AddPage() {
   return (
     <Page title="Quick add">
-      <Tabs defaultValue="type" className="flex flex-col gap-4">
+      <Tabs defaultValue="manual" className="flex flex-col gap-4">
         <TabsList aria-label="How to add">
+          <TabsTrigger value="manual">
+            <PencilLine className="size-4" aria-hidden />
+            Manual
+          </TabsTrigger>
           {ways.map(({ id, label, icon: Icon }) => (
             <TabsTrigger key={id} value={id}>
               <Icon className="size-4" aria-hidden />
@@ -35,6 +40,9 @@ export function AddPage() {
             </TabsTrigger>
           ))}
         </TabsList>
+        <TabsContent value="manual">
+          <AddItemForm />
+        </TabsContent>
         {ways.map((w) => (
           <TabsContent key={w.id} value={w.id}>
             <Placeholder milestone="M2">{w.text}</Placeholder>

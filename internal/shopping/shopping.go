@@ -15,6 +15,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/catalog"
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/identity"
+	"github.com/a-jay98/stockpot/internal/inventory"
 	"github.com/a-jay98/stockpot/internal/units"
 )
 
@@ -463,8 +464,6 @@ func (h *handlers) itemCheck(ctx context.Context, tx pgx.Tx, p ItemCheck) error 
 	return nil
 }
 
-var shelfKey = map[string]string{"fridge": "fridge", "freezer": "freezer", "pantry": "pantry", "other": "pantry"}
-
 // addToInventory creates the stock item for a ticked item and links it.
 func (h *handlers) addToInventory(ctx context.Context, tx pgx.Tx, hh, item, product uuid.UUID, qty, unit *string, m *InventoryMove) error {
 	if m.Quantity != nil {
@@ -510,16 +509,12 @@ func (h *handlers) addToInventory(ctx context.Context, tx pgx.Tx, hh, item, prod
 		}
 	}
 	if expires == nil && loc != nil {
-		var days *int
-		err := tx.QueryRow(ctx, `SELECT coalesce((p.shelf_life ->> $2)::int, (i.shelf_life ->> $2)::int, (pi.shelf_life ->> $2)::int)
-			FROM product p LEFT JOIN ingredient i ON i.id = p.ingredient_id LEFT JOIN ingredient pi ON pi.id = i.parent_id
-			WHERE p.id = $1`, product, shelfKey[locKind]).Scan(&days)
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		d, ok, err := inventory.EstimateAdd(ctx, tx, hh, product, inventory.LocationKind(locKind), today(ctx))
+		if err != nil {
 			return err
 		}
-		if days != nil {
-			t := today(ctx).AddDate(0, 0, *days)
-			expires, kind = &t, "estimated"
+		if ok {
+			expires, kind = &d, "estimated"
 		}
 	}
 	var frozen *time.Time

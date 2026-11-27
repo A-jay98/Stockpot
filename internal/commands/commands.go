@@ -51,6 +51,15 @@ func Forbidden(format string, a ...any) error {
 	return &Error{CodeForbidden, fmt.Sprintf(format, a...)}
 }
 
+type idKey struct{}
+
+// ID is the id of the command a handler is applying, for ledgers that link
+// their rows back to it.
+func ID(ctx context.Context) (uuid.UUID, bool) {
+	id, ok := ctx.Value(idKey{}).(uuid.UUID)
+	return id, ok
+}
+
 // Handler applies one decoded command inside tx (a savepoint of the
 // command's transaction). The household comes from identity.HouseholdID(ctx).
 type Handler[P any] func(ctx context.Context, tx pgx.Tx, p P) error
@@ -179,6 +188,7 @@ func (s *Service) applyOne(ctx context.Context, hh, user uuid.UUID, c Command) (
 		return s.replay(ctx, tx, hh, c)
 	}
 
+	ctx = context.WithValue(ctx, idKey{}, c.ID)
 	h := s.lookup(c.Type)
 	if h == nil {
 		return s.reject(ctx, tx, c, &Error{CodeInvalid, "unknown command type " + c.Type})

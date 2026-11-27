@@ -33,6 +33,8 @@ type Deps struct {
 	Sync     Syncer
 	// Backups serves /api/v1/admin/backups; nil answers 503.
 	Backups BackupAdmin
+	// FoodRules serves /api/v1/food-rules and the admin view.
+	FoodRules FoodRuleService
 	// Enrich serves /api/v1/admin/catalog; nil answers 503.
 	Enrich CatalogEnricher
 	// Matcher serves /api/v1/catalog/match.
@@ -44,17 +46,18 @@ type Deps struct {
 // Server implements StrictServerInterface. Handlers live in one file per
 // feature area (admin.go, identity.go, …).
 type Server struct {
-	checks   map[string]Pinger
-	admin    *admin.Service
-	identity *identity.Service
-	llm      LLMGateway
-	commands CommandApplier
-	sync     Syncer
-	backups  BackupAdmin
-	enrich   CatalogEnricher
-	matcher  CatalogMatcher
-	alerts   Alerts
-	now      func() time.Time
+	checks    map[string]Pinger
+	admin     *admin.Service
+	identity  *identity.Service
+	llm       LLMGateway
+	commands  CommandApplier
+	sync      Syncer
+	backups   BackupAdmin
+	enrich    CatalogEnricher
+	matcher   CatalogMatcher
+	alerts    Alerts
+	foodRules FoodRuleService
+	now       func() time.Time
 }
 
 var _ StrictServerInterface = (*Server)(nil)
@@ -63,7 +66,7 @@ var _ StrictServerInterface = (*Server)(nil)
 func NewServer(d Deps) *Server {
 	return &Server{
 		checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM,
-		commands: d.Commands, sync: d.Sync, backups: d.Backups, enrich: d.Enrich, matcher: d.Matcher, alerts: d.Alerts, now: time.Now,
+		commands: d.Commands, sync: d.Sync, backups: d.Backups, enrich: d.Enrich, matcher: d.Matcher, alerts: d.Alerts, foodRules: d.FoodRules, now: time.Now,
 	}
 }
 

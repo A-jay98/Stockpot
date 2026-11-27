@@ -17,6 +17,7 @@ const byName = <T extends { name: string }>(a: T, b: T) => a.name.localeCompare(
 
 export const useCategories = (): Category[] =>
   useLiveQuery(
+    // `sort` isn't an index on category, so order in memory (a few dozen rows).
     async () => (await db.category.toArray()).sort((a, b) => a.sort - b.sort),
     [],
     [] as Category[],

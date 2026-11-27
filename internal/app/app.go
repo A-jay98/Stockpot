@@ -12,6 +12,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"golang.org/x/sync/errgroup"
@@ -30,6 +31,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/httpapi"
 	"github.com/a-jay98/stockpot/internal/identity"
 	"github.com/a-jay98/stockpot/internal/identity/passkey"
+	"github.com/a-jay98/stockpot/internal/inventory"
 	"github.com/a-jay98/stockpot/internal/jobs"
 	"github.com/a-jay98/stockpot/internal/listener"
 	"github.com/a-jay98/stockpot/internal/llm"
@@ -139,6 +141,9 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	// its handlers here (one line per area).
 	cmdRegistry := commands.NewRegistry()
 	catalog.Register(cmdRegistry, resolve.Resolver{})
+	inventory.Register(cmdRegistry, resolve.Resolver{}, func(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, store *uuid.UUID, at time.Time, qty, unit *string) error {
+		return shopping.RecordPurchase(ctx, tx, hh, product, store, uuid.Nil, at, qty, unit)
+	})
 	shopping.Register(cmdRegistry, resolve.Resolver{})
 	syncStore, err := syncdb.New(ctx, pool)
 	if err != nil {
@@ -204,16 +209,17 @@ func Serve(ctx context.Context, cfg config.Config) error {
 
 	handler, err := httpapi.NewHandler(
 		httpapi.NewServer(httpapi.Deps{
-			Checks:   map[string]httpapi.Pinger{"database": pool, "schema": schema},
-			Admin:    adminSvc,
-			Identity: ident,
-			LLM:      gateway,
-			Commands: commands.NewService(pool, cmdRegistry),
-			Sync:     syncStore,
-			Backups:  backups,
-			Enrich:   enricher,
-			Matcher:  catalog.Matcher{Pool: pool, Res: resolve.Resolver{}},
-			Alerts:   alertSvc,
+			Checks:    map[string]httpapi.Pinger{"database": pool, "schema": schema},
+			Admin:     adminSvc,
+			Identity:  ident,
+			LLM:       gateway,
+			Commands:  commands.NewService(pool, cmdRegistry),
+			Sync:      syncStore,
+			Backups:   backups,
+			Enrich:    enricher,
+			Matcher:   catalog.Matcher{Pool: pool, Res: resolve.Resolver{}},
+			Alerts:    alertSvc,
+			FoodRules: inventory.NewRuleService(pool),
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,

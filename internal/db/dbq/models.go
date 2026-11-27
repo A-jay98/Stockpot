@@ -145,6 +145,16 @@ type EnrichRun struct {
 	Reason     *string
 }
 
+type FoodRule struct {
+	ID           uuid.UUID
+	HouseholdID  *uuid.UUID
+	IngredientID *uuid.UUID
+	CategoryID   *uuid.UUID
+	ShelfLife    []byte
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+}
+
 type Household struct {
 	ID        uuid.UUID
 	Name      string

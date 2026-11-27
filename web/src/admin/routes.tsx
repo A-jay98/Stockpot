@@ -5,6 +5,7 @@ import { AdminLayout } from './AdminLayout'
 import { AuditPage } from './AuditPage'
 import { BackupsPage } from './BackupsPage'
 import { CatalogPage } from './CatalogPage'
+import { FoodRulesPage } from './FoodRulesPage'
 import { JobsPage } from './JobsPage'
 import { LLMPage } from './LLMPage'
 import { LogsPage } from './LogsPage'
@@ -30,6 +31,7 @@ export const adminRoutes: RouteObject = {
     { path: 'settings', Component: SettingsPage },
     { path: 'llm', Component: LLMPage },
     { path: 'backups', Component: BackupsPage },
+    { path: 'food-rules', Component: FoodRulesPage },
     { path: 'catalog', Component: CatalogPage },
   ],
 }
