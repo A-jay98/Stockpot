@@ -60,6 +60,8 @@ type ItemAdd struct {
 	ListID       uuid.UUID  `json:"listId"`
 	Sort         *int       `json:"sort"`
 	IngredientID *uuid.UUID `json:"ingredientId"`
+	// RecipeID is the recipe the item is for ("Missing to list").
+	RecipeID *uuid.UUID `json:"recipeId"`
 	ItemFields
 }
 
@@ -301,12 +303,31 @@ func (h *handlers) itemAdd(ctx context.Context, tx pgx.Tx, p ItemAdd) error {
 	if !ok {
 		return commands.Gone("list no longer exists")
 	}
+	if p.RecipeID != nil {
+		// A recipe deleted meanwhile (another device) only drops the link, so the
+		// queued item isn't lost; another household's recipe is refused.
+		var owner uuid.UUID
+		var deleted bool
+		err := tx.QueryRow(ctx, `SELECT household_id, deleted_at IS NOT NULL FROM recipe WHERE id = $1`, *p.RecipeID).Scan(&owner, &deleted)
+		switch {
+		case errors.Is(err, pgx.ErrNoRows) || (err == nil && owner != hh):
+			return commands.Invalid("unknown recipe")
+		case err != nil:
+			return err
+		case deleted:
+			p.RecipeID = nil
+		}
+	}
 	cols, args := itemCols(&p.ItemFields, []any{p.ID, hh, p.ListID})
 	names := []string{"id", "household_id", "list_id"}
 	vals := []string{"$1", "$2", "$3"}
 	for _, c := range cols {
 		name, rest, _ := strings.Cut(c, " = ")
 		names, vals = append(names, name), append(vals, rest)
+	}
+	if p.RecipeID != nil {
+		args = append(args, *p.RecipeID)
+		names, vals = append(names, "recipe_id"), append(vals, fmt.Sprintf("$%d", len(args)))
 	}
 	if p.Sort != nil {
 		args = append(args, *p.Sort)

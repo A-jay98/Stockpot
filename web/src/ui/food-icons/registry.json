@@ -221,6 +221,12 @@
     "label": "Household",
     "tags": ["category", "household"]
   },
+  "cat-leftovers": {
+    "set": "fe",
+    "name": "pot-of-food",
+    "label": "Leftovers",
+    "tags": ["category", "leftovers"]
+  },
   "cat-meat": {
     "set": "fe",
     "name": "cut-of-meat",

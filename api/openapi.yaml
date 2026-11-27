@@ -2870,6 +2870,12 @@ components:
         - $ref: "#/components/schemas/CmdShoppingItemCheck"
         - $ref: "#/components/schemas/CmdShoppingItemUncheck"
         - $ref: "#/components/schemas/CmdShoppingItemClearChecked"
+        - $ref: "#/components/schemas/CmdRecipeCreate"
+        - $ref: "#/components/schemas/CmdRecipeVersionCreate"
+        - $ref: "#/components/schemas/CmdRecipeVersionRestore"
+        - $ref: "#/components/schemas/CmdRecipeUpdate"
+        - $ref: "#/components/schemas/CmdRecipeDelete"
+        - $ref: "#/components/schemas/CmdRecipeLineSetIngredient"
       discriminator:
         propertyName: type
         mapping:
@@ -2908,6 +2914,12 @@ components:
           shopping.item.check: "#/components/schemas/CmdShoppingItemCheck"
           shopping.item.uncheck: "#/components/schemas/CmdShoppingItemUncheck"
           shopping.item.clear_checked: "#/components/schemas/CmdShoppingItemClearChecked"
+          recipe.create: "#/components/schemas/CmdRecipeCreate"
+          recipe.version.create: "#/components/schemas/CmdRecipeVersionCreate"
+          recipe.version.restore: "#/components/schemas/CmdRecipeVersionRestore"
+          recipe.update: "#/components/schemas/CmdRecipeUpdate"
+          recipe.delete: "#/components/schemas/CmdRecipeDelete"
+          recipe.line.set_ingredient: "#/components/schemas/CmdRecipeLineSetIngredient"
     CmdCatalogProductCreate:
       type: object
       required: [id, type, payload, clientTime]
@@ -3438,6 +3450,11 @@ components:
             listId:
               type: string
               format: uuid
+            recipeId:
+              type: string
+              format: uuid
+              nullable: true
+              description: The recipe this item is for ("Missing to list").
             sort:
               type: integer
               nullable: true
@@ -3682,6 +3699,288 @@ components:
             listId:
               type: string
               format: uuid
+    CmdRecipeCreate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.create]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, versionId, title, ingredients, steps]
+          properties:
+            id:
+              type: string
+              format: uuid
+            versionId:
+              type: string
+              format: uuid
+            subtitle:
+              type: string
+              maxLength: 300
+              nullable: true
+            sourceKind:
+              type: string
+              enum: [manual, url, text]
+              nullable: true
+            sourceUrl:
+              type: string
+              maxLength: 2000
+              nullable: true
+            sourceLang:
+              type: string
+              maxLength: 35
+              nullable: true
+              description: BCP 47; null means English.
+            tags:
+              type: array
+              maxItems: 30
+              nullable: true
+              items:
+                type: string
+                maxLength: 40
+            title:
+              type: string
+              minLength: 1
+              maxLength: 200
+            servings:
+              type: integer
+              minimum: 1
+              maximum: 100
+              nullable: true
+            totalMinutes:
+              type: integer
+              minimum: 0
+              maximum: 10000
+              nullable: true
+            ingredients:
+              type: array
+              maxItems: 200
+              description: Raw ingredient lines in order; section headers ("For the rice:") included. The server parses them.
+              items:
+                type: string
+                maxLength: 500
+            steps:
+              type: array
+              maxItems: 100
+              items:
+                $ref: "#/components/schemas/RecipeStep"
+            notes:
+              type: string
+              maxLength: 10000
+              nullable: true
+    CmdRecipeVersionCreate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.version.create]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [recipeId, versionId, origin, title, ingredients, steps]
+          properties:
+            recipeId:
+              type: string
+              format: uuid
+            versionId:
+              type: string
+              format: uuid
+            origin:
+              type: string
+              enum: [manual, chat]
+            parentVersionId:
+              type: string
+              format: uuid
+              nullable: true
+              description: Version the content was based on; defaults to the current one.
+            fromMessageId:
+              type: string
+              format: uuid
+              nullable: true
+            changeSummary:
+              type: string
+              maxLength: 500
+              nullable: true
+            title:
+              type: string
+              minLength: 1
+              maxLength: 200
+            servings:
+              type: integer
+              minimum: 1
+              maximum: 100
+              nullable: true
+            totalMinutes:
+              type: integer
+              minimum: 0
+              maximum: 10000
+              nullable: true
+            ingredients:
+              type: array
+              maxItems: 200
+              description: Raw ingredient lines in order; section headers ("For the rice:") included. The server parses them.
+              items:
+                type: string
+                maxLength: 500
+            steps:
+              type: array
+              maxItems: 100
+              items:
+                $ref: "#/components/schemas/RecipeStep"
+            notes:
+              type: string
+              maxLength: 10000
+              nullable: true
+    CmdRecipeVersionRestore:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.version.restore]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [recipeId, versionId, fromVersionId]
+          properties:
+            recipeId:
+              type: string
+              format: uuid
+            versionId:
+              type: string
+              format: uuid
+            fromVersionId:
+              type: string
+              format: uuid
+    CmdRecipeUpdate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.update]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+            tags:
+              type: array
+              maxItems: 30
+              nullable: true
+              items:
+                type: string
+                maxLength: 40
+            saved:
+              type: boolean
+              nullable: true
+            coverBlob:
+              type: string
+              pattern: '^[0-9a-f]{64}$'
+              nullable: true
+            subtitle:
+              type: string
+              maxLength: 300
+              nullable: true
+    CmdRecipeDelete:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.delete]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdRecipeLineSetIngredient:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.line.set_ingredient]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [versionId, lineId, ingredientId]
+          properties:
+            versionId:
+              type: string
+              format: uuid
+            lineId:
+              type: string
+              format: uuid
+            ingredientId:
+              type: string
+              format: uuid
+              nullable: true
+    RecipeStep:
+      type: object
+      required: [text]
+      additionalProperties: false
+      properties:
+        text:
+          type: string
+          maxLength: 4000
+        minutes:
+          type: integer
+          minimum: 0
+          maximum: 10000
+          nullable: true
     CommandBatch:
       type: object
       required: [householdId, commands]
