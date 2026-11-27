@@ -116,10 +116,10 @@ func exists(ctx context.Context, tx pgx.Tx, q string, args ...any) (bool, error)
 	return ok, err
 }
 
-func cleanName(field, s string, max int) (string, error) {
+func cleanName(field, s string, limit int) (string, error) {
 	s = strings.TrimSpace(s)
-	if s == "" || len([]rune(s)) > max {
-		return "", commands.Invalid("%s must be 1-%d characters", field, max)
+	if s == "" || len([]rune(s)) > limit {
+		return "", commands.Invalid("%s must be 1-%d characters", field, limit)
 	}
 	return s, nil
 }

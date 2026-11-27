@@ -2,6 +2,7 @@ package shopping
 
 import (
 	"context"
+	"errors"
 	"sort"
 	"time"
 
@@ -161,7 +162,7 @@ func RecordPurchase(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, store
 func ForgetPurchase(ctx context.Context, tx pgx.Tx, hh, item uuid.UUID) error {
 	var product uuid.UUID
 	err := tx.QueryRow(ctx, `DELETE FROM purchase WHERE household_id = $1 AND shopping_item_id = $2 RETURNING product_id`, hh, item).Scan(&product)
-	if err == pgx.ErrNoRows {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil
 	}
 	if err != nil {
