@@ -3,8 +3,13 @@ import type { CommandPayloads, CommandType } from './commands'
 import { db, type OutboxRow, type StockpotDB } from './db'
 import { applyReducer } from './reducers'
 
-function newRow<T extends CommandType>(type: T, payload: CommandPayloads[T]): OutboxRow {
+function newRow<T extends CommandType>(
+  type: T,
+  payload: CommandPayloads[T],
+  householdId?: string,
+): OutboxRow {
   return {
+    householdId,
     id: uuidv7(),
     type,
     payload,
@@ -38,13 +43,15 @@ export async function dispatch<T extends CommandType>(
   payload: CommandPayloads[T],
   database: StockpotDB = db,
 ): Promise<string> {
-  const row = newRow(type, payload)
+  let row: OutboxRow | undefined
   await database.transaction('rw', database.tables, async () => {
+    const household = (await database.meta.get('sync.household'))?.value
+    row = newRow(type, payload, typeof household === 'string' ? household : undefined)
     await database.outbox.add(row)
     await applyReducer(database, type, payload, row.clientTime)
   })
   syncHooks.requested()
-  return row.id
+  return (row as OutboxRow).id
 }
 
 /** Set by the sync engine; a no-op until it runs (and in unit tests). */

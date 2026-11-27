@@ -19,7 +19,8 @@ func cmdBody(typ string, payload map[string]any) map[string]any {
 
 func TestCommandsAndSyncOverHTTP(t *testing.T) {
 	e := newEnv(t)
-	admin, _ := e.setupAdmin()
+	admin, me := e.setupAdmin()
+	hh := *me.ActiveHouseholdId
 
 	// Public callers are turned away.
 	e.client().fail(http.MethodGet, "/v1/sync", nil, http.StatusUnauthorized, "unauthenticated")
@@ -27,24 +28,27 @@ func TestCommandsAndSyncOverHTTP(t *testing.T) {
 	pid := uuid.NewString()
 	create := cmdBody("catalog.product.create", map[string]any{"id": pid, "name": "Mandarins", "brand": nil, "defaultQty": "2", "defaultUnit": "lb"})
 	var res CommandResults
-	admin.ok(http.MethodPost, "/v1/commands", map[string]any{"commands": []any{create}}, &res)
+	admin.ok(http.MethodPost, "/v1/commands", map[string]any{"householdId": hh, "commands": []any{create}}, &res)
 	if len(res.Results) != 1 || res.Results[0].Status != CommandResultStatusApplied {
 		t.Fatalf("results %+v", res)
 	}
-	admin.ok(http.MethodPost, "/v1/commands", map[string]any{"commands": []any{create}}, &res)
+	admin.ok(http.MethodPost, "/v1/commands", map[string]any{"householdId": hh, "commands": []any{create}}, &res)
 	if res.Results[0].Status != CommandResultStatusDuplicate {
 		t.Fatalf("replay %+v", res)
 	}
 	bad := cmdBody("catalog.product.update", map[string]any{"id": uuid.NewString(), "note": "x"})
-	admin.ok(http.MethodPost, "/v1/commands", map[string]any{"commands": []any{bad}}, &res)
+	admin.ok(http.MethodPost, "/v1/commands", map[string]any{"householdId": hh, "commands": []any{bad}}, &res)
 	if res.Results[0].Status != CommandResultStatusRejected || res.Results[0].Problem.Code != "gone" {
 		t.Fatalf("missing product %+v", res)
 	}
 
 	// The schema, not the handler, refuses unknown commands and fields.
-	admin.fail(http.MethodPost, "/v1/commands", map[string]any{"commands": []any{cmdBody("catalog.nope", map[string]any{"id": pid})}}, http.StatusBadRequest, "bad_request")
-	admin.fail(http.MethodPost, "/v1/commands", map[string]any{"commands": []any{cmdBody("catalog.store.create", map[string]any{"id": pid, "name": "S", "x": 1})}}, http.StatusBadRequest, "bad_request")
-	admin.fail(http.MethodPost, "/v1/commands", map[string]any{"commands": []any{}}, http.StatusBadRequest, "bad_request")
+	admin.fail(http.MethodPost, "/v1/commands", map[string]any{"householdId": hh, "commands": []any{cmdBody("catalog.nope", map[string]any{"id": pid})}}, http.StatusBadRequest, "bad_request")
+	admin.fail(http.MethodPost, "/v1/commands", map[string]any{"householdId": hh, "commands": []any{cmdBody("catalog.store.create", map[string]any{"id": pid, "name": "S", "x": 1})}}, http.StatusBadRequest, "bad_request")
+	admin.fail(http.MethodPost, "/v1/commands", map[string]any{"householdId": hh, "commands": []any{}}, http.StatusBadRequest, "bad_request")
+
+	// Commands queued under another household are refused outright.
+	admin.fail(http.MethodPost, "/v1/commands", map[string]any{"householdId": uuid.NewString(), "commands": []any{create}}, http.StatusConflict, "household_mismatch")
 
 	var page struct {
 		Rows       map[string][]map[string]any `json:"rows"`
@@ -77,7 +81,7 @@ func itoa(n int64) string { return strconv.FormatInt(n, 10) }
 
 func TestSyncEventsStream(t *testing.T) {
 	e := newEnv(t)
-	admin, _ := e.setupAdmin()
+	admin, me := e.setupAdmin()
 	srv := httptest.NewServer(e.h)
 	t.Cleanup(srv.Close)
 
@@ -118,7 +122,7 @@ func TestSyncEventsStream(t *testing.T) {
 	}
 	wait(": connected")
 
-	body := map[string]any{"commands": []any{cmdBody("catalog.store.create", map[string]any{"id": uuid.NewString(), "name": "Costco"})}}
+	body := map[string]any{"householdId": *me.ActiveHouseholdId, "commands": []any{cmdBody("catalog.store.create", map[string]any{"id": uuid.NewString(), "name": "Costco"})}}
 	admin.ok(http.MethodPost, "/v1/commands", body, nil)
 	wait("event: changed")
 }

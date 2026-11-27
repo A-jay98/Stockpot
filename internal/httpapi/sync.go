@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"time"
 
@@ -21,7 +22,7 @@ type Syncer interface {
 
 // CommandApplier applies command batches.
 type CommandApplier interface {
-	Apply(ctx context.Context, cmds []commands.Command) ([]commands.Result, error)
+	Apply(ctx context.Context, household uuid.UUID, cmds []commands.Command) ([]commands.Result, error)
 }
 
 // sseHeartbeat keeps proxies from closing an idle event stream.
@@ -44,7 +45,13 @@ func (s *Server) ApplyCommands(ctx context.Context, req ApplyCommandsRequestObje
 		}
 		cmds = append(cmds, cmd)
 	}
-	results, err := s.commands.Apply(ctx, cmds)
+	results, err := s.commands.Apply(ctx, req.Body.HouseholdId, cmds)
+	if errors.Is(err, commands.ErrHouseholdMismatch) {
+		return ApplyCommandsdefaultApplicationProblemPlusJSONResponse{
+			Body:       problemCtx(ctx, http.StatusConflict, CodeHouseholdMismatch, "These changes were made in another household."),
+			StatusCode: http.StatusConflict,
+		}, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -168,8 +175,19 @@ func (s *Server) GetSyncEvents(ctx context.Context, _ GetSyncEventsRequestObject
 		return nil, err
 	}
 	changes, stop, err := s.sync.Listen(ctx, hh)
+	if errors.Is(err, syncdb.ErrTooManyStreams) {
+		return tooManyStreams{problemCtx(ctx, http.StatusTooManyRequests, CodeTooManyStreams, "Too many open connections for this household.")}, nil
+	}
 	if err != nil {
 		return nil, err
 	}
 	return syncEventsResponse{ctx: ctx, changes: changes, stop: stop}, nil
+}
+
+// tooManyStreams is the 429 for GetSyncEvents (the stream response has no problem variant).
+type tooManyStreams struct{ p Problem }
+
+func (r tooManyStreams) VisitGetSyncEventsResponse(w http.ResponseWriter) error {
+	WriteProblem(w, r.p)
+	return nil
 }

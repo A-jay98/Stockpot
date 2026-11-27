@@ -15,6 +15,7 @@ type Server = {
   applied: Cmd[]
   pages: unknown[]
   syncCalls: string[]
+  failNames: Set<string>
 }
 
 let server: Server
@@ -23,12 +24,21 @@ const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
 
 beforeEach(async () => {
-  server = { online: true, rejectTypes: new Set(), applied: [], pages: [], syncCalls: [] }
+  server = {
+    online: true,
+    rejectTypes: new Set(),
+    applied: [],
+    pages: [],
+    syncCalls: [],
+    failNames: new Set(),
+  }
   vi.stubGlobal('fetch', async (req: Request) => {
     if (!server.online) throw new TypeError('offline')
     const url = new URL(req.url)
     if (url.pathname === '/api/v1/commands') {
-      const { commands } = (await req.json()) as { commands: Cmd[] }
+      const { commands } = (await req.json()) as { commands: Cmd[]; householdId: string }
+      if (commands.some((c) => server.failNames.has(String(c.payload.name))))
+        return json({ title: 'boom' }, 500)
       return json({
         results: commands.map((c) => {
           if (server.rejectTypes.has(c.type)) {
@@ -219,12 +229,29 @@ test('retrying a rejected command queues it again under a new id', async () => {
   expect(server.applied[0]?.id).not.toBe(rejected?.id)
 })
 
-test('switching household empties the replica and outbox', async () => {
+test('switching household parks the outbox and replays it on return', async () => {
+  const B = '0190a1b2-0000-7000-8000-0000000000a2'
   await dispatch('catalog.store.create', { id: sid(1), name: 'A' }, db)
   await adoptHousehold(HH, db) // same household: untouched
   expect(await db.store.count()).toBe(1)
-  await adoptHousehold('0190a1b2-0000-7000-8000-0000000000a2', db)
+  await adoptHousehold(B, db)
   expect(await db.store.count()).toBe(0)
-  expect(await db.outbox.count()).toBe(0)
-  expect((await db.meta.get('sync.household'))?.value).toBe('0190a1b2-0000-7000-8000-0000000000a2')
+  expect(await db.outbox.count()).toBe(1)
+  expect((await db.meta.get('sync.household'))?.value).toBe(B)
+  await flushOutbox(db)
+  expect(server.applied).toEqual([]) // A's command is never sent to B
+  await adoptHousehold(HH, db)
+  expect((await db.store.toArray()).map((s) => s.name)).toEqual(['A'])
+  await flushOutbox(db)
+  expect(server.applied.map((c) => c.payload.name)).toEqual(['A'])
+})
+
+test('a poison command that makes the server 500 is isolated and the queue moves on', async () => {
+  await dispatch('catalog.store.create', { id: sid(1), name: 'Poison' }, db)
+  await dispatch('catalog.store.create', { id: sid(2), name: 'Fine' }, db)
+  server.failNames.add('Poison')
+  for (let i = 0; i < 6; i++) await flushOutbox(db)
+  expect(server.applied.map((c) => c.payload.name)).toEqual(['Fine'])
+  const rows = await db.outbox.toArray()
+  expect(rows.filter((r) => r.status === 'rejected')).toHaveLength(1)
 })

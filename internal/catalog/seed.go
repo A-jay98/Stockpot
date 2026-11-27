@@ -37,7 +37,21 @@ func SeedIngredients() ([]SeedIngredient, error) {
 	return out, nil
 }
 
-// Seed upserts the global ingredient seed by slug. It is idempotent: rows
+// normalizedAliases stores aliases in the form the resolver compares (see Normalize).
+func normalizedAliases(in []string) []string {
+	out := make([]string, 0, len(in))
+	seen := map[string]bool{}
+	for _, a := range in {
+		if n := Normalize(a); n != "" && !seen[n] {
+			seen[n] = true
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+// Seed upserts the global ingredient seed by slug. Entries removed from the
+// file stay in the database (households may reference them). It is idempotent: rows
 // that already match are not touched (so rev doesn't churn on every
 // migrate), rows an admin edited (source != 'seed') are left alone, and no
 // household row is ever changed or deleted.
@@ -65,10 +79,7 @@ const zeroUUID = "'00000000-0000-0000-0000-000000000000'::uuid"
 func seedTx(ctx context.Context, tx pgx.Tx, items []SeedIngredient) error {
 	for _, it := range items {
 		shelf, _ := json.Marshal(it.ShelfLife)
-		aliases := it.Aliases
-		if aliases == nil {
-			aliases = []string{}
-		}
+		aliases := normalizedAliases(it.Aliases)
 		_, err := tx.Exec(ctx, `
 			INSERT INTO ingredient (household_id, slug, name, plural, category_id, icon, aliases, shelf_life, default_unit, source)
 			VALUES (NULL, $1, $2, $3, (SELECT id FROM category WHERE household_id IS NULL AND slug = $4), $5, $6, $7, $8, 'seed')
@@ -86,6 +97,10 @@ func seedTx(ctx context.Context, tx pgx.Tx, items []SeedIngredient) error {
 	// Parents second, so order in the file doesn't matter.
 	for _, it := range items {
 		if it.Parent == nil {
+			if _, err := tx.Exec(ctx, `UPDATE ingredient SET parent_id = NULL
+				WHERE household_id IS NULL AND slug = $1 AND source = 'seed' AND parent_id IS NOT NULL`, it.Slug); err != nil {
+				return fmt.Errorf("seed parent %s: %w", it.Slug, err)
+			}
 			continue
 		}
 		if _, err := tx.Exec(ctx, `

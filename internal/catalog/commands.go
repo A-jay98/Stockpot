@@ -109,18 +109,21 @@ func Register(r *commands.Registry, res Resolver) {
 	h := &handlers{res: res}
 	commands.Register(r, "catalog.product.create", h.productCreate)
 	commands.Register(r, "catalog.product.update", h.productUpdate)
-	commands.Register(r, "catalog.product.delete", softDelete[IDPayload]("product", func(p IDPayload) uuid.UUID { return p.ID }))
+	commands.Register(r, "catalog.product.delete", softDelete("product", func(p IDPayload) uuid.UUID { return p.ID }, nil))
 	commands.Register(r, "catalog.product.set_ingredient", h.productSetIngredient)
 	commands.Register(r, "catalog.store.create", h.storeCreate)
 	commands.Register(r, "catalog.store.update", h.storeUpdate)
-	commands.Register(r, "catalog.store.delete", softDelete[IDPayload]("store", func(p IDPayload) uuid.UUID { return p.ID }))
+	commands.Register(r, "catalog.store.delete", softDelete("store", func(p IDPayload) uuid.UUID { return p.ID }, releaseStore))
 	commands.Register(r, "catalog.location.create", h.locationCreate)
 	commands.Register(r, "catalog.location.update", h.locationUpdate)
-	commands.Register(r, "catalog.location.delete", softDelete[IDPayload]("location", func(p IDPayload) uuid.UUID { return p.ID }))
+	commands.Register(r, "catalog.location.delete", softDelete("location", func(p IDPayload) uuid.UUID { return p.ID }, guardLocation))
 	commands.Register(r, "catalog.ingredient.create", h.ingredientCreate)
 }
 
 type handlers struct{ res Resolver }
+
+// sortOK keeps sort inside the spec's bound (and well inside int4).
+func sortOK(n int) bool { return n >= -1_000_000 && n <= 1_000_000 }
 
 var locationKinds = map[string]bool{"fridge": true, "freezer": true, "pantry": true, "other": true}
 
@@ -205,6 +208,9 @@ func (h *handlers) checkRefs(ctx context.Context, tx pgx.Tx, hh uuid.UUID, f *Pr
 			return commands.Invalid("%v", err)
 		}
 		*f.DefaultQty.Value = q
+	}
+	if f.Icon.Set && f.Icon.Value != nil && !IconExists(*f.Icon.Value) {
+		return commands.Invalid("unknown icon %q", *f.Icon.Value)
 	}
 	if f.DefaultLocationKind.Set && f.DefaultLocationKind.Value != nil && !locationKinds[*f.DefaultLocationKind.Value] {
 		return commands.Invalid("unknown location kind")
@@ -323,7 +329,7 @@ func (h *handlers) productCreate(ctx context.Context, tx pgx.Tx, p ProductCreate
 		return err
 	}
 	if tag.RowsAffected() == 0 {
-		return nil // same id again: already created
+		return commands.CheckOwned(ctx, tx, "product", p.ID, hh) // same id again: already created
 	}
 	if !p.IngredientID.Set {
 		return h.resolve(ctx, tx, hh, p.ID, *p.Name.Value, p.Brand.Value)
@@ -419,13 +425,20 @@ func ptrs(id *uuid.UUID) []uuid.UUID {
 
 // softDelete builds a delete command for table. Deleting a row that is
 // already deleted succeeds; one that never existed is gone.
-func softDelete[P any](table string, id func(P) uuid.UUID) commands.Handler[P] {
+//
+// before (optional) runs first and may reject the delete or detach references.
+func softDelete[P any](table string, id func(P) uuid.UUID, before func(ctx context.Context, tx pgx.Tx, hh, id uuid.UUID) error) commands.Handler[P] {
 	q := fmt.Sprintf(`UPDATE %s SET deleted_at = now() WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL`, table)
 	q2 := fmt.Sprintf(`SELECT EXISTS (SELECT 1 FROM %s WHERE id = $1 AND household_id = $2)`, table)
 	return func(ctx context.Context, tx pgx.Tx, p P) error {
 		hh, err := identity.HouseholdID(ctx)
 		if err != nil {
 			return err
+		}
+		if before != nil {
+			if err := before(ctx, tx, hh, id(p)); err != nil {
+				return err
+			}
 		}
 		tag, err := tx.Exec(ctx, q, id(p), hh)
 		if err != nil {
@@ -458,9 +471,18 @@ func (h *handlers) storeCreate(ctx context.Context, tx pgx.Tx, p StoreCreate) er
 	if p.Sort != nil {
 		sort = *p.Sort
 	}
-	_, err = tx.Exec(ctx, `INSERT INTO store (id, household_id, name, sort, color) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING`,
+	if !sortOK(sort) {
+		return commands.Invalid("sort out of range")
+	}
+	tag, err := tx.Exec(ctx, `INSERT INTO store (id, household_id, name, sort, color) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING`,
 		p.ID, hh, name, sort, p.Color)
-	return err
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return commands.CheckOwned(ctx, tx, "store", p.ID, hh)
+	}
+	return nil
 }
 
 func (h *handlers) storeUpdate(ctx context.Context, tx pgx.Tx, p StoreUpdate) error {
@@ -480,6 +502,9 @@ func (h *handlers) storeUpdate(ctx context.Context, tx pgx.Tx, p StoreUpdate) er
 		s.add("sort", "", p.Sort.Value)
 	}
 	optStr(&s, "color", p.Color)
+	if p.Sort.Set && p.Sort.Value != nil && !sortOK(*p.Sort.Value) {
+		return commands.Invalid("sort out of range")
+	}
 	return updateRow(ctx, tx, "store", hh, p.ID, &s)
 }
 
@@ -496,9 +521,18 @@ func (h *handlers) locationCreate(ctx context.Context, tx pgx.Tx, p LocationCrea
 	if p.Sort != nil {
 		sort = *p.Sort
 	}
-	_, err = tx.Exec(ctx, `INSERT INTO location (id, household_id, name, kind, sort) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING`,
+	if !sortOK(sort) {
+		return commands.Invalid("sort out of range")
+	}
+	tag, err := tx.Exec(ctx, `INSERT INTO location (id, household_id, name, kind, sort) VALUES ($1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING`,
 		p.ID, hh, name, p.Kind, sort)
-	return err
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return commands.CheckOwned(ctx, tx, "location", p.ID, hh)
+	}
+	return nil
 }
 
 func (h *handlers) locationUpdate(ctx context.Context, tx pgx.Tx, p LocationUpdate) error {
@@ -517,6 +551,9 @@ func (h *handlers) locationUpdate(ctx context.Context, tx pgx.Tx, p LocationUpda
 	optStr(&s, "kind", p.Kind)
 	if p.Sort.Set {
 		s.add("sort", "", p.Sort.Value)
+	}
+	if p.Sort.Set && p.Sort.Value != nil && !sortOK(*p.Sort.Value) {
+		return commands.Invalid("sort out of range")
 	}
 	return updateRow(ctx, tx, "location", hh, p.ID, &s)
 }
@@ -565,6 +602,9 @@ func (h *handlers) ingredientCreate(ctx context.Context, tx pgx.Tx, p Ingredient
 	if name == "" || len(name) > 100 || strings.IndexFunc(name, unicode.IsControl) >= 0 {
 		return commands.Invalid("name must be 1-100 characters")
 	}
+	if p.Icon != nil && !IconExists(*p.Icon) {
+		return commands.Invalid("unknown icon %q", *p.Icon)
+	}
 	if p.ParentID != nil {
 		if err := checkIngredient(ctx, tx, hh, *p.ParentID); err != nil {
 			return err
@@ -585,9 +625,11 @@ func (h *handlers) ingredientCreate(ctx context.Context, tx pgx.Tx, p Ingredient
 			aliases = append(aliases, a)
 		}
 	}
-	done, err := exists(ctx, tx, `SELECT 1 FROM ingredient WHERE id = $1 AND household_id = $2`, p.ID, hh)
-	if err != nil || done {
+	if err := commands.CheckOwned(ctx, tx, "ingredient", p.ID, hh); err != nil {
 		return err
+	}
+	if done, err := exists(ctx, tx, `SELECT 1 FROM ingredient WHERE id = $1`, p.ID); err != nil || done {
+		return err // replay: already created
 	}
 	base := Slugify(name)
 	for i := 1; i <= 50; i++ {
@@ -607,4 +649,28 @@ func (h *handlers) ingredientCreate(ctx context.Context, tx pgx.Tx, p Ingredient
 		return err
 	}
 	return commands.Invalid("no free slug for %q", name)
+}
+
+// Reference rules for deletes (also in docs/architecture-m1.md §3):
+//   - a location can't be deleted while live stock is in it: move the items first;
+//   - deleting a store detaches it from products' default store and from shopping
+//     items' store lists (purchase history in product_stat is kept).
+
+func guardLocation(ctx context.Context, tx pgx.Tx, hh, id uuid.UUID) error {
+	used, err := exists(ctx, tx, `SELECT 1 FROM stock_item WHERE household_id = $1 AND location_id = $2 AND deleted_at IS NULL`, hh, id)
+	if err != nil {
+		return err
+	}
+	if used {
+		return commands.Invalid("move the items out of this location first")
+	}
+	return nil
+}
+
+func releaseStore(ctx context.Context, tx pgx.Tx, hh, id uuid.UUID) error {
+	if _, err := tx.Exec(ctx, `UPDATE product SET default_store_id = NULL WHERE household_id = $1 AND default_store_id = $2`, hh, id); err != nil {
+		return err
+	}
+	_, err := tx.Exec(ctx, `UPDATE shopping_item SET store_ids = array_remove(store_ids, $2) WHERE household_id = $1 AND $2 = ANY(store_ids)`, hh, id)
+	return err
 }

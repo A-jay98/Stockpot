@@ -6,9 +6,11 @@ package syncdb
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -75,16 +77,26 @@ type Page struct {
 	More       bool
 }
 
+// MaxStreams caps concurrent change streams per household: each holds a
+// Postgres connection, and devices that reconnect in a loop shouldn't pile up.
+const MaxStreams = 8
+
+// ErrTooManyStreams is returned by Listen at the cap.
+var ErrTooManyStreams = errors.New("syncdb: too many open change streams")
+
 // Store reads synced rows.
 type Store struct {
 	pool    *pgxpool.Pool
 	extract map[string]string // table → jsonb expression rendering numerics as strings
+
+	mu      sync.Mutex
+	streams map[uuid.UUID]int
 }
 
 // New introspects the synced tables so numeric columns go over the wire as
 // decimal strings, as the contract says.
 func New(ctx context.Context, pool *pgxpool.Pool) (*Store, error) {
-	s := &Store{pool: pool, extract: map[string]string{}}
+	s := &Store{pool: pool, extract: map[string]string{}, streams: map[uuid.UUID]int{}}
 	rows, err := pool.Query(ctx, `
 		SELECT c.relname, a.attname
 		FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid
@@ -206,14 +218,30 @@ func (s *Store) Pull(ctx context.Context, household *uuid.UUID, since int64, lim
 // Call stop to release the dedicated connection. The connection is not
 // taken from the pool, so idle SSE clients can't starve requests.
 func (s *Store) Listen(ctx context.Context, household uuid.UUID) (changes <-chan struct{}, stop func(), err error) {
+	s.mu.Lock()
+	if s.streams[household] >= MaxStreams {
+		s.mu.Unlock()
+		return nil, nil, ErrTooManyStreams
+	}
+	s.streams[household]++
+	s.mu.Unlock()
+	release := func() {
+		s.mu.Lock()
+		if s.streams[household]--; s.streams[household] <= 0 {
+			delete(s.streams, household)
+		}
+		s.mu.Unlock()
+	}
 	conn, err := pgx.ConnectConfig(ctx, s.pool.Config().ConnConfig)
 	if err != nil {
+		release()
 		return nil, nil, err
 	}
 	hh := household
 	for _, ch := range []string{Channel(&hh), Channel(nil)} {
 		if _, err := conn.Exec(ctx, "LISTEN "+pgx.Identifier{ch}.Sanitize()); err != nil {
 			_ = conn.Close(ctx)
+			release()
 			return nil, nil, err
 		}
 	}
@@ -239,5 +267,6 @@ func (s *Store) Listen(ctx context.Context, household uuid.UUID) (changes <-chan
 		cctx, ccancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
 		defer ccancel()
 		_ = conn.Close(cctx)
+		release()
 	}, nil
 }

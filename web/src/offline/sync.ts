@@ -2,7 +2,7 @@ import { v7 } from 'uuid'
 import { api } from '../api/client'
 import { db, type MetaRow, type OutboxRow, type StockpotDB } from './db'
 import { syncHooks } from './outbox'
-import { applyReducer } from './reducers'
+import { applyReducer, reducerTargets } from './reducers'
 import { camelizeRow, replicaTables } from './replica'
 
 const REV = 'sync.rev'
@@ -31,19 +31,51 @@ async function getMeta<T>(database: StockpotDB, key: string, fallback: T): Promi
 const setMeta = (database: StockpotDB, key: string, value: unknown) =>
   database.meta.put({ key, value } satisfies MetaRow)
 
-/** Empties the replica, the outbox and the cursors (logout, household switch). */
+/** Empties the replica, the outbox and the cursors (sign-out). */
 export async function resetReplica(database: StockpotDB = db): Promise<void> {
   await database.transaction('rw', database.tables, async () => {
     await Promise.all(database.tables.map((t) => t.clear()))
   })
 }
 
-/** Clears the replica if it belongs to another household than `householdId`. */
+/**
+ * Makes the replica belong to `householdId`. Another household's rows and cursors are dropped;
+ * its unsent commands stay in the outbox, parked under their own household (never sent to the
+ * wrong one), and this household's own parked commands are shown optimistically again.
+ */
 export async function adoptHousehold(householdId: string, database: StockpotDB = db) {
   const current = await getMeta<string | null>(database, HOUSEHOLD, null)
   if (current === householdId) return
-  await resetReplica(database)
-  await setMeta(database, HOUSEHOLD, householdId)
+  await database.transaction('rw', database.tables, async () => {
+    await Promise.all(replicaTables.map((t) => database.table(t).clear()))
+    await database.meta.clear()
+    await setMeta(database, HOUSEHOLD, householdId)
+    await replayPending(database, householdId, 'all')
+  })
+}
+
+/** Commands still waiting to be sent, in order, for the household the replica shows. */
+async function pendingFor(database: StockpotDB, householdId: string | null) {
+  const rows = await database.outbox.where('status').equals('pending').sortBy('seq')
+  return rows.filter((r) => !r.householdId || r.householdId === householdId)
+}
+
+/**
+ * Re-applies queued commands over rows the server just overwrote. A command is replayed when its
+ * reducer didn't declare targets, or a target is among `ids` (rows the page wrote or deleted),
+ * so delta reducers run exactly once on top of server state.
+ */
+async function replayPending(
+  database: StockpotDB,
+  householdId: string | null,
+  ids: Set<string> | 'all',
+) {
+  for (const row of await pendingFor(database, householdId)) {
+    const targets = reducerTargets(row.type, row.payload)
+    if (ids === 'all' || targets === null || targets.some((id) => ids.has(id))) {
+      await applyReducer(database, row.type, row.payload, row.clientTime)
+    }
+  }
 }
 
 export type FlushResult = 'done' | 'offline' | 'rejected'
@@ -54,10 +86,13 @@ type Result = {
   problem?: RejectedProblem
 }
 
-async function send(rows: OutboxRow[]): Promise<{ results: Result[] } | 'bad_request' | 'offline'> {
+type Sent = { results: Result[] } | 'bad_request' | 'offline' | 'server_error'
+
+async function send(householdId: string, rows: OutboxRow[]): Promise<Sent> {
   try {
     const res = await api.POST('/v1/commands', {
       body: {
+        householdId,
         commands: rows.map((r) => ({
           id: r.id,
           type: r.type,
@@ -66,49 +101,58 @@ async function send(rows: OutboxRow[]): Promise<{ results: Result[] } | 'bad_req
         })) as never,
       },
     })
-    if (res.response.status === 400) return 'bad_request'
-    if (!res.response.ok || !res.data) return 'offline'
+    const status = res.response.status
+    if (status === 400) return 'bad_request'
+    if (status >= 500) return 'server_error'
+    if (!res.response.ok || !res.data) return 'offline' // 401 (sign-in handled elsewhere), 409 household switch
     return { results: res.data.results as Result[] }
   } catch {
     return 'offline'
   }
 }
 
+/** Server failures on the same command before it is set aside as rejected. */
+const MAX_ATTEMPTS = 5
+
+const refusal = (detail: string) => JSON.stringify({ code: 'invalid', detail })
+
 /**
- * Sends pending commands in `seq` order, in batches. Stops at the first network/server
- * failure (they stay pending). Rejected commands are kept, marked, for the "Couldn't sync" sheet.
+ * Sends this household's pending commands in `seq` order, in batches. Network failures stop the
+ * flush (commands stay pending). A command the server can't process (400, or 5xx five times in a
+ * row when sent alone) is set aside as rejected so it never blocks the ones behind it. Rejected
+ * commands stay for the "Couldn't sync" sheet.
  */
 export async function flushOutbox(database: StockpotDB = db): Promise<FlushResult> {
+  const household = await getMeta<string | null>(database, HOUSEHOLD, null)
+  if (!household) return 'done'
   let rejected = false
+  let size = BATCH
   for (;;) {
-    const rows = (await database.outbox.where('status').equals('pending').sortBy('seq')).slice(
-      0,
-      BATCH,
-    )
+    const rows = (await pendingFor(database, household)).slice(0, size)
     if (rows.length === 0) return rejected ? 'rejected' : 'done'
-    let out = await send(rows)
-    if (out === 'bad_request' && rows.length > 1) {
-      // One command the schema refuses: find it by sending one at a time.
-      const first = rows[0] as OutboxRow
-      const single = await send([first])
-      if (single === 'bad_request') out = 'bad_request'
-      else if (single === 'offline') return bump(database, rows, 'offline')
-      else out = single
-      rows.length = 1
-    }
+    const out = await send(household, rows)
     if (out === 'offline') return bump(database, rows, 'offline')
-    if (out === 'bad_request') {
+    if (out === 'bad_request' || out === 'server_error') {
+      if (rows.length > 1) {
+        size = 1 // find the culprit by sending one at a time
+        continue
+      }
       const [row] = rows as [OutboxRow]
+      if (out === 'server_error' && row.attempts + 1 < MAX_ATTEMPTS)
+        return bump(database, rows, 'offline')
       await database.outbox.update(row.seq as number, {
         status: 'rejected',
-        error: JSON.stringify({
-          code: 'invalid',
-          detail: 'The server could not read this change.',
-        }),
+        error: refusal(
+          out === 'bad_request'
+            ? 'The server could not read this change.'
+            : 'The server failed to process this change.',
+        ),
       })
       rejected = true
+      size = BATCH
       continue
     }
+    size = BATCH
     const byId = new Map(out.results.map((r) => [r.id, r]))
     await database.transaction('rw', database.outbox, async () => {
       for (const row of rows) {
@@ -185,14 +229,12 @@ async function applyPage(database: StockpotDB, page: SyncPage) {
     }
     await setMeta(database, REV, page.next)
     await setMeta(database, REV_GLOBAL, page.nextGlobal)
-    await reapplyPending(database)
+    // Rows this page wrote or deleted lost their optimistic state: replay what's queued for them.
+    const touched = new Set<string>()
+    for (const rows of Object.values(page.rows)) for (const r of rows) touched.add(String(r.id))
+    for (const ids of Object.values(page.tombstones)) for (const id of ids) touched.add(id)
+    await replayPending(database, await getMeta<string | null>(database, HOUSEHOLD, null), touched)
   })
-}
-
-/** The pull overwrote optimistic rows with older server state; replay what's still queued. */
-async function reapplyPending(database: StockpotDB) {
-  const pending = await database.outbox.where('status').equals('pending').sortBy('seq')
-  for (const row of pending) await applyReducer(database, row.type, row.payload, row.clientTime)
 }
 
 /**
@@ -210,13 +252,18 @@ async function requestFullPull(database: StockpotDB) {
 
 async function purgeGhosts(database: StockpotDB) {
   await database.transaction('rw', database.tables, async () => {
-    for (const t of replicaTables)
-      await database
+    const purged = new Set<string>()
+    for (const t of replicaTables) {
+      const ghosts = await database
         .table(t)
         .filter((r) => r.rev === 0)
-        .delete()
+        .primaryKeys()
+      for (const id of ghosts) purged.add(String(id))
+      await database.table(t).bulkDelete(ghosts)
+    }
     await database.meta.delete(REBUILD)
-    await reapplyPending(database)
+    // Rows the re-pull rewrote were already replayed; bring back what only exists optimistically.
+    await replayPending(database, await getMeta<string | null>(database, HOUSEHOLD, null), purged)
   })
 }
 

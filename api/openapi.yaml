@@ -2435,6 +2435,8 @@ components:
             sort:
                 type: integer
                 nullable: true
+                minimum: -1000000
+                maximum: 1000000
             color:
                 type: string
                 nullable: true
@@ -2468,6 +2470,8 @@ components:
             sort:
                 type: integer
                 nullable: true
+                minimum: -1000000
+                maximum: 1000000
             color:
                 type: string
                 nullable: true
@@ -2526,6 +2530,8 @@ components:
             sort:
                 type: integer
                 nullable: true
+                minimum: -1000000
+                maximum: 1000000
     CmdCatalogLocationUpdate:
       type: object
       required: [id, type, payload, clientTime]
@@ -2558,6 +2564,8 @@ components:
             sort:
                 type: integer
                 nullable: true
+                minimum: -1000000
+                maximum: 1000000
     CmdCatalogLocationDelete:
       type: object
       required: [id, type, payload, clientTime]
@@ -2629,9 +2637,16 @@ components:
                 maxItems: 30
     CommandBatch:
       type: object
-      required: [commands]
+      required: [householdId, commands]
       additionalProperties: false
       properties:
+        householdId:
+          type: string
+          format: uuid
+          description: |
+            The household the commands were queued under. The server answers 409
+            `household_mismatch` and applies nothing when the session's active
+            household is another one.
         commands:
           type: array
           minItems: 1

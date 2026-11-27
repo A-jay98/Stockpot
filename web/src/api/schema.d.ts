@@ -1718,6 +1718,13 @@ export interface components {
             };
         };
         CommandBatch: {
+            /**
+             * Format: uuid
+             * @description The household the commands were queued under. The server answers 409
+             *     `household_mismatch` and applies nothing when the session's active
+             *     household is another one.
+             */
+            householdId: string;
             commands: components["schemas"]["Command"][];
         };
         CommandResult: {

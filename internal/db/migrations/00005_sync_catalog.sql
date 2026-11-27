@@ -280,7 +280,7 @@ INSERT INTO category (slug, name, icon, sort) VALUES
     ('bakery', 'Bakery', 'cat-bakery', 80),
     ('pantry', 'Pantry', 'cat-pantry', 90),
     ('baking', 'Baking', 'cat-baking', 100),
-    ('spices-condiments','Spices & condiments',   'salt',           110),
+    ('spices-condiments','Spices & condiments',   'cat-spices-condiments', 110),
     ('oils-sauces', 'Oils & sauces', 'cat-oils-sauces', 120),
     ('frozen', 'Frozen', 'cat-frozen', 130),
     ('snacks-sweets', 'Snacks & sweets', 'cat-snacks-sweets', 140),

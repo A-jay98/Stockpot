@@ -10,11 +10,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/a-jay98/stockpot/internal/audit"
@@ -129,13 +131,22 @@ type Service struct {
 // NewService returns a service over reg.
 func NewService(pool *pgxpool.Pool, reg *Registry) *Service { return &Service{pool: pool, reg: reg} }
 
+// ErrHouseholdMismatch means the batch was written for a household other than
+// the session's active one (the user switched households in between).
+var ErrHouseholdMismatch = errors.New("commands: batch is for another household")
+
 // Apply runs cmds in order, each in its own transaction, and returns one
-// result per command. On an unexpected error it returns the results so far
-// plus the error; commands after it were not attempted.
-func (s *Service) Apply(ctx context.Context, cmds []Command) ([]Result, error) {
+// result per command. household is the one the client queued them under; it
+// must be the session's active household or nothing is applied. On an
+// unexpected error it returns the results so far plus the error; commands
+// after it were not attempted.
+func (s *Service) Apply(ctx context.Context, household uuid.UUID, cmds []Command) ([]Result, error) {
 	hh, err := identity.HouseholdID(ctx)
 	if err != nil {
 		return nil, err
+	}
+	if hh != household {
+		return nil, ErrHouseholdMismatch
 	}
 	p := identity.PrincipalFrom(ctx)
 	out := make([]Result, 0, len(cmds))
@@ -178,7 +189,13 @@ func (s *Service) applyOne(ctx context.Context, hh, user uuid.UUID, c Command) (
 	}
 	after, err := h(ctx, sp, c.Payload)
 	var rej *Error
+	var pgErr *pgconn.PgError
 	switch {
+	case errors.As(err, &pgErr) && (strings.HasPrefix(pgErr.Code, "22") || strings.HasPrefix(pgErr.Code, "23")):
+		// Data exceptions and integrity violations are the payload's fault, and retrying
+		// can't help: reject, so one bad command never wedges the client's queue.
+		_ = sp.Rollback(ctx)
+		return s.reject(ctx, tx, c, &Error{CodeInvalid, "the change conflicts with existing data"})
 	case errors.As(err, &rej):
 		_ = sp.Rollback(ctx)
 		return s.reject(ctx, tx, c, rej)
@@ -259,5 +276,24 @@ func (e *Error) UnmarshalJSON(b []byte) error {
 		return err
 	}
 	e.Code, e.Detail = v.Code, v.Detail
+	return nil
+}
+
+// CheckOwned is for create handlers that insert with ON CONFLICT (id) DO NOTHING:
+// when nothing was inserted, the id must already belong to this household
+// (a replay, fine) and not to another one (rejected, never silently "applied").
+// table is a trusted constant.
+func CheckOwned(ctx context.Context, tx pgx.Tx, table string, id, household uuid.UUID) error {
+	var owner *uuid.UUID // NULL for global rows
+	err := tx.QueryRow(ctx, "SELECT household_id FROM "+table+" WHERE id = $1", id).Scan(&owner)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if owner == nil || *owner != household {
+		return Invalid("id already in use")
+	}
 	return nil
 }

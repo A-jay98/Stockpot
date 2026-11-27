@@ -42,7 +42,7 @@ func (ExactResolver) Resolve(ctx context.Context, q dbq.DBTX, household uuid.UUI
 	err := q.QueryRow(ctx, `
 		SELECT id FROM ingredient
 		WHERE deleted_at IS NULL AND (household_id = $1 OR household_id IS NULL)
-		  AND (immutable_unaccent(lower(name)) = $2 OR immutable_unaccent(lower(coalesce(plural, ''))) = $2
+		  AND (`+sqlNorm("name")+` = $2 OR `+sqlNorm("coalesce(plural, '')")+` = $2
 		       OR replace(slug, '-', ' ') = $2 OR $2 = ANY(aliases))
 		ORDER BY household_id IS NULL, id LIMIT 1`, household, n).Scan(&id)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -54,6 +54,11 @@ func (ExactResolver) Resolve(ctx context.Context, q dbq.DBTX, household uuid.UUI
 	return &Match{IngredientID: id, Confidence: 1}, nil
 }
 
+// sqlNorm is Normalize in SQL, for columns stored as typed (aliases are stored normalized).
+func sqlNorm(expr string) string {
+	return "btrim(regexp_replace(immutable_unaccent(lower(" + expr + ")), '[^[:alnum:]]+', ' ', 'g'))"
+}
+
 // Normalize lowercases, strips accents (common Latin ones; SQL does the
 // rest), turns punctuation into spaces and collapses whitespace.
 func Normalize(s string) string {
@@ -61,6 +66,8 @@ func Normalize(s string) string {
 	space := true
 	for _, r := range strings.ToLower(s) {
 		switch {
+		case r == '\u200c' || r == '\u200d': // zero-width (non-)joiners inside Persian words
+			continue
 		case unicode.IsLetter(r) || unicode.IsDigit(r):
 			b.WriteRune(foldAccent(r))
 			space = false
@@ -72,9 +79,18 @@ func Normalize(s string) string {
 	return strings.TrimSpace(b.String())
 }
 
+var accentFold = func() map[rune]rune {
+	from, to := []rune("àáâãäåçèéêëìíîïñòóôõöùúûüýÿ"), []rune("aaaaaaceeeeiiiinooooouuuuyy")
+	m := make(map[rune]rune, len(from))
+	for i, r := range from {
+		m[r] = to[i]
+	}
+	return m
+}()
+
 func foldAccent(r rune) rune {
-	if i := strings.IndexRune("àáâãäåçèéêëìíîïñòóôõöùúûüýÿ", r); i >= 0 {
-		return []rune("aaaaaaceeeeiiiinooooouuuuyy")[i]
+	if f, ok := accentFold[r]; ok {
+		return f
 	}
 	return r
 }

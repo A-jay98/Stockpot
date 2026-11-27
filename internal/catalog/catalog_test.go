@@ -3,6 +3,7 @@ package catalog_test
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"sync"
 	"testing"
@@ -66,7 +67,7 @@ func cmd(typ string, payload map[string]any) commands.Command {
 
 func (e *env) apply(t *testing.T, cs ...commands.Command) []commands.Result {
 	t.Helper()
-	rs, err := e.svc.Apply(e.ctx, cs)
+	rs, err := e.svc.Apply(e.ctx, e.hh, cs)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -392,7 +393,7 @@ func TestParallelCommandBatchesDoNotLoseRows(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for range 5 {
-				if _, err := e.svc.Apply(e.ctx, []commands.Command{cmd("catalog.store.create", map[string]any{"id": uuid.New(), "name": "S"})}); err != nil {
+				if _, err := e.svc.Apply(e.ctx, e.hh, []commands.Command{cmd("catalog.store.create", map[string]any{"id": uuid.New(), "name": "S"})}); err != nil {
 					t.Error(err)
 				}
 			}
@@ -445,5 +446,123 @@ func TestIngredientCreateSlugsAndLocationCommands(t *testing.T) {
 	_ = e.pool.QueryRow(t.Context(), `SELECT name FROM location WHERE id = $1`, lid).Scan(&name)
 	if name != "Basement freezer" {
 		t.Fatal(name)
+	}
+}
+
+func TestPostgresErrorsAreRejectedNotRetriedForever(t *testing.T) {
+	e := newEnv(t)
+	// A NUL byte in text is refused by Postgres (22021): a deterministic failure the
+	// handlers don't pre-check, which must reject rather than 500 forever.
+	r := e.one(t, cmd("catalog.product.create", map[string]any{"id": uuid.New(), "name": "S", "note": "a\u0000b"}))
+	if r.Status != commands.StatusRejected || r.Problem.Code != commands.CodeInvalid {
+		t.Fatalf("NUL byte: %+v", r)
+	}
+	if r := e.one(t, cmd("catalog.store.create", map[string]any{"id": uuid.New(), "name": "S", "sort": 3000000000})); r.Status != commands.StatusRejected {
+		t.Fatalf("overflow: %+v", r)
+	}
+	if again := e.one(t, cmd("catalog.store.create", map[string]any{"id": uuid.New(), "name": "T"})); again.Status != commands.StatusApplied {
+		t.Fatalf("queue stays usable: %+v", again)
+	}
+}
+
+func TestCreateWithAnotherHouseholdsIdIsRejected(t *testing.T) {
+	e := newEnv(t)
+	other := e.household(t, "Other")
+	var theirs uuid.UUID
+	_ = e.pool.QueryRow(t.Context(), `INSERT INTO store (id, household_id, name) VALUES (gen_random_uuid(), $1, 'Theirs') RETURNING id`, other).Scan(&theirs)
+	var theirProduct uuid.UUID
+	_ = e.pool.QueryRow(t.Context(), `INSERT INTO product (id, household_id, name) VALUES (gen_random_uuid(), $1, 'Theirs') RETURNING id`, other).Scan(&theirProduct)
+	var theirLoc, theirIng uuid.UUID
+	_ = e.pool.QueryRow(t.Context(), `SELECT id FROM location WHERE household_id = $1 LIMIT 1`, other).Scan(&theirLoc)
+	_ = e.pool.QueryRow(t.Context(), `INSERT INTO ingredient (household_id, slug, name) VALUES ($1, 'theirs', 'Theirs') RETURNING id`, other).Scan(&theirIng)
+	for name, c := range map[string]commands.Command{
+		"store":      cmd("catalog.store.create", map[string]any{"id": theirs, "name": "Mine"}),
+		"product":    cmd("catalog.product.create", map[string]any{"id": theirProduct, "name": "Mine"}),
+		"location":   cmd("catalog.location.create", map[string]any{"id": theirLoc, "name": "Mine", "kind": "pantry"}),
+		"ingredient": cmd("catalog.ingredient.create", map[string]any{"id": theirIng, "name": "Mine"}),
+	} {
+		if r := e.one(t, c); r.Status != commands.StatusRejected || r.Problem.Code != commands.CodeInvalid {
+			t.Errorf("%s: %+v", name, r)
+		}
+	}
+	// A replay in the owning household is still a quiet success.
+	id := uuid.New()
+	e.one(t, cmd("catalog.store.create", map[string]any{"id": id, "name": "Mine"}))
+	if r := e.one(t, cmd("catalog.store.create", map[string]any{"id": id, "name": "Mine"})); r.Status != commands.StatusApplied {
+		t.Fatalf("replay with a new command id: %+v", r)
+	}
+}
+
+func TestBatchForAnotherHouseholdIsRefused(t *testing.T) {
+	e := newEnv(t)
+	other := e.household(t, "Other")
+	_, err := e.svc.Apply(e.ctx, other, []commands.Command{cmd("catalog.store.create", map[string]any{"id": uuid.New(), "name": "X"})})
+	if !errors.Is(err, commands.ErrHouseholdMismatch) {
+		t.Fatalf("err = %v", err)
+	}
+	var n int
+	_ = e.pool.QueryRow(t.Context(), `SELECT count(*) FROM store`).Scan(&n)
+	if n != 0 {
+		t.Fatal("something was applied")
+	}
+}
+
+func TestIconsAndCategoryIcons(t *testing.T) {
+	e := newEnv(t)
+	if r := e.one(t, cmd("catalog.product.create", map[string]any{"id": uuid.New(), "name": "Thing", "icon": "not-an-icon"})); r.Status != commands.StatusRejected {
+		t.Fatalf("bad icon accepted: %+v", r)
+	}
+	if r := e.one(t, cmd("catalog.product.create", map[string]any{"id": uuid.New(), "name": "Thing2", "icon": "tangerine"})); r.Status != commands.StatusApplied {
+		t.Fatalf("good icon refused: %+v", r)
+	}
+	rows, err := e.pool.Query(t.Context(), `SELECT slug, icon FROM category WHERE household_id IS NULL`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var slug string
+		var icon *string
+		_ = rows.Scan(&slug, &icon)
+		if icon == nil || *icon != catalog.CategoryIconKey(slug) || !catalog.IconExists(*icon) {
+			t.Errorf("category %s icon = %v", slug, icon)
+		}
+	}
+}
+
+func TestDeleteRules(t *testing.T) {
+	e := newEnv(t)
+	var loc uuid.UUID
+	_ = e.pool.QueryRow(t.Context(), `SELECT id FROM location WHERE household_id = $1 AND kind = 'fridge'`, e.hh).Scan(&loc)
+	pid, sid := uuid.New(), uuid.New()
+	e.apply(t,
+		cmd("catalog.store.create", map[string]any{"id": sid, "name": "Costco"}),
+		cmd("catalog.product.create", map[string]any{"id": pid, "name": "Rice", "defaultStoreId": sid}),
+	)
+	if _, err := e.pool.Exec(t.Context(), `INSERT INTO stock_item (id, household_id, product_id, location_id) VALUES (gen_random_uuid(), $1, $2, $3)`, e.hh, pid, loc); err != nil {
+		t.Fatal(err)
+	}
+	if r := e.one(t, cmd("catalog.location.delete", map[string]any{"id": loc})); r.Status != commands.StatusRejected || r.Problem.Code != commands.CodeInvalid {
+		t.Fatalf("location with stock deleted: %+v", r)
+	}
+	if r := e.one(t, cmd("catalog.store.delete", map[string]any{"id": sid})); r.Status != commands.StatusApplied {
+		t.Fatalf("store delete: %+v", r)
+	}
+	var def *uuid.UUID
+	_ = e.pool.QueryRow(t.Context(), `SELECT default_store_id FROM product WHERE id = $1`, pid).Scan(&def)
+	if def != nil {
+		t.Fatal("store reference not detached")
+	}
+}
+
+func TestResolverMatchesPunctuatedAliases(t *testing.T) {
+	e := newEnv(t)
+	for name, want := range map[string]string{"2% Milk": "milk", "Half & Half": "cream", "Jell-O": "jelly-dessert", "All-Purpose Flour": "flour"} {
+		pid := uuid.New()
+		e.one(t, cmd("catalog.product.create", map[string]any{"id": pid, "name": name}))
+		var slug string
+		if err := e.pool.QueryRow(t.Context(), `SELECT i.slug FROM product p JOIN ingredient i ON i.id = p.ingredient_id WHERE p.id = $1`, pid).Scan(&slug); err != nil || slug != want {
+			t.Errorf("%q resolved to %q (%v), want %s", name, slug, err, want)
+		}
 	}
 }

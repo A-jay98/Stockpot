@@ -17,6 +17,8 @@ export type OutboxRow = {
   id: string
   /** Auto-incremented send order. */
   seq?: number
+  /** Household the user was in when acting; commands are only ever sent to this one. */
+  householdId?: string
   type: string
   payload: unknown
   /** ISO 8601 time the user acted. */

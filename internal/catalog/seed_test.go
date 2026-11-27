@@ -37,7 +37,7 @@ func TestSeedFileIsConsistent(t *testing.T) {
 			t.Errorf("%s: unknown category %q", it.Slug, it.Category)
 		}
 		// A name or alias must point at one ingredient, or the exact resolver is ambiguous.
-		for _, n := range append([]string{catalog.Normalize(it.Name), catalog.Normalize(it.Plural)}, it.Aliases...) {
+		for _, n := range append([]string{catalog.Normalize(it.Name), catalog.Normalize(it.Plural)}, aliasesNormalized(it.Aliases)...) {
 			if other, ok := names[n]; ok && other != it.Slug {
 				t.Errorf("%q names both %s and %s", n, other, it.Slug)
 			}
@@ -63,4 +63,12 @@ func TestSeedFileIsConsistent(t *testing.T) {
 			t.Errorf("seed lacks %s", want)
 		}
 	}
+}
+
+func aliasesNormalized(in []string) []string {
+	out := make([]string, len(in))
+	for i, a := range in {
+		out[i] = catalog.Normalize(a)
+	}
+	return out
 }

@@ -120,3 +120,12 @@ Runs **client-side** over the replica (instant, works offline). Engine in `web/s
 | m1-5 alerts + Telegram linking | m1-1, m1-6 (telegram pkg) | 2 |
 
 Shared-file rules for parallel threads: OpenAPI paths go in the thread's own tag section; command payload schemas are named `Cmd<Area><Thing><Verb>`; each thread registers its command handlers from its own package (`internal/inventory`, `internal/shopping`, …) in `app.go` (one line each); client reducers live in `web/src/features/<area>/commands.ts` and register via `registerReducer(type, fn)`.
+
+## Implementation notes (m1-1)
+
+- `CommandBatch` is household-bound: the client sends `householdId`; a mismatch with the session household is a 409 `household_mismatch`. The outbox stamps each command with its household, parks other households' commands on switch (never sends them to the wrong one) and replays them on return.
+- Delta reducers (e.g. "add 1 to qty") must declare `targets` in `registerReducer(type, fn, {targets})`. After a pull the engine replays only queued commands whose targets the page touched, so a delta is applied exactly once on top of server state. Reducers without targets are replayed every pull.
+- Delete rules: a location with live stock cannot be deleted (`invalid`); deleting a store detaches it from products' default store and shopping items' `store_ids`.
+- Offline-created duplicate product names are not merged server-side; later commands referencing a rejected create fail and surface in the "Couldn't sync" sheet (m1-4 should resolve by name before create).
+- Seed ingredients: rows with no parent have their parent cleared on reseed; seed never deletes. `opened_fridge`/`thawed_fridge` shelf-life values are not in the seed; the m1-2 `food_rule` is expected to cover them.
+- A command that makes the server fail (400/5xx) is isolated by sending it alone, and set aside as rejected after 5 failed attempts so it cannot block the queue.
