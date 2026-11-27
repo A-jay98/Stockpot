@@ -362,7 +362,7 @@ func (s *Service) completeLink(ctx context.Context, code string, chat int64, use
 	defer func() { _ = tx.Rollback(ctx) }()
 	var user uuid.UUID
 	err = tx.QueryRow(ctx, `DELETE FROM telegram_link l USING app_user u
-		WHERE l.code_hash = $1 AND l.expires_at > now() AND u.id = l.user_id AND u.status = 'active' RETURNING l.user_id`, hashCode(code)).Scan(&user)
+		WHERE l.code_hash = $1 AND l.expires_at > $2 AND u.id = l.user_id AND u.status = 'active' RETURNING l.user_id`, hashCode(code), s.d.Now()).Scan(&user)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", ErrLinkNotFound
 	}
@@ -379,9 +379,9 @@ func (s *Service) completeLink(ctx context.Context, code string, chat int64, use
 	}
 	if _, err := tx.Exec(ctx, `
 		INSERT INTO notification_channel (user_id, kind, chat_id, username, enabled, last_error, linked_at)
-		VALUES ($1, 'telegram', $2, NULLIF($3, ''), true, NULL, now())
-		ON CONFLICT (user_id, kind) DO UPDATE SET chat_id = $2, username = NULLIF($3, ''), enabled = true, last_error = NULL, linked_at = now()`,
-		user, chat, username); err != nil {
+		VALUES ($1, 'telegram', $2, NULLIF($3, ''), true, NULL, $4)
+		ON CONFLICT (user_id, kind) DO UPDATE SET chat_id = $2, username = NULLIF($3, ''), enabled = true, last_error = NULL, linked_at = $4`,
+		user, chat, username, s.d.Now()); err != nil {
 		return "", err
 	}
 	// The bot acts for the user it just linked.

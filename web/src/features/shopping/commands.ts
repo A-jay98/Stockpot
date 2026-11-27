@@ -1,6 +1,7 @@
 import type { CommandPayloads } from '../../offline/commands'
-import { registerReducer } from '../../offline/reducers'
+import { applyReducer, registerReducer } from '../../offline/reducers'
 import type { ShoppingItem, ShoppingList, StockItem } from '../../offline/replica'
+import '../catalog/commands' // a free-text check creates its product
 
 // Optimistic shopping reducers. Each one sets fields (never adds), so replaying them after a
 // pull is harmless. The server derives product links and purchase stats; the next pull brings them.
@@ -90,12 +91,12 @@ const shelfKey = {
  */
 async function optimisticStock(
   db: import('../../offline/db').StockpotDB,
-  item: ShoppingItem,
+  item: ShoppingItem & { productId: string },
   m: NonNullable<CommandPayloads['shopping.item.check']['inventory']>,
   clientTime: string,
 ) {
   if (await db.stock_item.get(m.stockItemId)) return
-  const product = item.productId ? await db.product.get(item.productId) : undefined
+  const product = await db.product.get(item.productId)
   const locations = await db.location.orderBy('sort').toArray()
   const loc =
     locations.find((l) => l.id === m.locationId) ??
@@ -115,7 +116,7 @@ async function optimisticStock(
   }
   const row: StockItem = {
     ...(await base(db, m.stockItemId, clientTime)),
-    productId: item.productId ?? '',
+    productId: item.productId,
     locationId: loc?.id ?? null,
     amountKind: 'exact',
     quantity: m.quantity ?? item.qty,
@@ -135,11 +136,30 @@ async function optimisticStock(
   await db.stock_item.put(row)
 }
 
+/**
+ * The product a free-text item becomes when ticked: the client's pick (see `productPick`), which
+ * the server uses as is or creates under that id. A new one is shown optimistically meanwhile.
+ */
+async function productFor(
+  db: import('../../offline/db').StockpotDB,
+  row: ShoppingItem,
+  pick: string | null | undefined,
+  clientTime: string,
+): Promise<string | null> {
+  if (row.productId || !pick) return row.productId
+  const name = row.text.trim()
+  if (!name) return null
+  await applyReducer(db, 'catalog.product.create', { id: pick, name }, clientTime)
+  return pick
+}
+
 registerReducer('shopping.item.check', async (db, p, { clientTime }) => {
-  const row = await db.shopping_item.get(p.id)
-  if (!row) return
+  const found = await db.shopping_item.get(p.id)
+  if (!found) return
+  const row = { ...found, productId: await productFor(db, found, p.productId, clientTime) }
   const putAway = p.inventory && !row.stockItemId
-  if (p.inventory && putAway) await optimisticStock(db, row, p.inventory, clientTime)
+  if (p.inventory && putAway && row.productId)
+    await optimisticStock(db, { ...row, productId: row.productId }, p.inventory, clientTime)
   await db.shopping_item.put({
     ...row,
     checkedAt: row.checkedAt ?? clientTime,

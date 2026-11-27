@@ -1,4 +1,5 @@
 import type { Category, Location, Product, ShoppingItem } from '../../offline/replica'
+import { normalize } from '../catalog/suggest/text'
 
 /** An item as the list shows it: display name from the product when linked, else what was typed. */
 export type Row = ShoppingItem & { title: string; brand: string | null; product: Product | null }
@@ -43,3 +44,28 @@ export function defaultLocation(r: Row, locations: Location[]): Location | undef
   const kind = r.product?.defaultLocationKind
   return (kind && locations.find((l) => l.kind === kind)) || locations[0]
 }
+
+/** Name key for matching typed text to products: case, accents and a plural s/es ignored. */
+export const sameName = (name: string) =>
+  normalize(name)
+    .split(' ')
+    .map((w) => (w.length > 3 ? w.replace(/(es|s)$/, '') : w))
+    .join(' ')
+
+/**
+ * The household product typed text names: the same name (brand-less first, as the server
+ * picks), else a brand-less one that differs only by case, accents or a plural.
+ */
+export function productNamed(products: Product[], text: string): Product | undefined {
+  const exact = text.trim().toLowerCase()
+  const byAge = (a: Product, b: Product) =>
+    Number(a.brand !== null) - Number(b.brand !== null) || a.createdAt.localeCompare(b.createdAt)
+  const same = products.filter((p) => p.name.trim().toLowerCase() === exact).sort(byAge)
+  if (same[0]) return same[0]
+  const key = sameName(text)
+  return products.filter((p) => !p.brand && sameName(p.name) === key).sort(byAge)[0]
+}
+
+/** The productId a tick sends for an item without one: the product it names, else a new id. */
+export const productPick = (row: ShoppingItem, products: Product[], newId: () => string) =>
+  row.productId ? {} : { productId: productNamed(products, row.text)?.id ?? newId() }

@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { v7 as uuidv7 } from 'uuid'
 import { dispatch } from '../../offline/outbox'
-import type { Location } from '../../offline/replica'
+import type { Location, Product } from '../../offline/replica'
 import { Button, Input, Sheet, SheetContent } from '../../ui'
-import { defaultLocation, type Row } from './items'
+import { defaultLocation, productPick, type Row } from './items'
 
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
   rows: Row[]
+  products: Product[]
   locations: Location[]
   /** The store being shopped at (the active filter), so purchases teach the right store. */
   storeId?: string | null
@@ -18,7 +19,7 @@ type Props = {
  * "Move N checked to inventory": a location and an optional expiry per item. Leaving the date
  * empty lets the server estimate it from the ingredient's shelf life.
  */
-export function PutAwaySheet({ open, onOpenChange, rows, locations, storeId }: Props) {
+export function PutAwaySheet({ open, onOpenChange, rows, products, locations, storeId }: Props) {
   const [loc, setLoc] = useState<Record<string, string>>({})
   const [expiry, setExpiry] = useState<Record<string, string>>({})
 
@@ -28,6 +29,7 @@ export function PutAwaySheet({ open, onOpenChange, rows, locations, storeId }: P
       await dispatch('shopping.item.check', {
         id: r.id,
         ...(storeId ? { storeId } : {}),
+        ...productPick(r, products, uuidv7),
         inventory: {
           stockItemId: uuidv7(),
           ...(locationId ? { locationId } : {}),

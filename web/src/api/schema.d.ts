@@ -2395,6 +2395,11 @@ export interface components {
                 id: string;
                 /** Format: uuid */
                 storeId?: string | null;
+                /**
+                 * Format: uuid
+                 * @description For an item without a product: the household product the client matched it to, or the id for a new one (created under it unless a product of exactly that name exists). Lets an offline client show the product before it syncs. Ignored when the item already has a product.
+                 */
+                productId?: string | null;
                 inventory?: {
                     /** Format: uuid */
                     stockItemId: string;
@@ -2691,6 +2696,8 @@ export interface components {
                 /** Format: uuid */
                 eventId: string;
                 parts: components["schemas"]["StockSplitPart"][];
+                /** @description Share whatever the item holds when the command applies evenly across the parts (which then carry no amounts), so the split survives consumes synced before it. Exact amounts round down to 3 decimals and the last part takes the rest. */
+                all?: boolean;
                 /** Format: uuid */
                 locationId?: string;
                 /** Format: date */

@@ -192,6 +192,32 @@ test('a pull does not wipe optimistic changes still waiting in the outbox', asyn
   ])
 })
 
+test('optimistic rows the server never created are dropped once the outbox drains', async () => {
+  // Two creates; the server applies both but sends back only one (it chose an existing row for
+  // the other), so that one's optimistic copy would linger with rev 0.
+  await dispatch('catalog.store.create', { id: sid(1), name: 'Kept' }, db)
+  await dispatch('catalog.store.create', { id: sid(2), name: 'Ghost' }, db)
+  server.pages = [
+    {
+      rows: { store: [storeRow(sid(1), 'Kept', 4)] },
+      tombstones: {},
+      next: 4,
+      nextGlobal: 0,
+      more: false,
+    },
+  ]
+  await syncNow(db)
+  expect((await db.store.toArray()).map((s) => s.name)).toEqual(['Kept'])
+
+  // A row still waiting to be sent is not a ghost.
+  server.online = false
+  await dispatch('catalog.store.create', { id: sid(3), name: 'Queued' }, db)
+  server.online = true
+  await db.meta.put({ key: 'sync.settle', value: Date.now() - 1 })
+  await pull(db)
+  expect((await db.store.toArray()).map((s) => s.name).sort()).toEqual(['Kept', 'Queued'])
+})
+
 test('a rejected command is kept for the sheet and its optimistic change disappears', async () => {
   await dispatch('catalog.store.create', { id: sid(1), name: 'Ghost' }, db)
   server.rejectTypes.add('catalog.store.create')
