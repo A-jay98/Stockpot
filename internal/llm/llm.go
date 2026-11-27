@@ -26,6 +26,10 @@ var (
 	// LLM features are off, nothing is configured, or every candidate is out
 	// of quota or failing. Callers degrade to the manual path.
 	ErrUnavailable = errors.New("llm unavailable")
+	// ErrDeferred means a Background request was not tried because the quota
+	// left is within the reserve kept for interactive features. It is an
+	// ErrUnavailable: callers retry later.
+	ErrDeferred = fmt.Errorf("%w: background request deferred to keep the reserve for interactive use", ErrUnavailable)
 	// ErrQuota means a provider refused the call for rate or quota limits.
 	ErrQuota = errors.New("llm quota exhausted")
 	// ErrBadOutput means the model's reply didn't match the requested JSON
@@ -68,6 +72,20 @@ func (e *ProviderError) Error() string {
 }
 
 func (e *ProviderError) Unwrap() error { return e.Err }
+
+// Priority says whether a person is waiting for the answer.
+type Priority int
+
+// Request priorities.
+const (
+	// Interactive is the default: a person waits, so the request may use all
+	// the quota there is.
+	Interactive Priority = iota
+	// Background work (enrichment, backfills) only runs while the quota left
+	// is above the reserve (llm.background_reserve_pct), so it never starves
+	// interactive features. Otherwise the router answers ErrDeferred.
+	Background
+)
 
 // Feature tags a request with the product feature it serves, for metering,
 // and sets how long its responses may be reused.
@@ -122,6 +140,8 @@ type Request struct {
 	MaxTokens int
 	// Temperature, when set, overrides the provider default.
 	Temperature *float64
+	// Priority defaults to Interactive.
+	Priority Priority
 	// Provider pins the request to one provider id (admin test prompt).
 	Provider string
 }

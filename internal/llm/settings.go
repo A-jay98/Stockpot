@@ -193,6 +193,14 @@ var (
 		Validate:    settings.Between(0, 1_000_000),
 		Description: "Maximum LLM calls per day across all providers (0 = no cap).",
 	})
+	// SettingBackgroundReservePct is the share of each daily quota kept for
+	// interactive requests.
+	SettingBackgroundReservePct = settings.Define(settings.Def[int]{
+		Key:         "llm.background_reserve_pct",
+		Default:     40,
+		Validate:    settings.Between(0, 100),
+		Description: "Percent of each daily LLM quota (per provider and global) kept for interactive features. Background jobs such as catalog enrichment only run while more than this is left.",
+	})
 	// SettingUsageTZ is the zone of the global cap's day and of usage reports.
 	SettingUsageTZ = settings.Define(settings.Def[string]{
 		Key:     "llm.usage_tz",
