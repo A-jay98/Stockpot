@@ -31,6 +31,8 @@ type Deps struct {
 	// Commands and Sync serve /api/v1/commands and /api/v1/sync*.
 	Commands CommandApplier
 	Sync     Syncer
+	// Backups serves /api/v1/admin/backups; nil answers 503.
+	Backups BackupAdmin
 }
 
 // Server implements StrictServerInterface. Handlers live in one file per
@@ -42,6 +44,7 @@ type Server struct {
 	llm      LLMGateway
 	commands CommandApplier
 	sync     Syncer
+	backups  BackupAdmin
 	now      func() time.Time
 }
 
@@ -49,7 +52,10 @@ var _ StrictServerInterface = (*Server)(nil)
 
 // NewServer returns the API implementation.
 func NewServer(d Deps) *Server {
-	return &Server{checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM, commands: d.Commands, sync: d.Sync, now: time.Now}
+	return &Server{
+		checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM,
+		commands: d.Commands, sync: d.Sync, backups: d.Backups, now: time.Now,
+	}
 }
 
 // healthTimeout bounds each dependency probe; the deploy step polls often.

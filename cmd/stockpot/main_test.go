@@ -22,3 +22,10 @@ func TestUnknownCommand(t *testing.T) {
 		t.Fatal("want an error")
 	}
 }
+
+func TestRestoreNeedsFlags(t *testing.T) {
+	err := run(context.Background(), []string{"restore"}, &bytes.Buffer{})
+	if err == nil || !strings.Contains(err.Error(), "--manifest") {
+		t.Fatalf("err = %v", err)
+	}
+}
