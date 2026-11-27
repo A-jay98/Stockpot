@@ -17,6 +17,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/a-jay98/stockpot/internal/admin"
+	"github.com/a-jay98/stockpot/internal/alerts"
 	"github.com/a-jay98/stockpot/internal/audit"
 	"github.com/a-jay98/stockpot/internal/backup"
 	"github.com/a-jay98/stockpot/internal/blob"
@@ -160,6 +161,8 @@ func Serve(ctx context.Context, cfg config.Config) error {
 		},
 	})
 
+	alertSvc := alerts.NewService(alerts.Deps{Pool: pool, Settings: store, Telegram: tg, PublicURL: publicURL(cfg)})
+
 	sweepers := []jobs.Sweeper{jobs.AppLogSweeper(pool)}
 	sweepers = append(sweepers, audit.Sweepers(pool)...)
 	sweepers = append(sweepers, identity.Sweepers(pool)...)
@@ -167,11 +170,13 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	sweepers = append(sweepers, backup.Sweepers(pool)...)
 	enricher := catalog.NewEnricher(catalog.EnrichDeps{Pool: pool, Settings: store, LLM: gateway})
 	sweepers = append(sweepers, enricher.Sweepers()...)
+	sweepers = append(sweepers, alerts.Sweepers(alertSvc)...)
 	jobClient, err := jobs.New(jobs.Deps{
 		Pool:     pool,
 		Settings: store,
 		Sweepers: sweepers,
-		Workers:  []func(*river.Workers) error{backups.Registrar(), enricher.Registrar()},
+		Workers:  []func(*river.Workers) error{backups.Registrar(), enricher.Registrar(), alertSvc.Registrar()},
+		Periodic: []*river.PeriodicJob{alerts.PeriodicJob()},
 		Logger:   slog.Default(),
 	})
 	if err != nil {
@@ -206,6 +211,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Backups:  backups,
 			Enrich:   enricher,
 			Matcher:  catalog.Matcher{Pool: pool, Res: resolve.Resolver{}},
+			Alerts:   alertSvc,
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,
@@ -225,6 +231,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 
 	g, gctx := errgroup.WithContext(ctx)
 	g.Go(func() error { return store.Run(gctx) })
+	g.Go(func() error { return alertSvc.RunBot(gctx) })
 	g.Go(func() error {
 		// River's own context must outlive gctx so Stop can drain gracefully.
 		if err := jobClient.Start(context.WithoutCancel(gctx)); err != nil {
@@ -308,4 +315,12 @@ func backupsToday(b *backup.Service) func(context.Context) (admin.BackupsToday, 
 		}
 		return admin.BackupsToday{Enabled: h.Enabled, LastOK: h.LastOK, LastStatus: h.LastStatus, LastError: h.LastError, Stale: h.Stale}, nil
 	}
+}
+
+// publicURL is the app's origin as a string ("" when unset).
+func publicURL(cfg config.Config) string {
+	if cfg.PublicURL == nil {
+		return ""
+	}
+	return cfg.PublicURL.String()
 }
