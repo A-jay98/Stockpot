@@ -84,19 +84,34 @@ export async function savePhoto(file: Blob, database: StockpotDB = db): Promise<
 /** URL of a blob (or its thumbnail at `w` px wide). */
 export const blobUrl = (ref: string, w?: ThumbWidth) => `/api/v1/blobs/${ref}${w ? `?w=${w}` : ''}`
 
-/** Statuses that mean the server will never accept these bytes. */
-const permanent = new Set([400, 413, 415, 422])
+/** Statuses that mean the server will never accept these bytes (403: this user can't upload). */
+const permanent = new Set([400, 403, 413, 415, 422])
+
+/** Failed upload tries (5xx, 429, …) before the commands using the photo are set aside. */
+export const MAX_UPLOAD_ATTEMPTS = 5
+
+/** How long a photo no queued command references is kept (picked, then discarded). */
+const ORPHAN_MS = 7 * 24 * 60 * 60 * 1000
+
+export type UploadResult = {
+  /** 'offline': stop the flush and try later (network down, signed out, a retryable failure). */
+  status: 'done' | 'offline'
+  /** Refs that can't be uploaded (refused, or out of attempts): their commands are set aside. */
+  failed: string[]
+}
 
 /**
  * Upload every ref in `refs` that is still waiting in `pending_blob`, deleting each once the
- * server has it. Stops with 'offline' on a network or server failure (the caller retries later).
- * Bytes the server refuses for good are dropped; the command that references them is then
- * rejected by the server and shows on the "Couldn't sync" sheet.
+ * server has it. A network failure or 401 stops with 'offline' without counting. Other failures
+ * count an attempt; after MAX_UPLOAD_ATTEMPTS, or at once for a permanent refusal, the ref is
+ * reported in `failed` so the outbox sets its commands aside ("Couldn't sync") instead of letting
+ * one photo block everything queued behind it. Retrying such a command tries the photo again.
  */
 export async function uploadPendingBlobs(
   refs: Iterable<string>,
   database: StockpotDB = db,
-): Promise<'done' | 'offline'> {
+): Promise<UploadResult> {
+  const failed: string[] = []
   for (const ref of new Set(refs)) {
     const pending = await database.pending_blob.get(ref)
     if (!pending) continue
@@ -113,19 +128,57 @@ export async function uploadPendingBlobs(
       status = res.response.status
       got = res.data?.ref
     } catch {
-      return 'offline'
+      return { status: 'offline', failed }
     }
     if (status === 201 && got === ref) {
       await database.pending_blob.delete(ref)
+    } else if (status === 401) {
+      return { status: 'offline', failed } // signed out: sign-in is handled elsewhere
     } else if (permanent.has(status) || status === 201) {
       // 201 with another ref means the bytes changed on the way: they can't stand for `ref`.
       console.warn('photo upload refused', ref, status)
-      await database.pending_blob.delete(ref)
+      await database.pending_blob.put({ ...pending, attempts: MAX_UPLOAD_ATTEMPTS })
+      failed.push(ref)
     } else {
-      return 'offline'
+      const attempts = (pending.attempts ?? 0) + 1
+      await database.pending_blob.put({ ...pending, attempts })
+      if (attempts < MAX_UPLOAD_ATTEMPTS) return { status: 'offline', failed }
+      failed.push(ref)
     }
   }
-  return 'done'
+  return { status: 'done', failed }
+}
+
+/** Let a photo be tried again (the user retried a command that was set aside because of it). */
+// put, not update: Dexie's update deep-clones the row, which must keep the Blob as is.
+export async function resetUploadAttempts(refs: string[], database: StockpotDB = db) {
+  for (const ref of refs) {
+    const pending = await database.pending_blob.get(ref)
+    if (pending?.attempts) await database.pending_blob.put({ ...pending, attempts: 0 })
+  }
+}
+
+/**
+ * Delete photos older than a week that no queued or set-aside command references: picks the user
+ * discarded before saving. Photos a command still needs are never touched.
+ */
+export async function sweepPendingBlobs(
+  referenced: (type: string, payload: unknown) => string[],
+  database: StockpotDB = db,
+  now = Date.now(),
+): Promise<number> {
+  return database.transaction('rw', database.pending_blob, database.outbox, async () => {
+    const cutoff = new Date(now - ORPHAN_MS).toISOString()
+    const old = await database.pending_blob.filter((p) => p.createdAt < cutoff).primaryKeys()
+    if (old.length === 0) return 0
+    const inUse = new Set<string>()
+    await database.outbox.each((row) => {
+      for (const ref of referenced(row.type, row.payload)) inUse.add(ref)
+    })
+    const orphans = old.filter((ref) => !inUse.has(ref))
+    await database.pending_blob.bulkDelete(orphans)
+    return orphans.length
+  })
 }
 
 /** Drop cached photos (sign-out, household switch): they are household-private. */

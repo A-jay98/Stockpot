@@ -120,7 +120,7 @@ func TestUploadAndOwnership(t *testing.T) {
 	}
 
 	// Duplicate upload by A is a no-op; the same bytes from B add B as owner.
-	again, err := e.svc.Upload(ctxA, "image/jpeg", bytes.NewReader(data))
+	again, err := e.svc.Upload(ctxA, "image/jpeg; charset=binary", bytes.NewReader(data))
 	if err != nil || again.Ref != info.Ref {
 		t.Fatalf("again: %v %v", again.Ref, err)
 	}

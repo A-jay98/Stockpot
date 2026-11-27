@@ -33,7 +33,13 @@ export type OutboxRow = {
  * A photo prepared on this device (downscaled JPEG) that the server may not have yet. Commands
  * reference `ref` (its SHA-256) at once; the outbox uploads it before sending them. Local only.
  */
-export type PendingBlob = { ref: string; blob: Blob; createdAt: string }
+export type PendingBlob = {
+  ref: string
+  blob: Blob
+  createdAt: string
+  /** Failed upload tries; see MAX_UPLOAD_ATTEMPTS in src/lib/photos.ts. */
+  attempts?: number
+}
 
 type Replica = { [K in keyof ReplicaTables]: EntityTable<ReplicaTables[K], 'id'> }
 

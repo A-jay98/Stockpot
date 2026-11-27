@@ -96,7 +96,7 @@ func TestGetBlob(t *testing.T) {
 	if rec.Code != http.StatusOK || rec.Body.String() != "img" || f.gotWidth != 512 {
 		t.Fatalf("%d %s", rec.Code, rec.Body)
 	}
-	if cc := rec.Header().Get("Cache-Control"); cc != "private, max-age=31536000, immutable" {
+	if cc := rec.Header().Get("Cache-Control"); cc != "private, no-cache" {
 		t.Fatalf("Cache-Control %q", cc)
 	}
 	if rec.Header().Get("Content-Type") != "image/jpeg" || rec.Header().Get("ETag") != `"`+testRef+`"` {

@@ -1,6 +1,11 @@
 import { v7 } from 'uuid'
 import { api } from '../api/client'
-import { clearBlobCache, uploadPendingBlobs } from '../lib/photos'
+import {
+  clearBlobCache,
+  resetUploadAttempts,
+  sweepPendingBlobs,
+  uploadPendingBlobs,
+} from '../lib/photos'
 import { db, type MetaRow, type OutboxRow, type StockpotDB } from './db'
 import { syncHooks } from './outbox'
 import { applyReducer, commandBlobRefs, reducerTargets } from './reducers'
@@ -130,6 +135,7 @@ const refusal = (detail: string) => JSON.stringify({ code: 'invalid', detail })
 export async function flushOutbox(database: StockpotDB = db): Promise<FlushResult> {
   const household = await getMeta<string | null>(database, HOUSEHOLD, null)
   if (!household) return 'done'
+  await sweepPendingBlobs(commandBlobRefs, database)
   let rejected = false
   let size = BATCH
   for (;;) {
@@ -137,8 +143,30 @@ export async function flushOutbox(database: StockpotDB = db): Promise<FlushResul
     if (rows.length === 0) return rejected ? 'rejected' : 'done'
     // Photos first: the server only accepts a command whose blob refs it already has.
     const refs = rows.flatMap((r) => commandBlobRefs(r.type, r.payload))
-    if (refs.length > 0 && (await uploadPendingBlobs(refs, database)) === 'offline')
-      return 'offline'
+    if (refs.length > 0) {
+      const up = await uploadPendingBlobs(refs, database)
+      if (up.failed.length > 0) {
+        // Set aside every command that needs a photo that can't be uploaded, so one photo never
+        // blocks the commands behind it. Retrying the command tries the photo again.
+        const bad = new Set(up.failed)
+        await database.transaction('rw', database.outbox, async () => {
+          for (const row of rows) {
+            if (commandBlobRefs(row.type, row.payload).some((r) => bad.has(r))) {
+              await database.outbox.update(row.seq as number, {
+                status: 'rejected',
+                error: JSON.stringify({
+                  code: 'photo_upload_failed',
+                  detail: "A photo in this change couldn't be uploaded.",
+                }),
+              })
+            }
+          }
+        })
+        rejected = true
+        continue
+      }
+      if (up.status === 'offline') return 'offline'
+    }
     const out = await send(household, rows)
     if (out === 'offline') return bump(database, rows, 'offline')
     if (out === 'bad_request' || out === 'server_error') {
@@ -349,6 +377,7 @@ export async function retryRejected(seq: number, database: StockpotDB = db) {
       error: undefined,
     })
     await applyReducer(database, row.type, row.payload, row.clientTime)
+    await resetUploadAttempts(commandBlobRefs(row.type, row.payload), database)
   })
   void syncNow(database)
 }

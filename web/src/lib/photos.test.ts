@@ -4,15 +4,26 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { StockpotDB } from '../offline/db'
 import { dispatch } from '../offline/outbox'
 import { registerReducer } from '../offline/reducers'
-import { flushOutbox } from '../offline/sync'
-import { addPendingBlob, blobUrl, fitWithin, sha256Hex, uploadPendingBlobs } from './photos'
+import { flushOutbox, retryRejected, syncNow } from '../offline/sync'
+import {
+  addPendingBlob,
+  blobUrl,
+  fitWithin,
+  MAX_UPLOAD_ATTEMPTS,
+  sha256Hex,
+  sweepPendingBlobs,
+} from './photos'
 
 declare module '../offline/commands' {
   interface CommandPayloads {
     'test.photo': { id: string; refs: string[] }
+    'test.plain': { id: string }
   }
 }
 registerReducer('test.photo', () => {}, { blobs: (p) => p.refs })
+registerReducer('test.plain', () => {})
+const refsOf = (type: string, payload: unknown) =>
+  type === 'test.photo' ? (payload as { refs: string[] }).refs : []
 
 const HH = '0190a1b2-0000-7000-8000-0000000000a1'
 const HELLO = '2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824'
@@ -105,9 +116,56 @@ test('offline or failing uploads keep the photo and its command for later', asyn
   expect(await db.outbox.count()).toBe(0)
 })
 
-test('a photo the server refuses for good is dropped so it never blocks the outbox', async () => {
-  const a = await addPendingBlob(jpeg('corrupt'), db)
-  server.blobStatus = 422
-  expect(await uploadPendingBlobs([a], db)).toBe('done')
-  expect(await db.pending_blob.count()).toBe(0)
+test('a photo that keeps failing is set aside with its command and never blocks the rest', async () => {
+  const a = await addPendingBlob(jpeg('photo a'), db)
+  await dispatch('test.photo', { id: '1', refs: [a] }, db)
+  await dispatch('test.plain', { id: '2' }, db)
+  server.blobStatus = 500
+  for (let i = 1; i < MAX_UPLOAD_ATTEMPTS; i++) expect(await flushOutbox(db)).toBe('offline')
+  expect(server.calls.filter((c) => c === '/api/v1/commands')).toEqual([])
+
+  expect(await flushOutbox(db)).toBe('rejected')
+  const rows = await db.outbox.toArray()
+  expect(rows.map((r) => [r.type, r.status])).toEqual([['test.photo', 'rejected']])
+  expect(JSON.parse(rows[0]?.error ?? '')).toMatchObject({ code: 'photo_upload_failed' })
+  expect(await db.pending_blob.get(a)).toMatchObject({ attempts: MAX_UPLOAD_ATTEMPTS })
+
+  // Retrying tries the photo again from scratch; the photo was kept.
+  server.blobStatus = 201
+  await retryRejected(rows[0]?.seq as number, db)
+  await syncNow(db) // joins the sync the retry started
+  expect(server.uploaded).toEqual([a])
+  expect(await db.outbox.count()).toBe(0)
+})
+
+test('a photo the server refuses for good sets its command aside at once', async () => {
+  const a = await addPendingBlob(jpeg('not allowed'), db)
+  await dispatch('test.photo', { id: '1', refs: [a] }, db)
+  await dispatch('test.plain', { id: '2' }, db)
+  server.blobStatus = 403
+  expect(await flushOutbox(db)).toBe('rejected')
+  expect((await db.outbox.toArray()).map((r) => r.status)).toEqual(['rejected'])
+  expect(server.calls).toEqual(['/api/v1/blobs', '/api/v1/commands'])
+})
+
+test('old photos no command references are swept; referenced and recent ones stay', async () => {
+  const old = '2026-01-01T00:00:00.000Z'
+  const now = Date.parse('2026-01-20T00:00:00Z')
+  for (const ref of ['orphan', 'used', 'rejected-use']) {
+    await db.pending_blob.put({ ref, blob: jpeg(ref), createdAt: old })
+  }
+  await db.pending_blob.put({
+    ref: 'fresh',
+    blob: jpeg('fresh'),
+    createdAt: '2026-01-19T00:00:00.000Z',
+  })
+  await dispatch('test.photo', { id: '1', refs: ['used'] }, db)
+  await dispatch('test.photo', { id: '2', refs: ['rejected-use'] }, db)
+  await db.outbox.where('seq').equals(2).modify({ status: 'rejected' })
+  expect(await sweepPendingBlobs(refsOf, db, now)).toBe(1)
+  expect((await db.pending_blob.toCollection().primaryKeys()).sort()).toEqual([
+    'fresh',
+    'rejected-use',
+    'used',
+  ])
 })

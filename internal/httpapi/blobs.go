@@ -23,9 +23,11 @@ type BlobService interface {
 	Open(ctx context.Context, ref blob.Ref, width int) (media.Blob, error)
 }
 
-// blobCacheControl: a ref is a content hash, so its bytes never change.
-// private: only the owning household may read it.
-const blobCacheControl = "private, max-age=31536000, immutable"
+// blobCacheControl: only the owning household may read a blob, so it is
+// private, and the browser revalidates (a cheap 304: the ETag is the content
+// hash) rather than keeping it in its HTTP cache past sign-out. Offline
+// copies live in the service worker's cache, which sign-out clears.
+const blobCacheControl = "private, no-cache"
 
 func blobProblem(ctx context.Context, err error) (Problem, bool) {
 	switch {

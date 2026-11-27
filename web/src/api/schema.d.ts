@@ -1261,8 +1261,9 @@ export interface paths {
         };
         /**
          * A photo the household uploaded, or a resized copy
-         * @description 404 unless the active household uploaded `ref`. Responses are
-         *     immutable (the ref is a content hash). `w` serves a JPEG at that
+         * @description 404 unless the active household uploaded `ref`. `Cache-Control:
+         *     private, no-cache` with `ETag` = the ref (a content hash), so
+         *     revalidation is a cheap 304; the service worker keeps offline copies. `w` serves a JPEG at that
          *     width, built on first request; a width at or above the original's
          *     serves the original.
          */

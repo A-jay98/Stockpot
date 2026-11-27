@@ -15,6 +15,7 @@ import (
 	"image/jpeg"
 	_ "image/png" // decoder registration
 	"io"
+	"mime"
 	"slices"
 
 	"github.com/google/uuid"
@@ -88,6 +89,10 @@ func (s *Service) Upload(ctx context.Context, contentType string, r io.Reader) (
 	hh, err := identity.HouseholdID(ctx)
 	if err != nil {
 		return Info{}, err
+	}
+	// Parameters (image/jpeg; charset=binary) don't change the type.
+	if mt, _, err := mime.ParseMediaType(contentType); err == nil {
+		contentType = mt
 	}
 	if !slices.Contains(ContentTypes, contentType) {
 		return Info{}, fmt.Errorf("%w: %s", ErrUnsupportedType, contentType)
