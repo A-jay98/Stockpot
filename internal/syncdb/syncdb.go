@@ -27,10 +27,17 @@ type Table struct {
 // household_id, rev and deleted_at. Adding one needs a migration and a
 // Dexie version on the client.
 var Tables = []Table{
-	{"category", true}, {"ingredient", true},
-	{"store", false}, {"location", false}, {"product", false}, {"product_barcode", false},
-	{"product_stat", false}, {"stock_item", false}, {"stock_event", false},
-	{"shopping_list", false}, {"shopping_item", false},
+	{"category", true},
+	{"ingredient", true},
+	{"store", false},
+	{"location", false},
+	{"product", false},
+	{"product_barcode", false},
+	{"product_stat", false},
+	{"stock_item", false},
+	{"stock_event", false},
+	{"shopping_list", false},
+	{"shopping_item", false},
 }
 
 const globalLockKey = "hh:global"

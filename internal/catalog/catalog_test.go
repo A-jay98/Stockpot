@@ -159,8 +159,10 @@ func TestCommandValidation(t *testing.T) {
 		"unknown type":  cmd("catalog.nope", map[string]any{"id": uuid.New()}),
 		"unknown field": cmd("catalog.store.create", map[string]any{"id": uuid.New(), "name": "X", "bogus": 1}),
 		"bad unit":      cmd("catalog.product.create", map[string]any{"id": uuid.New(), "name": "X", "defaultUnit": "furlong"}),
-		"other hh store": cmd("catalog.product.create", map[string]any{"id": uuid.New(), "name": "Y",
-			"defaultStoreId": e.foreignStore(t)}),
+		"other hh store": cmd("catalog.product.create", map[string]any{
+			"id": uuid.New(), "name": "Y",
+			"defaultStoreId": e.foreignStore(t),
+		}),
 	} {
 		if r := e.one(t, c); r.Status != commands.StatusRejected || r.Problem.Code != commands.CodeInvalid {
 			t.Errorf("%s: %+v", name, r)
