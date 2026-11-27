@@ -9,6 +9,7 @@ import {
   type LucideIcon,
   ScrollText,
   ShieldCheck,
+  Timer,
   Users,
 } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
@@ -27,6 +28,7 @@ export const adminSections: Section[] = [
   { to: '/admin/settings', label: 'Settings & flags', icon: Flag },
   { to: '/admin/llm', label: 'LLM', icon: Cpu },
   { to: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
+  { to: '/admin/food-rules', label: 'Food rules', icon: Timer },
 ]
 
 const link =

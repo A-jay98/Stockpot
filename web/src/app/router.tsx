@@ -9,7 +9,9 @@ import { RequireSession } from '../features/auth/RequireSession'
 import { SetupPage } from '../features/auth/SetupPage'
 import { HomePage } from '../features/home/HomePage'
 import { InventoryPage } from '../features/inventory/InventoryPage'
+import { ItemDetailPage } from '../features/inventory/ItemDetailPage'
 import { RecipesPage } from '../features/recipes/RecipesPage'
+import { FoodRulesPage } from '../features/settings/FoodRulesPage'
 import { LocationsPage } from '../features/settings/LocationsPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
 import { StoresPage } from '../features/settings/StoresPage'
@@ -46,12 +48,14 @@ export const routes: RouteObject[] = [
         children: [
           { index: true, Component: HomePage },
           { path: 'inventory', Component: InventoryPage },
+          { path: 'inventory/:id', Component: ItemDetailPage },
           { path: 'add', Component: AddPage },
           { path: 'shopping', Component: ShoppingPage },
           { path: 'recipes', Component: RecipesPage },
           { path: 'settings', Component: SettingsPage },
           { path: 'settings/stores', Component: StoresPage },
           { path: 'settings/locations', Component: LocationsPage },
+          { path: 'settings/food-rules', Component: FoodRulesPage },
         ],
       },
     ],

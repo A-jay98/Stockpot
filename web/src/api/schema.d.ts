@@ -901,6 +901,61 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/food-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Stockpot's default shelf-life rules and the household's overrides */
+        get: operations["listFoodRules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/food-rules/{subjectKind}/{subjectId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subjectKind: "ingredient" | "category";
+                subjectId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Override the shelf life of an ingredient or category for this household */
+        put: operations["putFoodRule"];
+        post?: never;
+        /** Remove the household's override, back to the Stockpot default */
+        delete: operations["deleteFoodRule"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/food-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every default rule and every household override (read-only) */
+        get: operations["getAdminFoodRules"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1492,7 +1547,7 @@ export interface components {
          *     UUIDv7). Fields typed nullable clear the column when sent as null;
          *     absent fields are left unchanged.
          */
-        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"];
+        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"];
         CmdCatalogProductCreate: {
             /** Format: uuid */
             id: string;
@@ -1716,6 +1771,352 @@ export interface components {
                 icon?: string | null;
                 aliases?: string[];
             };
+        };
+        CmdInventoryStockAdd: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.add";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                /** Format: uuid */
+                productId?: string;
+                newProduct?: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    brand?: string | null;
+                    /** Format: uuid */
+                    ingredientId?: string | null;
+                    /** Format: uuid */
+                    categoryId?: string | null;
+                };
+                /** Format: uuid */
+                locationId: string;
+                /** @enum {string} */
+                amountKind: "exact" | "portions" | "level";
+                /** @description Decimal string. */
+                quantity?: string;
+                unit?: string;
+                portions?: number;
+                /** @enum {string} */
+                level?: "full" | "most" | "half" | "low" | "almost_out";
+                /** Format: date */
+                expiresOn?: string;
+                /** @enum {string} */
+                expiryKind?: "use_by" | "best_before";
+                /** Format: date */
+                openedOn?: string;
+                /** @enum {string} */
+                source: "manual" | "shopping" | "capture" | "cook";
+                /** Format: uuid */
+                storeId?: string;
+                note?: string;
+                /** Format: date */
+                on?: string;
+            };
+        };
+        CmdInventoryStockConsume: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.consume";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                /** @description Decimal string. */
+                quantity?: string;
+                unit?: string;
+                portions?: number;
+                reason?: string;
+            };
+        };
+        CmdInventoryStockAdjust: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.adjust";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                /** @description Decimal string. */
+                quantity?: string;
+                portions?: number;
+            };
+        };
+        CmdInventoryStockSetLevel: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.set_level";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                /** @enum {string} */
+                level: "full" | "most" | "half" | "low" | "almost_out";
+            };
+        };
+        CmdInventoryStockMarkLow: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.mark_low";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+            };
+        };
+        CmdInventoryStockUnmarkLow: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.unmark_low";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+            };
+        };
+        CmdInventoryStockMove: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.move";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                /** Format: uuid */
+                locationId: string;
+                /** Format: date */
+                on?: string;
+            };
+        };
+        CmdInventoryStockSplit: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.split";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                parts: components["schemas"]["StockSplitPart"][];
+                /** Format: uuid */
+                locationId?: string;
+                /** Format: date */
+                on?: string;
+            };
+        };
+        CmdInventoryStockOpen: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.open";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                /** Format: date */
+                on?: string;
+            };
+        };
+        CmdInventoryStockThaw: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.thaw";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                /** Format: uuid */
+                locationId: string;
+                /** Format: date */
+                on?: string;
+            };
+        };
+        CmdInventoryStockFreeze: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.freeze";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                /** Format: uuid */
+                locationId: string;
+                /** Format: date */
+                on?: string;
+            };
+        };
+        CmdInventoryStockDiscard: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.discard";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                /** @enum {string} */
+                reason: "expired" | "spoiled" | "unwanted" | "mistake" | "other";
+            };
+        };
+        CmdInventoryStockUpdate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "inventory.stock.update";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                eventId: string;
+                /** Format: date */
+                expiresOn?: string | null;
+                /** @enum {string|null} */
+                expiryKind?: "use_by" | "best_before" | null;
+                note?: string | null;
+                amount?: {
+                    /** @enum {string} */
+                    amountKind: "exact" | "portions" | "level";
+                    /** @description Decimal string. */
+                    quantity?: string;
+                    unit?: string;
+                    portions?: number;
+                    /** @enum {string} */
+                    level?: "full" | "most" | "half" | "low" | "almost_out";
+                };
+            };
+        };
+        StockSplitPart: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            eventId: string;
+            /** @description Decimal string. */
+            quantity?: string;
+            portions?: number;
+        };
+        /** @description Days a food keeps, by where it is and what was done to it. Absent = unknown. */
+        ShelfLife: {
+            fridge?: number;
+            freezer?: number;
+            pantry?: number;
+            opened_fridge?: number;
+            thawed_fridge?: number;
+        };
+        FoodRule: {
+            /** @enum {string} */
+            subjectKind: "ingredient" | "category";
+            /** Format: uuid */
+            subjectId: string;
+            /**
+             * Format: uuid
+             * @description Absent on a Stockpot default.
+             */
+            householdId?: string;
+            shelfLife: components["schemas"]["ShelfLife"];
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        FoodRules: {
+            rules: components["schemas"]["FoodRule"][];
+        };
+        FoodRuleInput: {
+            shelfLife: components["schemas"]["ShelfLife"];
+        };
+        AdminFoodRule: components["schemas"]["FoodRule"] & {
+            householdName: string;
+        };
+        AdminFoodRules: {
+            defaults: components["schemas"]["FoodRule"][];
+            overrides: components["schemas"]["AdminFoodRule"][];
         };
         CommandBatch: {
             /**
@@ -3004,6 +3405,96 @@ export interface operations {
                 };
                 content: {
                     "text/event-stream": string;
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    listFoodRules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Defaults (no householdId) first, then this household's overrides */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FoodRules"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    putFoodRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subjectKind: "ingredient" | "category";
+                subjectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["FoodRuleInput"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    deleteFoodRule: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                subjectKind: "ingredient" | "category";
+                subjectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed (or there was none) */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getAdminFoodRules: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Rules */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminFoodRules"];
                 };
             };
             default: components["responses"]["Problem"];
