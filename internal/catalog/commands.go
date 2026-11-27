@@ -120,6 +120,12 @@ func Register(r *commands.Registry, res Resolver) {
 	commands.Register(r, "catalog.ingredient.create", h.ingredientCreate)
 }
 
+// CreateProduct is the catalog.product.create handler, for commands that
+// create a product as part of their own work (stock add by name).
+func CreateProduct(res Resolver) commands.Handler[ProductCreate] {
+	return (&handlers{res: res}).productCreate
+}
+
 type handlers struct{ res Resolver }
 
 // sortOK keeps sort inside the spec's bound (and well inside int4).

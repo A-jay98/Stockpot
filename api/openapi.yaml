@@ -38,6 +38,8 @@ tags:
     description: LLM gateway administration (providers, keys, quota, usage).
   - name: sync
     description: Offline sync engine - commands, pulls and change events.
+  - name: inventory
+    description: Shelf-life (food) rules behind expiry estimates.
 paths:
   /health:
     get:
@@ -1147,6 +1149,76 @@ paths:
                 type: string
         default:
           $ref: "#/components/responses/Problem"
+  /v1/food-rules:
+    get:
+      operationId: listFoodRules
+      summary: Stockpot's default shelf-life rules and the household's overrides
+      tags: [inventory]
+      x-roles: [user]
+      responses:
+        "200":
+          description: Defaults (no householdId) first, then this household's overrides
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FoodRules"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/food-rules/{subjectKind}/{subjectId}:
+    parameters:
+      - name: subjectKind
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [ingredient, category]
+      - name: subjectId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      operationId: putFoodRule
+      summary: Override the shelf life of an ingredient or category for this household
+      tags: [inventory]
+      x-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FoodRuleInput"
+      responses:
+        "204":
+          description: Saved
+        default:
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: deleteFoodRule
+      summary: Remove the household's override, back to the Stockpot default
+      tags: [inventory]
+      x-roles: [user]
+      responses:
+        "204":
+          description: Removed (or there was none)
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/food-rules:
+    get:
+      operationId: getAdminFoodRules
+      summary: Every default rule and every household override (read-only)
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: Rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminFoodRules"
+        default:
+          $ref: "#/components/responses/Problem"
 components:
   headers:
     SetCookie:
@@ -2193,6 +2265,19 @@ components:
         - $ref: "#/components/schemas/CmdCatalogLocationUpdate"
         - $ref: "#/components/schemas/CmdCatalogLocationDelete"
         - $ref: "#/components/schemas/CmdCatalogIngredientCreate"
+        - $ref: "#/components/schemas/CmdInventoryStockAdd"
+        - $ref: "#/components/schemas/CmdInventoryStockConsume"
+        - $ref: "#/components/schemas/CmdInventoryStockAdjust"
+        - $ref: "#/components/schemas/CmdInventoryStockSetLevel"
+        - $ref: "#/components/schemas/CmdInventoryStockMarkLow"
+        - $ref: "#/components/schemas/CmdInventoryStockUnmarkLow"
+        - $ref: "#/components/schemas/CmdInventoryStockMove"
+        - $ref: "#/components/schemas/CmdInventoryStockSplit"
+        - $ref: "#/components/schemas/CmdInventoryStockOpen"
+        - $ref: "#/components/schemas/CmdInventoryStockThaw"
+        - $ref: "#/components/schemas/CmdInventoryStockFreeze"
+        - $ref: "#/components/schemas/CmdInventoryStockDiscard"
+        - $ref: "#/components/schemas/CmdInventoryStockUpdate"
       discriminator:
         propertyName: type
         mapping:
@@ -2207,6 +2292,19 @@ components:
           catalog.location.update: "#/components/schemas/CmdCatalogLocationUpdate"
           catalog.location.delete: "#/components/schemas/CmdCatalogLocationDelete"
           catalog.ingredient.create: "#/components/schemas/CmdCatalogIngredientCreate"
+          inventory.stock.add: "#/components/schemas/CmdInventoryStockAdd"
+          inventory.stock.consume: "#/components/schemas/CmdInventoryStockConsume"
+          inventory.stock.adjust: "#/components/schemas/CmdInventoryStockAdjust"
+          inventory.stock.set_level: "#/components/schemas/CmdInventoryStockSetLevel"
+          inventory.stock.mark_low: "#/components/schemas/CmdInventoryStockMarkLow"
+          inventory.stock.unmark_low: "#/components/schemas/CmdInventoryStockUnmarkLow"
+          inventory.stock.move: "#/components/schemas/CmdInventoryStockMove"
+          inventory.stock.split: "#/components/schemas/CmdInventoryStockSplit"
+          inventory.stock.open: "#/components/schemas/CmdInventoryStockOpen"
+          inventory.stock.thaw: "#/components/schemas/CmdInventoryStockThaw"
+          inventory.stock.freeze: "#/components/schemas/CmdInventoryStockFreeze"
+          inventory.stock.discard: "#/components/schemas/CmdInventoryStockDiscard"
+          inventory.stock.update: "#/components/schemas/CmdInventoryStockUpdate"
     CmdCatalogProductCreate:
       type: object
       required: [id, type, payload, clientTime]
@@ -2635,6 +2733,577 @@ components:
                 items:
                   type: string
                 maxItems: 30
+    CmdInventoryStockAdd:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.add]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId, locationId, amountKind, source]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            productId:
+              type: string
+              format: uuid
+            newProduct:
+              type: object
+              additionalProperties: false
+              required: [id, name]
+              properties:
+                id:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                brand:
+                  type: string
+                  maxLength: 100
+                  nullable: true
+                ingredientId:
+                  type: string
+                  format: uuid
+                  nullable: true
+                categoryId:
+                  type: string
+                  format: uuid
+                  nullable: true
+            locationId:
+              type: string
+              format: uuid
+            amountKind:
+              type: string
+              enum: [exact, portions, level]
+            quantity:
+              type: string
+              pattern: '^[0-9]+(\.[0-9]+)?$'
+              description: "Decimal string."
+            unit:
+              type: string
+              maxLength: 16
+            portions:
+              type: integer
+              minimum: 0
+              maximum: 100000
+            level:
+              type: string
+              enum: [full, most, half, low, almost_out]
+            expiresOn:
+              type: string
+              format: date
+            expiryKind:
+              type: string
+              enum: [use_by, best_before]
+            openedOn:
+              type: string
+              format: date
+            source:
+              type: string
+              enum: [manual, shopping, capture, cook]
+            storeId:
+              type: string
+              format: uuid
+            note:
+              type: string
+              maxLength: 1000
+            on:
+              type: string
+              format: date
+    CmdInventoryStockConsume:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.consume]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            quantity:
+              type: string
+              pattern: '^[0-9]+(\.[0-9]+)?$'
+              description: "Decimal string."
+            unit:
+              type: string
+              maxLength: 16
+            portions:
+              type: integer
+              minimum: 1
+              maximum: 100000
+            reason:
+              type: string
+              maxLength: 200
+    CmdInventoryStockAdjust:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.adjust]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            quantity:
+              type: string
+              pattern: '^[0-9]+(\.[0-9]+)?$'
+              description: "Decimal string."
+            portions:
+              type: integer
+              minimum: 0
+              maximum: 100000
+    CmdInventoryStockSetLevel:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.set_level]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId, level]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            level:
+              type: string
+              enum: [full, most, half, low, almost_out]
+    CmdInventoryStockMarkLow:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.mark_low]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+    CmdInventoryStockUnmarkLow:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.unmark_low]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+    CmdInventoryStockMove:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.move]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId, locationId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            locationId:
+              type: string
+              format: uuid
+            on:
+              type: string
+              format: date
+    CmdInventoryStockSplit:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.split]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId, parts]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            parts:
+              type: array
+              minItems: 1
+              maxItems: 50
+              items:
+                $ref: "#/components/schemas/StockSplitPart"
+            locationId:
+              type: string
+              format: uuid
+            on:
+              type: string
+              format: date
+    CmdInventoryStockOpen:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.open]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            on:
+              type: string
+              format: date
+    CmdInventoryStockThaw:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.thaw]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId, locationId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            locationId:
+              type: string
+              format: uuid
+            on:
+              type: string
+              format: date
+    CmdInventoryStockFreeze:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.freeze]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId, locationId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            locationId:
+              type: string
+              format: uuid
+            on:
+              type: string
+              format: date
+    CmdInventoryStockDiscard:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.discard]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId, reason]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            reason:
+              type: string
+              enum: [expired, spoiled, unwanted, mistake, other]
+    CmdInventoryStockUpdate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [inventory.stock.update]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, eventId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            eventId:
+              type: string
+              format: uuid
+            expiresOn:
+              type: string
+              format: date
+              nullable: true
+            expiryKind:
+              type: string
+              enum: [use_by, best_before]
+              nullable: true
+            note:
+              type: string
+              maxLength: 1000
+              nullable: true
+            amount:
+              type: object
+              additionalProperties: false
+              required: [amountKind]
+              properties:
+                amountKind:
+                  type: string
+                  enum: [exact, portions, level]
+                quantity:
+                  type: string
+                  pattern: '^[0-9]+(\.[0-9]+)?$'
+                  description: "Decimal string."
+                unit:
+                  type: string
+                  maxLength: 16
+                portions:
+                  type: integer
+                  minimum: 0
+                  maximum: 100000
+                level:
+                  type: string
+                  enum: [full, most, half, low, almost_out]
+    StockSplitPart:
+      type: object
+      required: [id, eventId]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        quantity:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)?$'
+          description: "Decimal string."
+        portions:
+          type: integer
+          minimum: 1
+          maximum: 100000
+    ShelfLife:
+      type: object
+      description: Days a food keeps, by where it is and what was done to it. Absent = unknown.
+      additionalProperties: false
+      properties:
+        fridge: {type: integer, minimum: 1, maximum: 3650}
+        freezer: {type: integer, minimum: 1, maximum: 3650}
+        pantry: {type: integer, minimum: 1, maximum: 3650}
+        opened_fridge: {type: integer, minimum: 1, maximum: 3650}
+        thawed_fridge: {type: integer, minimum: 1, maximum: 3650}
+    FoodRule:
+      type: object
+      required: [subjectKind, subjectId, shelfLife, updatedAt]
+      properties:
+        subjectKind:
+          type: string
+          enum: [ingredient, category]
+        subjectId:
+          type: string
+          format: uuid
+        householdId:
+          type: string
+          format: uuid
+          description: Absent on a Stockpot default.
+        shelfLife:
+          $ref: "#/components/schemas/ShelfLife"
+        updatedAt:
+          type: string
+          format: date-time
+    FoodRules:
+      type: object
+      required: [rules]
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/FoodRule"
+    FoodRuleInput:
+      type: object
+      required: [shelfLife]
+      additionalProperties: false
+      properties:
+        shelfLife:
+          $ref: "#/components/schemas/ShelfLife"
+    AdminFoodRule:
+      allOf:
+        - $ref: "#/components/schemas/FoodRule"
+        - type: object
+          required: [householdName]
+          properties:
+            householdName:
+              type: string
+    AdminFoodRules:
+      type: object
+      required: [defaults, overrides]
+      properties:
+        defaults:
+          type: array
+          items:
+            $ref: "#/components/schemas/FoodRule"
+        overrides:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminFoodRule"
     CommandBatch:
       type: object
       required: [householdId, commands]

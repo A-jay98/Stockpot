@@ -33,19 +33,22 @@ type Deps struct {
 	Sync     Syncer
 	// Backups serves /api/v1/admin/backups; nil answers 503.
 	Backups BackupAdmin
+	// FoodRules serves /api/v1/food-rules and the admin view.
+	FoodRules FoodRuleService
 }
 
 // Server implements StrictServerInterface. Handlers live in one file per
 // feature area (admin.go, identity.go, …).
 type Server struct {
-	checks   map[string]Pinger
-	admin    *admin.Service
-	identity *identity.Service
-	llm      LLMGateway
-	commands CommandApplier
-	sync     Syncer
-	backups  BackupAdmin
-	now      func() time.Time
+	checks    map[string]Pinger
+	admin     *admin.Service
+	identity  *identity.Service
+	llm       LLMGateway
+	commands  CommandApplier
+	sync      Syncer
+	backups   BackupAdmin
+	foodRules FoodRuleService
+	now       func() time.Time
 }
 
 var _ StrictServerInterface = (*Server)(nil)
@@ -54,7 +57,7 @@ var _ StrictServerInterface = (*Server)(nil)
 func NewServer(d Deps) *Server {
 	return &Server{
 		checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM,
-		commands: d.Commands, sync: d.Sync, backups: d.Backups, now: time.Now,
+		commands: d.Commands, sync: d.Sync, backups: d.Backups, foodRules: d.FoodRules, now: time.Now,
 	}
 }
 

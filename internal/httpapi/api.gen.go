@@ -108,6 +108,24 @@ func (e AdminBackupsTodayLastStatus) Valid() bool {
 	}
 }
 
+// Defines values for AdminFoodRuleSubjectKind.
+const (
+	AdminFoodRuleSubjectKindCategory   AdminFoodRuleSubjectKind = "category"
+	AdminFoodRuleSubjectKindIngredient AdminFoodRuleSubjectKind = "ingredient"
+)
+
+// Valid indicates whether the value is a known member of the AdminFoodRuleSubjectKind enum.
+func (e AdminFoodRuleSubjectKind) Valid() bool {
+	switch e {
+	case AdminFoodRuleSubjectKindCategory:
+		return true
+	case AdminFoodRuleSubjectKindIngredient:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AdminJobState.
 const (
 	AdminJobStateAvailable AdminJobState = "available"
@@ -489,6 +507,411 @@ func (e CmdCatalogStoreUpdateType) Valid() bool {
 	}
 }
 
+// Defines values for CmdInventoryStockAddPayloadAmountKind.
+const (
+	CmdInventoryStockAddPayloadAmountKindExact    CmdInventoryStockAddPayloadAmountKind = "exact"
+	CmdInventoryStockAddPayloadAmountKindLevel    CmdInventoryStockAddPayloadAmountKind = "level"
+	CmdInventoryStockAddPayloadAmountKindPortions CmdInventoryStockAddPayloadAmountKind = "portions"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockAddPayloadAmountKind enum.
+func (e CmdInventoryStockAddPayloadAmountKind) Valid() bool {
+	switch e {
+	case CmdInventoryStockAddPayloadAmountKindExact:
+		return true
+	case CmdInventoryStockAddPayloadAmountKindLevel:
+		return true
+	case CmdInventoryStockAddPayloadAmountKindPortions:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockAddPayloadExpiryKind.
+const (
+	CmdInventoryStockAddPayloadExpiryKindBestBefore CmdInventoryStockAddPayloadExpiryKind = "best_before"
+	CmdInventoryStockAddPayloadExpiryKindUseBy      CmdInventoryStockAddPayloadExpiryKind = "use_by"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockAddPayloadExpiryKind enum.
+func (e CmdInventoryStockAddPayloadExpiryKind) Valid() bool {
+	switch e {
+	case CmdInventoryStockAddPayloadExpiryKindBestBefore:
+		return true
+	case CmdInventoryStockAddPayloadExpiryKindUseBy:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockAddPayloadLevel.
+const (
+	CmdInventoryStockAddPayloadLevelAlmostOut CmdInventoryStockAddPayloadLevel = "almost_out"
+	CmdInventoryStockAddPayloadLevelFull      CmdInventoryStockAddPayloadLevel = "full"
+	CmdInventoryStockAddPayloadLevelHalf      CmdInventoryStockAddPayloadLevel = "half"
+	CmdInventoryStockAddPayloadLevelLow       CmdInventoryStockAddPayloadLevel = "low"
+	CmdInventoryStockAddPayloadLevelMost      CmdInventoryStockAddPayloadLevel = "most"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockAddPayloadLevel enum.
+func (e CmdInventoryStockAddPayloadLevel) Valid() bool {
+	switch e {
+	case CmdInventoryStockAddPayloadLevelAlmostOut:
+		return true
+	case CmdInventoryStockAddPayloadLevelFull:
+		return true
+	case CmdInventoryStockAddPayloadLevelHalf:
+		return true
+	case CmdInventoryStockAddPayloadLevelLow:
+		return true
+	case CmdInventoryStockAddPayloadLevelMost:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockAddPayloadSource.
+const (
+	CmdInventoryStockAddPayloadSourceCapture  CmdInventoryStockAddPayloadSource = "capture"
+	CmdInventoryStockAddPayloadSourceCook     CmdInventoryStockAddPayloadSource = "cook"
+	CmdInventoryStockAddPayloadSourceManual   CmdInventoryStockAddPayloadSource = "manual"
+	CmdInventoryStockAddPayloadSourceShopping CmdInventoryStockAddPayloadSource = "shopping"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockAddPayloadSource enum.
+func (e CmdInventoryStockAddPayloadSource) Valid() bool {
+	switch e {
+	case CmdInventoryStockAddPayloadSourceCapture:
+		return true
+	case CmdInventoryStockAddPayloadSourceCook:
+		return true
+	case CmdInventoryStockAddPayloadSourceManual:
+		return true
+	case CmdInventoryStockAddPayloadSourceShopping:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockAddType.
+const (
+	CmdInventoryStockAddTypeInventoryStockAdd CmdInventoryStockAddType = "inventory.stock.add"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockAddType enum.
+func (e CmdInventoryStockAddType) Valid() bool {
+	switch e {
+	case CmdInventoryStockAddTypeInventoryStockAdd:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockAdjustType.
+const (
+	CmdInventoryStockAdjustTypeInventoryStockAdjust CmdInventoryStockAdjustType = "inventory.stock.adjust"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockAdjustType enum.
+func (e CmdInventoryStockAdjustType) Valid() bool {
+	switch e {
+	case CmdInventoryStockAdjustTypeInventoryStockAdjust:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockConsumeType.
+const (
+	CmdInventoryStockConsumeTypeInventoryStockConsume CmdInventoryStockConsumeType = "inventory.stock.consume"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockConsumeType enum.
+func (e CmdInventoryStockConsumeType) Valid() bool {
+	switch e {
+	case CmdInventoryStockConsumeTypeInventoryStockConsume:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockDiscardPayloadReason.
+const (
+	CmdInventoryStockDiscardPayloadReasonExpired  CmdInventoryStockDiscardPayloadReason = "expired"
+	CmdInventoryStockDiscardPayloadReasonMistake  CmdInventoryStockDiscardPayloadReason = "mistake"
+	CmdInventoryStockDiscardPayloadReasonOther    CmdInventoryStockDiscardPayloadReason = "other"
+	CmdInventoryStockDiscardPayloadReasonSpoiled  CmdInventoryStockDiscardPayloadReason = "spoiled"
+	CmdInventoryStockDiscardPayloadReasonUnwanted CmdInventoryStockDiscardPayloadReason = "unwanted"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockDiscardPayloadReason enum.
+func (e CmdInventoryStockDiscardPayloadReason) Valid() bool {
+	switch e {
+	case CmdInventoryStockDiscardPayloadReasonExpired:
+		return true
+	case CmdInventoryStockDiscardPayloadReasonMistake:
+		return true
+	case CmdInventoryStockDiscardPayloadReasonOther:
+		return true
+	case CmdInventoryStockDiscardPayloadReasonSpoiled:
+		return true
+	case CmdInventoryStockDiscardPayloadReasonUnwanted:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockDiscardType.
+const (
+	CmdInventoryStockDiscardTypeInventoryStockDiscard CmdInventoryStockDiscardType = "inventory.stock.discard"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockDiscardType enum.
+func (e CmdInventoryStockDiscardType) Valid() bool {
+	switch e {
+	case CmdInventoryStockDiscardTypeInventoryStockDiscard:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockFreezeType.
+const (
+	CmdInventoryStockFreezeTypeInventoryStockFreeze CmdInventoryStockFreezeType = "inventory.stock.freeze"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockFreezeType enum.
+func (e CmdInventoryStockFreezeType) Valid() bool {
+	switch e {
+	case CmdInventoryStockFreezeTypeInventoryStockFreeze:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockMarkLowType.
+const (
+	CmdInventoryStockMarkLowTypeInventoryStockMarkLow CmdInventoryStockMarkLowType = "inventory.stock.mark_low"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockMarkLowType enum.
+func (e CmdInventoryStockMarkLowType) Valid() bool {
+	switch e {
+	case CmdInventoryStockMarkLowTypeInventoryStockMarkLow:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockMoveType.
+const (
+	CmdInventoryStockMoveTypeInventoryStockMove CmdInventoryStockMoveType = "inventory.stock.move"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockMoveType enum.
+func (e CmdInventoryStockMoveType) Valid() bool {
+	switch e {
+	case CmdInventoryStockMoveTypeInventoryStockMove:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockOpenType.
+const (
+	CmdInventoryStockOpenTypeInventoryStockOpen CmdInventoryStockOpenType = "inventory.stock.open"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockOpenType enum.
+func (e CmdInventoryStockOpenType) Valid() bool {
+	switch e {
+	case CmdInventoryStockOpenTypeInventoryStockOpen:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockSetLevelPayloadLevel.
+const (
+	CmdInventoryStockSetLevelPayloadLevelAlmostOut CmdInventoryStockSetLevelPayloadLevel = "almost_out"
+	CmdInventoryStockSetLevelPayloadLevelFull      CmdInventoryStockSetLevelPayloadLevel = "full"
+	CmdInventoryStockSetLevelPayloadLevelHalf      CmdInventoryStockSetLevelPayloadLevel = "half"
+	CmdInventoryStockSetLevelPayloadLevelLow       CmdInventoryStockSetLevelPayloadLevel = "low"
+	CmdInventoryStockSetLevelPayloadLevelMost      CmdInventoryStockSetLevelPayloadLevel = "most"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockSetLevelPayloadLevel enum.
+func (e CmdInventoryStockSetLevelPayloadLevel) Valid() bool {
+	switch e {
+	case CmdInventoryStockSetLevelPayloadLevelAlmostOut:
+		return true
+	case CmdInventoryStockSetLevelPayloadLevelFull:
+		return true
+	case CmdInventoryStockSetLevelPayloadLevelHalf:
+		return true
+	case CmdInventoryStockSetLevelPayloadLevelLow:
+		return true
+	case CmdInventoryStockSetLevelPayloadLevelMost:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockSetLevelType.
+const (
+	CmdInventoryStockSetLevelTypeInventoryStockSetLevel CmdInventoryStockSetLevelType = "inventory.stock.set_level"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockSetLevelType enum.
+func (e CmdInventoryStockSetLevelType) Valid() bool {
+	switch e {
+	case CmdInventoryStockSetLevelTypeInventoryStockSetLevel:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockSplitType.
+const (
+	CmdInventoryStockSplitTypeInventoryStockSplit CmdInventoryStockSplitType = "inventory.stock.split"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockSplitType enum.
+func (e CmdInventoryStockSplitType) Valid() bool {
+	switch e {
+	case CmdInventoryStockSplitTypeInventoryStockSplit:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockThawType.
+const (
+	CmdInventoryStockThawTypeInventoryStockThaw CmdInventoryStockThawType = "inventory.stock.thaw"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockThawType enum.
+func (e CmdInventoryStockThawType) Valid() bool {
+	switch e {
+	case CmdInventoryStockThawTypeInventoryStockThaw:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockUnmarkLowType.
+const (
+	CmdInventoryStockUnmarkLowTypeInventoryStockUnmarkLow CmdInventoryStockUnmarkLowType = "inventory.stock.unmark_low"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockUnmarkLowType enum.
+func (e CmdInventoryStockUnmarkLowType) Valid() bool {
+	switch e {
+	case CmdInventoryStockUnmarkLowTypeInventoryStockUnmarkLow:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockUpdatePayloadAmountAmountKind.
+const (
+	CmdInventoryStockUpdatePayloadAmountAmountKindExact    CmdInventoryStockUpdatePayloadAmountAmountKind = "exact"
+	CmdInventoryStockUpdatePayloadAmountAmountKindLevel    CmdInventoryStockUpdatePayloadAmountAmountKind = "level"
+	CmdInventoryStockUpdatePayloadAmountAmountKindPortions CmdInventoryStockUpdatePayloadAmountAmountKind = "portions"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockUpdatePayloadAmountAmountKind enum.
+func (e CmdInventoryStockUpdatePayloadAmountAmountKind) Valid() bool {
+	switch e {
+	case CmdInventoryStockUpdatePayloadAmountAmountKindExact:
+		return true
+	case CmdInventoryStockUpdatePayloadAmountAmountKindLevel:
+		return true
+	case CmdInventoryStockUpdatePayloadAmountAmountKindPortions:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockUpdatePayloadAmountLevel.
+const (
+	CmdInventoryStockUpdatePayloadAmountLevelAlmostOut CmdInventoryStockUpdatePayloadAmountLevel = "almost_out"
+	CmdInventoryStockUpdatePayloadAmountLevelFull      CmdInventoryStockUpdatePayloadAmountLevel = "full"
+	CmdInventoryStockUpdatePayloadAmountLevelHalf      CmdInventoryStockUpdatePayloadAmountLevel = "half"
+	CmdInventoryStockUpdatePayloadAmountLevelLow       CmdInventoryStockUpdatePayloadAmountLevel = "low"
+	CmdInventoryStockUpdatePayloadAmountLevelMost      CmdInventoryStockUpdatePayloadAmountLevel = "most"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockUpdatePayloadAmountLevel enum.
+func (e CmdInventoryStockUpdatePayloadAmountLevel) Valid() bool {
+	switch e {
+	case CmdInventoryStockUpdatePayloadAmountLevelAlmostOut:
+		return true
+	case CmdInventoryStockUpdatePayloadAmountLevelFull:
+		return true
+	case CmdInventoryStockUpdatePayloadAmountLevelHalf:
+		return true
+	case CmdInventoryStockUpdatePayloadAmountLevelLow:
+		return true
+	case CmdInventoryStockUpdatePayloadAmountLevelMost:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockUpdatePayloadExpiryKind.
+const (
+	CmdInventoryStockUpdatePayloadExpiryKindBestBefore CmdInventoryStockUpdatePayloadExpiryKind = "best_before"
+	CmdInventoryStockUpdatePayloadExpiryKindUseBy      CmdInventoryStockUpdatePayloadExpiryKind = "use_by"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockUpdatePayloadExpiryKind enum.
+func (e CmdInventoryStockUpdatePayloadExpiryKind) Valid() bool {
+	switch e {
+	case CmdInventoryStockUpdatePayloadExpiryKindBestBefore:
+		return true
+	case CmdInventoryStockUpdatePayloadExpiryKindUseBy:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdInventoryStockUpdateType.
+const (
+	CmdInventoryStockUpdateTypeInventoryStockUpdate CmdInventoryStockUpdateType = "inventory.stock.update"
+)
+
+// Valid indicates whether the value is a known member of the CmdInventoryStockUpdateType enum.
+func (e CmdInventoryStockUpdateType) Valid() bool {
+	switch e {
+	case CmdInventoryStockUpdateTypeInventoryStockUpdate:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CommandResultProblemCode.
 const (
 	CommandResultProblemCodeForbidden CommandResultProblemCode = "forbidden"
@@ -525,6 +948,24 @@ func (e CommandResultStatus) Valid() bool {
 	case CommandResultStatusDuplicate:
 		return true
 	case CommandResultStatusRejected:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for FoodRuleSubjectKind.
+const (
+	FoodRuleSubjectKindCategory   FoodRuleSubjectKind = "category"
+	FoodRuleSubjectKindIngredient FoodRuleSubjectKind = "ingredient"
+)
+
+// Valid indicates whether the value is a known member of the FoodRuleSubjectKind enum.
+func (e FoodRuleSubjectKind) Valid() bool {
+	switch e {
+	case FoodRuleSubjectKindCategory:
+		return true
+	case FoodRuleSubjectKindIngredient:
 		return true
 	default:
 		return false
@@ -819,6 +1260,28 @@ type AdminDatabaseStatus struct {
 	// SchemaCurrent False while migrations are pending.
 	SchemaCurrent bool   `json:"schemaCurrent"`
 	SizeBytes     *int64 `json:"sizeBytes,omitempty"`
+}
+
+// AdminFoodRule defines model for AdminFoodRule.
+type AdminFoodRule struct {
+	// HouseholdId Absent on a Stockpot default.
+	HouseholdId   *openapi_types.UUID `json:"householdId,omitempty"`
+	HouseholdName string              `json:"householdName"`
+
+	// ShelfLife Days a food keeps, by where it is and what was done to it. Absent = unknown.
+	ShelfLife   ShelfLife                `json:"shelfLife"`
+	SubjectId   openapi_types.UUID       `json:"subjectId"`
+	SubjectKind AdminFoodRuleSubjectKind `json:"subjectKind"`
+	UpdatedAt   time.Time                `json:"updatedAt"`
+}
+
+// AdminFoodRuleSubjectKind defines model for AdminFoodRule.SubjectKind.
+type AdminFoodRuleSubjectKind string
+
+// AdminFoodRules defines model for AdminFoodRules.
+type AdminFoodRules struct {
+	Defaults  []FoodRule      `json:"defaults"`
+	Overrides []AdminFoodRule `json:"overrides"`
 }
 
 // AdminJob defines model for AdminJob.
@@ -1198,6 +1661,272 @@ type CmdCatalogStoreUpdate struct {
 // CmdCatalogStoreUpdateType defines model for CmdCatalogStoreUpdate.Type.
 type CmdCatalogStoreUpdateType string
 
+// CmdInventoryStockAdd defines model for CmdInventoryStockAdd.
+type CmdInventoryStockAdd struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		AmountKind CmdInventoryStockAddPayloadAmountKind  `json:"amountKind"`
+		EventId    openapi_types.UUID                     `json:"eventId"`
+		ExpiresOn  *openapi_types.Date                    `json:"expiresOn,omitempty"`
+		ExpiryKind *CmdInventoryStockAddPayloadExpiryKind `json:"expiryKind,omitempty"`
+		Id         openapi_types.UUID                     `json:"id"`
+		Level      *CmdInventoryStockAddPayloadLevel      `json:"level,omitempty"`
+		LocationId openapi_types.UUID                     `json:"locationId"`
+		NewProduct *struct {
+			Brand        *string             `json:"brand,omitempty"`
+			CategoryId   *openapi_types.UUID `json:"categoryId,omitempty"`
+			Id           openapi_types.UUID  `json:"id"`
+			IngredientId *openapi_types.UUID `json:"ingredientId,omitempty"`
+			Name         string              `json:"name"`
+		} `json:"newProduct,omitempty"`
+		Note      *string             `json:"note,omitempty"`
+		On        *openapi_types.Date `json:"on,omitempty"`
+		OpenedOn  *openapi_types.Date `json:"openedOn,omitempty"`
+		Portions  *int                `json:"portions,omitempty"`
+		ProductId *openapi_types.UUID `json:"productId,omitempty"`
+
+		// Quantity Decimal string.
+		Quantity *string                           `json:"quantity,omitempty"`
+		Source   CmdInventoryStockAddPayloadSource `json:"source"`
+		StoreId  *openapi_types.UUID               `json:"storeId,omitempty"`
+		Unit     *string                           `json:"unit,omitempty"`
+	} `json:"payload"`
+	Type CmdInventoryStockAddType `json:"type"`
+}
+
+// CmdInventoryStockAddPayloadAmountKind defines model for CmdInventoryStockAdd.Payload.AmountKind.
+type CmdInventoryStockAddPayloadAmountKind string
+
+// CmdInventoryStockAddPayloadExpiryKind defines model for CmdInventoryStockAdd.Payload.ExpiryKind.
+type CmdInventoryStockAddPayloadExpiryKind string
+
+// CmdInventoryStockAddPayloadLevel defines model for CmdInventoryStockAdd.Payload.Level.
+type CmdInventoryStockAddPayloadLevel string
+
+// CmdInventoryStockAddPayloadSource defines model for CmdInventoryStockAdd.Payload.Source.
+type CmdInventoryStockAddPayloadSource string
+
+// CmdInventoryStockAddType defines model for CmdInventoryStockAdd.Type.
+type CmdInventoryStockAddType string
+
+// CmdInventoryStockAdjust defines model for CmdInventoryStockAdjust.
+type CmdInventoryStockAdjust struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId  openapi_types.UUID `json:"eventId"`
+		Id       openapi_types.UUID `json:"id"`
+		Portions *int               `json:"portions,omitempty"`
+
+		// Quantity Decimal string.
+		Quantity *string `json:"quantity,omitempty"`
+	} `json:"payload"`
+	Type CmdInventoryStockAdjustType `json:"type"`
+}
+
+// CmdInventoryStockAdjustType defines model for CmdInventoryStockAdjust.Type.
+type CmdInventoryStockAdjustType string
+
+// CmdInventoryStockConsume defines model for CmdInventoryStockConsume.
+type CmdInventoryStockConsume struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId  openapi_types.UUID `json:"eventId"`
+		Id       openapi_types.UUID `json:"id"`
+		Portions *int               `json:"portions,omitempty"`
+
+		// Quantity Decimal string.
+		Quantity *string `json:"quantity,omitempty"`
+		Reason   *string `json:"reason,omitempty"`
+		Unit     *string `json:"unit,omitempty"`
+	} `json:"payload"`
+	Type CmdInventoryStockConsumeType `json:"type"`
+}
+
+// CmdInventoryStockConsumeType defines model for CmdInventoryStockConsume.Type.
+type CmdInventoryStockConsumeType string
+
+// CmdInventoryStockDiscard defines model for CmdInventoryStockDiscard.
+type CmdInventoryStockDiscard struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId openapi_types.UUID                    `json:"eventId"`
+		Id      openapi_types.UUID                    `json:"id"`
+		Reason  CmdInventoryStockDiscardPayloadReason `json:"reason"`
+	} `json:"payload"`
+	Type CmdInventoryStockDiscardType `json:"type"`
+}
+
+// CmdInventoryStockDiscardPayloadReason defines model for CmdInventoryStockDiscard.Payload.Reason.
+type CmdInventoryStockDiscardPayloadReason string
+
+// CmdInventoryStockDiscardType defines model for CmdInventoryStockDiscard.Type.
+type CmdInventoryStockDiscardType string
+
+// CmdInventoryStockFreeze defines model for CmdInventoryStockFreeze.
+type CmdInventoryStockFreeze struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId    openapi_types.UUID  `json:"eventId"`
+		Id         openapi_types.UUID  `json:"id"`
+		LocationId openapi_types.UUID  `json:"locationId"`
+		On         *openapi_types.Date `json:"on,omitempty"`
+	} `json:"payload"`
+	Type CmdInventoryStockFreezeType `json:"type"`
+}
+
+// CmdInventoryStockFreezeType defines model for CmdInventoryStockFreeze.Type.
+type CmdInventoryStockFreezeType string
+
+// CmdInventoryStockMarkLow defines model for CmdInventoryStockMarkLow.
+type CmdInventoryStockMarkLow struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId openapi_types.UUID `json:"eventId"`
+		Id      openapi_types.UUID `json:"id"`
+	} `json:"payload"`
+	Type CmdInventoryStockMarkLowType `json:"type"`
+}
+
+// CmdInventoryStockMarkLowType defines model for CmdInventoryStockMarkLow.Type.
+type CmdInventoryStockMarkLowType string
+
+// CmdInventoryStockMove defines model for CmdInventoryStockMove.
+type CmdInventoryStockMove struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId    openapi_types.UUID  `json:"eventId"`
+		Id         openapi_types.UUID  `json:"id"`
+		LocationId openapi_types.UUID  `json:"locationId"`
+		On         *openapi_types.Date `json:"on,omitempty"`
+	} `json:"payload"`
+	Type CmdInventoryStockMoveType `json:"type"`
+}
+
+// CmdInventoryStockMoveType defines model for CmdInventoryStockMove.Type.
+type CmdInventoryStockMoveType string
+
+// CmdInventoryStockOpen defines model for CmdInventoryStockOpen.
+type CmdInventoryStockOpen struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId openapi_types.UUID  `json:"eventId"`
+		Id      openapi_types.UUID  `json:"id"`
+		On      *openapi_types.Date `json:"on,omitempty"`
+	} `json:"payload"`
+	Type CmdInventoryStockOpenType `json:"type"`
+}
+
+// CmdInventoryStockOpenType defines model for CmdInventoryStockOpen.Type.
+type CmdInventoryStockOpenType string
+
+// CmdInventoryStockSetLevel defines model for CmdInventoryStockSetLevel.
+type CmdInventoryStockSetLevel struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId openapi_types.UUID                    `json:"eventId"`
+		Id      openapi_types.UUID                    `json:"id"`
+		Level   CmdInventoryStockSetLevelPayloadLevel `json:"level"`
+	} `json:"payload"`
+	Type CmdInventoryStockSetLevelType `json:"type"`
+}
+
+// CmdInventoryStockSetLevelPayloadLevel defines model for CmdInventoryStockSetLevel.Payload.Level.
+type CmdInventoryStockSetLevelPayloadLevel string
+
+// CmdInventoryStockSetLevelType defines model for CmdInventoryStockSetLevel.Type.
+type CmdInventoryStockSetLevelType string
+
+// CmdInventoryStockSplit defines model for CmdInventoryStockSplit.
+type CmdInventoryStockSplit struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId    openapi_types.UUID  `json:"eventId"`
+		Id         openapi_types.UUID  `json:"id"`
+		LocationId *openapi_types.UUID `json:"locationId,omitempty"`
+		On         *openapi_types.Date `json:"on,omitempty"`
+		Parts      []StockSplitPart    `json:"parts"`
+	} `json:"payload"`
+	Type CmdInventoryStockSplitType `json:"type"`
+}
+
+// CmdInventoryStockSplitType defines model for CmdInventoryStockSplit.Type.
+type CmdInventoryStockSplitType string
+
+// CmdInventoryStockThaw defines model for CmdInventoryStockThaw.
+type CmdInventoryStockThaw struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId    openapi_types.UUID  `json:"eventId"`
+		Id         openapi_types.UUID  `json:"id"`
+		LocationId openapi_types.UUID  `json:"locationId"`
+		On         *openapi_types.Date `json:"on,omitempty"`
+	} `json:"payload"`
+	Type CmdInventoryStockThawType `json:"type"`
+}
+
+// CmdInventoryStockThawType defines model for CmdInventoryStockThaw.Type.
+type CmdInventoryStockThawType string
+
+// CmdInventoryStockUnmarkLow defines model for CmdInventoryStockUnmarkLow.
+type CmdInventoryStockUnmarkLow struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		EventId openapi_types.UUID `json:"eventId"`
+		Id      openapi_types.UUID `json:"id"`
+	} `json:"payload"`
+	Type CmdInventoryStockUnmarkLowType `json:"type"`
+}
+
+// CmdInventoryStockUnmarkLowType defines model for CmdInventoryStockUnmarkLow.Type.
+type CmdInventoryStockUnmarkLowType string
+
+// CmdInventoryStockUpdate defines model for CmdInventoryStockUpdate.
+type CmdInventoryStockUpdate struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Amount *struct {
+			AmountKind CmdInventoryStockUpdatePayloadAmountAmountKind `json:"amountKind"`
+			Level      *CmdInventoryStockUpdatePayloadAmountLevel     `json:"level,omitempty"`
+			Portions   *int                                           `json:"portions,omitempty"`
+
+			// Quantity Decimal string.
+			Quantity *string `json:"quantity,omitempty"`
+			Unit     *string `json:"unit,omitempty"`
+		} `json:"amount,omitempty"`
+		EventId    openapi_types.UUID                        `json:"eventId"`
+		ExpiresOn  *openapi_types.Date                       `json:"expiresOn,omitempty"`
+		ExpiryKind *CmdInventoryStockUpdatePayloadExpiryKind `json:"expiryKind,omitempty"`
+		Id         openapi_types.UUID                        `json:"id"`
+		Note       *string                                   `json:"note,omitempty"`
+	} `json:"payload"`
+	Type CmdInventoryStockUpdateType `json:"type"`
+}
+
+// CmdInventoryStockUpdatePayloadAmountAmountKind defines model for CmdInventoryStockUpdate.Payload.Amount.AmountKind.
+type CmdInventoryStockUpdatePayloadAmountAmountKind string
+
+// CmdInventoryStockUpdatePayloadAmountLevel defines model for CmdInventoryStockUpdate.Payload.Amount.Level.
+type CmdInventoryStockUpdatePayloadAmountLevel string
+
+// CmdInventoryStockUpdatePayloadExpiryKind defines model for CmdInventoryStockUpdate.Payload.ExpiryKind.
+type CmdInventoryStockUpdatePayloadExpiryKind string
+
+// CmdInventoryStockUpdateType defines model for CmdInventoryStockUpdate.Type.
+type CmdInventoryStockUpdateType string
+
 // Command One offline-capable write. `type` selects the payload schema. Commands
 // are applied in order, each exactly once per `id` (a client-generated
 // UUIDv7). Fields typed nullable clear the column when sent as null;
@@ -1235,6 +1964,32 @@ type CommandResultStatus string
 // CommandResults defines model for CommandResults.
 type CommandResults struct {
 	Results []CommandResult `json:"results"`
+}
+
+// FoodRule defines model for FoodRule.
+type FoodRule struct {
+	// HouseholdId Absent on a Stockpot default.
+	HouseholdId *openapi_types.UUID `json:"householdId,omitempty"`
+
+	// ShelfLife Days a food keeps, by where it is and what was done to it. Absent = unknown.
+	ShelfLife   ShelfLife           `json:"shelfLife"`
+	SubjectId   openapi_types.UUID  `json:"subjectId"`
+	SubjectKind FoodRuleSubjectKind `json:"subjectKind"`
+	UpdatedAt   time.Time           `json:"updatedAt"`
+}
+
+// FoodRuleSubjectKind defines model for FoodRule.SubjectKind.
+type FoodRuleSubjectKind string
+
+// FoodRuleInput defines model for FoodRuleInput.
+type FoodRuleInput struct {
+	// ShelfLife Days a food keeps, by where it is and what was done to it. Absent = unknown.
+	ShelfLife ShelfLife `json:"shelfLife"`
+}
+
+// FoodRules defines model for FoodRules.
+type FoodRules struct {
+	Rules []FoodRule `json:"rules"`
 }
 
 // Health defines model for Health.
@@ -1531,6 +2286,25 @@ type SetupStatus struct {
 	TokenConfigured bool `json:"tokenConfigured"`
 }
 
+// ShelfLife Days a food keeps, by where it is and what was done to it. Absent = unknown.
+type ShelfLife struct {
+	Freezer      *int `json:"freezer,omitempty"`
+	Fridge       *int `json:"fridge,omitempty"`
+	OpenedFridge *int `json:"opened_fridge,omitempty"`
+	Pantry       *int `json:"pantry,omitempty"`
+	ThawedFridge *int `json:"thawed_fridge,omitempty"`
+}
+
+// StockSplitPart defines model for StockSplitPart.
+type StockSplitPart struct {
+	EventId  openapi_types.UUID `json:"eventId"`
+	Id       openapi_types.UUID `json:"id"`
+	Portions *int               `json:"portions,omitempty"`
+
+	// Quantity Decimal string.
+	Quantity *string `json:"quantity,omitempty"`
+}
+
 // SyncPage defines model for SyncPage.
 type SyncPage struct {
 	// More Either cursor has more rows; pull again at once.
@@ -1696,6 +2470,9 @@ type FinishLoginJSONRequestBody = CeremonyFinish
 
 // ApplyCommandsJSONRequestBody defines body for ApplyCommands for application/json ContentType.
 type ApplyCommandsJSONRequestBody = CommandBatch
+
+// PutFoodRuleJSONRequestBody defines body for PutFoodRule for application/json ContentType.
+type PutFoodRuleJSONRequestBody = FoodRuleInput
 
 // CreateInviteJSONRequestBody defines body for CreateInvite for application/json ContentType.
 type CreateInviteJSONRequestBody = InviteCreate
@@ -2035,6 +2812,370 @@ func (t *Command) MergeCmdCatalogIngredientCreate(v CmdCatalogIngredientCreate) 
 	return err
 }
 
+// AsCmdInventoryStockAdd returns the union data inside the Command as a CmdInventoryStockAdd
+func (t Command) AsCmdInventoryStockAdd() (CmdInventoryStockAdd, error) {
+	var body CmdInventoryStockAdd
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockAdd overwrites any union data inside the Command as the provided CmdInventoryStockAdd
+func (t *Command) FromCmdInventoryStockAdd(v CmdInventoryStockAdd) error {
+	v.Type = "inventory.stock.add"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockAdd performs a merge with any union data inside the Command, using the provided CmdInventoryStockAdd
+func (t *Command) MergeCmdInventoryStockAdd(v CmdInventoryStockAdd) error {
+	v.Type = "inventory.stock.add"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockConsume returns the union data inside the Command as a CmdInventoryStockConsume
+func (t Command) AsCmdInventoryStockConsume() (CmdInventoryStockConsume, error) {
+	var body CmdInventoryStockConsume
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockConsume overwrites any union data inside the Command as the provided CmdInventoryStockConsume
+func (t *Command) FromCmdInventoryStockConsume(v CmdInventoryStockConsume) error {
+	v.Type = "inventory.stock.consume"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockConsume performs a merge with any union data inside the Command, using the provided CmdInventoryStockConsume
+func (t *Command) MergeCmdInventoryStockConsume(v CmdInventoryStockConsume) error {
+	v.Type = "inventory.stock.consume"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockAdjust returns the union data inside the Command as a CmdInventoryStockAdjust
+func (t Command) AsCmdInventoryStockAdjust() (CmdInventoryStockAdjust, error) {
+	var body CmdInventoryStockAdjust
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockAdjust overwrites any union data inside the Command as the provided CmdInventoryStockAdjust
+func (t *Command) FromCmdInventoryStockAdjust(v CmdInventoryStockAdjust) error {
+	v.Type = "inventory.stock.adjust"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockAdjust performs a merge with any union data inside the Command, using the provided CmdInventoryStockAdjust
+func (t *Command) MergeCmdInventoryStockAdjust(v CmdInventoryStockAdjust) error {
+	v.Type = "inventory.stock.adjust"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockSetLevel returns the union data inside the Command as a CmdInventoryStockSetLevel
+func (t Command) AsCmdInventoryStockSetLevel() (CmdInventoryStockSetLevel, error) {
+	var body CmdInventoryStockSetLevel
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockSetLevel overwrites any union data inside the Command as the provided CmdInventoryStockSetLevel
+func (t *Command) FromCmdInventoryStockSetLevel(v CmdInventoryStockSetLevel) error {
+	v.Type = "inventory.stock.set_level"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockSetLevel performs a merge with any union data inside the Command, using the provided CmdInventoryStockSetLevel
+func (t *Command) MergeCmdInventoryStockSetLevel(v CmdInventoryStockSetLevel) error {
+	v.Type = "inventory.stock.set_level"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockMarkLow returns the union data inside the Command as a CmdInventoryStockMarkLow
+func (t Command) AsCmdInventoryStockMarkLow() (CmdInventoryStockMarkLow, error) {
+	var body CmdInventoryStockMarkLow
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockMarkLow overwrites any union data inside the Command as the provided CmdInventoryStockMarkLow
+func (t *Command) FromCmdInventoryStockMarkLow(v CmdInventoryStockMarkLow) error {
+	v.Type = "inventory.stock.mark_low"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockMarkLow performs a merge with any union data inside the Command, using the provided CmdInventoryStockMarkLow
+func (t *Command) MergeCmdInventoryStockMarkLow(v CmdInventoryStockMarkLow) error {
+	v.Type = "inventory.stock.mark_low"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockUnmarkLow returns the union data inside the Command as a CmdInventoryStockUnmarkLow
+func (t Command) AsCmdInventoryStockUnmarkLow() (CmdInventoryStockUnmarkLow, error) {
+	var body CmdInventoryStockUnmarkLow
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockUnmarkLow overwrites any union data inside the Command as the provided CmdInventoryStockUnmarkLow
+func (t *Command) FromCmdInventoryStockUnmarkLow(v CmdInventoryStockUnmarkLow) error {
+	v.Type = "inventory.stock.unmark_low"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockUnmarkLow performs a merge with any union data inside the Command, using the provided CmdInventoryStockUnmarkLow
+func (t *Command) MergeCmdInventoryStockUnmarkLow(v CmdInventoryStockUnmarkLow) error {
+	v.Type = "inventory.stock.unmark_low"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockMove returns the union data inside the Command as a CmdInventoryStockMove
+func (t Command) AsCmdInventoryStockMove() (CmdInventoryStockMove, error) {
+	var body CmdInventoryStockMove
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockMove overwrites any union data inside the Command as the provided CmdInventoryStockMove
+func (t *Command) FromCmdInventoryStockMove(v CmdInventoryStockMove) error {
+	v.Type = "inventory.stock.move"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockMove performs a merge with any union data inside the Command, using the provided CmdInventoryStockMove
+func (t *Command) MergeCmdInventoryStockMove(v CmdInventoryStockMove) error {
+	v.Type = "inventory.stock.move"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockSplit returns the union data inside the Command as a CmdInventoryStockSplit
+func (t Command) AsCmdInventoryStockSplit() (CmdInventoryStockSplit, error) {
+	var body CmdInventoryStockSplit
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockSplit overwrites any union data inside the Command as the provided CmdInventoryStockSplit
+func (t *Command) FromCmdInventoryStockSplit(v CmdInventoryStockSplit) error {
+	v.Type = "inventory.stock.split"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockSplit performs a merge with any union data inside the Command, using the provided CmdInventoryStockSplit
+func (t *Command) MergeCmdInventoryStockSplit(v CmdInventoryStockSplit) error {
+	v.Type = "inventory.stock.split"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockOpen returns the union data inside the Command as a CmdInventoryStockOpen
+func (t Command) AsCmdInventoryStockOpen() (CmdInventoryStockOpen, error) {
+	var body CmdInventoryStockOpen
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockOpen overwrites any union data inside the Command as the provided CmdInventoryStockOpen
+func (t *Command) FromCmdInventoryStockOpen(v CmdInventoryStockOpen) error {
+	v.Type = "inventory.stock.open"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockOpen performs a merge with any union data inside the Command, using the provided CmdInventoryStockOpen
+func (t *Command) MergeCmdInventoryStockOpen(v CmdInventoryStockOpen) error {
+	v.Type = "inventory.stock.open"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockThaw returns the union data inside the Command as a CmdInventoryStockThaw
+func (t Command) AsCmdInventoryStockThaw() (CmdInventoryStockThaw, error) {
+	var body CmdInventoryStockThaw
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockThaw overwrites any union data inside the Command as the provided CmdInventoryStockThaw
+func (t *Command) FromCmdInventoryStockThaw(v CmdInventoryStockThaw) error {
+	v.Type = "inventory.stock.thaw"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockThaw performs a merge with any union data inside the Command, using the provided CmdInventoryStockThaw
+func (t *Command) MergeCmdInventoryStockThaw(v CmdInventoryStockThaw) error {
+	v.Type = "inventory.stock.thaw"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockFreeze returns the union data inside the Command as a CmdInventoryStockFreeze
+func (t Command) AsCmdInventoryStockFreeze() (CmdInventoryStockFreeze, error) {
+	var body CmdInventoryStockFreeze
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockFreeze overwrites any union data inside the Command as the provided CmdInventoryStockFreeze
+func (t *Command) FromCmdInventoryStockFreeze(v CmdInventoryStockFreeze) error {
+	v.Type = "inventory.stock.freeze"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockFreeze performs a merge with any union data inside the Command, using the provided CmdInventoryStockFreeze
+func (t *Command) MergeCmdInventoryStockFreeze(v CmdInventoryStockFreeze) error {
+	v.Type = "inventory.stock.freeze"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockDiscard returns the union data inside the Command as a CmdInventoryStockDiscard
+func (t Command) AsCmdInventoryStockDiscard() (CmdInventoryStockDiscard, error) {
+	var body CmdInventoryStockDiscard
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockDiscard overwrites any union data inside the Command as the provided CmdInventoryStockDiscard
+func (t *Command) FromCmdInventoryStockDiscard(v CmdInventoryStockDiscard) error {
+	v.Type = "inventory.stock.discard"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockDiscard performs a merge with any union data inside the Command, using the provided CmdInventoryStockDiscard
+func (t *Command) MergeCmdInventoryStockDiscard(v CmdInventoryStockDiscard) error {
+	v.Type = "inventory.stock.discard"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdInventoryStockUpdate returns the union data inside the Command as a CmdInventoryStockUpdate
+func (t Command) AsCmdInventoryStockUpdate() (CmdInventoryStockUpdate, error) {
+	var body CmdInventoryStockUpdate
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdInventoryStockUpdate overwrites any union data inside the Command as the provided CmdInventoryStockUpdate
+func (t *Command) FromCmdInventoryStockUpdate(v CmdInventoryStockUpdate) error {
+	v.Type = "inventory.stock.update"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdInventoryStockUpdate performs a merge with any union data inside the Command, using the provided CmdInventoryStockUpdate
+func (t *Command) MergeCmdInventoryStockUpdate(v CmdInventoryStockUpdate) error {
+	v.Type = "inventory.stock.update"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
 func (t Command) Discriminator() (string, error) {
 	var discriminator struct {
 		Discriminator string `json:"type"`
@@ -2071,6 +3212,32 @@ func (t Command) ValueByDiscriminator() (interface{}, error) {
 		return t.AsCmdCatalogStoreDelete()
 	case "catalog.store.update":
 		return t.AsCmdCatalogStoreUpdate()
+	case "inventory.stock.add":
+		return t.AsCmdInventoryStockAdd()
+	case "inventory.stock.adjust":
+		return t.AsCmdInventoryStockAdjust()
+	case "inventory.stock.consume":
+		return t.AsCmdInventoryStockConsume()
+	case "inventory.stock.discard":
+		return t.AsCmdInventoryStockDiscard()
+	case "inventory.stock.freeze":
+		return t.AsCmdInventoryStockFreeze()
+	case "inventory.stock.mark_low":
+		return t.AsCmdInventoryStockMarkLow()
+	case "inventory.stock.move":
+		return t.AsCmdInventoryStockMove()
+	case "inventory.stock.open":
+		return t.AsCmdInventoryStockOpen()
+	case "inventory.stock.set_level":
+		return t.AsCmdInventoryStockSetLevel()
+	case "inventory.stock.split":
+		return t.AsCmdInventoryStockSplit()
+	case "inventory.stock.thaw":
+		return t.AsCmdInventoryStockThaw()
+	case "inventory.stock.unmark_low":
+		return t.AsCmdInventoryStockUnmarkLow()
+	case "inventory.stock.update":
+		return t.AsCmdInventoryStockUpdate()
 	default:
 		return nil, errors.New("unknown discriminator value: " + discriminator)
 	}
@@ -2106,6 +3273,9 @@ type ServerInterface interface {
 	// Send a test message to the backup channel
 	// (POST /v1/admin/backups/test)
 	TestAdminBackupChannel(w http.ResponseWriter, r *http.Request)
+	// Every default rule and every household override (read-only)
+	// (GET /v1/admin/food-rules)
+	GetAdminFoodRules(w http.ResponseWriter, r *http.Request)
 	// Every household
 	// (GET /v1/admin/households)
 	AdminListHouseholds(w http.ResponseWriter, r *http.Request)
@@ -2178,6 +3348,15 @@ type ServerInterface interface {
 	// Apply a batch of offline commands
 	// (POST /v1/commands)
 	ApplyCommands(w http.ResponseWriter, r *http.Request)
+	// Stockpot's default shelf-life rules and the household's overrides
+	// (GET /v1/food-rules)
+	ListFoodRules(w http.ResponseWriter, r *http.Request)
+	// Remove the household's override, back to the Stockpot default
+	// (DELETE /v1/food-rules/{subjectKind}/{subjectId})
+	DeleteFoodRule(w http.ResponseWriter, r *http.Request, subjectKind string, subjectId openapi_types.UUID)
+	// Override the shelf life of an ingredient or category for this household
+	// (PUT /v1/food-rules/{subjectKind}/{subjectId})
+	PutFoodRule(w http.ResponseWriter, r *http.Request, subjectKind string, subjectId openapi_types.UUID)
 	// Invites of a household
 	// (GET /v1/invites)
 	ListInvites(w http.ResponseWriter, r *http.Request, params ListInvitesParams)
@@ -2283,6 +3462,12 @@ func (_ Unimplemented) RunAdminBackup(w http.ResponseWriter, r *http.Request) {
 // Send a test message to the backup channel
 // (POST /v1/admin/backups/test)
 func (_ Unimplemented) TestAdminBackupChannel(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Every default rule and every household override (read-only)
+// (GET /v1/admin/food-rules)
+func (_ Unimplemented) GetAdminFoodRules(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2427,6 +3612,24 @@ func (_ Unimplemented) Logout(w http.ResponseWriter, r *http.Request) {
 // Apply a batch of offline commands
 // (POST /v1/commands)
 func (_ Unimplemented) ApplyCommands(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Stockpot's default shelf-life rules and the household's overrides
+// (GET /v1/food-rules)
+func (_ Unimplemented) ListFoodRules(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Remove the household's override, back to the Stockpot default
+// (DELETE /v1/food-rules/{subjectKind}/{subjectId})
+func (_ Unimplemented) DeleteFoodRule(w http.ResponseWriter, r *http.Request, subjectKind string, subjectId openapi_types.UUID) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Override the shelf life of an ingredient or category for this household
+// (PUT /v1/food-rules/{subjectKind}/{subjectId})
+func (_ Unimplemented) PutFoodRule(w http.ResponseWriter, r *http.Request, subjectKind string, subjectId openapi_types.UUID) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2866,6 +4069,20 @@ func (siw *ServerInterfaceWrapper) TestAdminBackupChannel(w http.ResponseWriter,
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.TestAdminBackupChannel(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetAdminFoodRules operation middleware
+func (siw *ServerInterfaceWrapper) GetAdminFoodRules(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetAdminFoodRules(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -3549,6 +4766,90 @@ func (siw *ServerInterfaceWrapper) ApplyCommands(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// ListFoodRules operation middleware
+func (siw *ServerInterfaceWrapper) ListFoodRules(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListFoodRules(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteFoodRule operation middleware
+func (siw *ServerInterfaceWrapper) DeleteFoodRule(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "subjectKind" -------------
+	var subjectKind string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "subjectKind", chi.URLParam(r, "subjectKind"), &subjectKind, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "subjectKind", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "subjectId" -------------
+	var subjectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "subjectId", chi.URLParam(r, "subjectId"), &subjectId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "subjectId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteFoodRule(w, r, subjectKind, subjectId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutFoodRule operation middleware
+func (siw *ServerInterfaceWrapper) PutFoodRule(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "subjectKind" -------------
+	var subjectKind string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "subjectKind", chi.URLParam(r, "subjectKind"), &subjectKind, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "subjectKind", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "subjectId" -------------
+	var subjectId openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "subjectId", chi.URLParam(r, "subjectId"), &subjectId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid"})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "subjectId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutFoodRule(w, r, subjectKind, subjectId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListInvites operation middleware
 func (siw *ServerInterfaceWrapper) ListInvites(w http.ResponseWriter, r *http.Request) {
 
@@ -4102,6 +5403,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/v1/admin/backups/test", wrapper.TestAdminBackupChannel)
 	})
 	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/admin/food-rules", wrapper.GetAdminFoodRules)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/v1/admin/households", wrapper.AdminListHouseholds)
 	})
 	r.Group(func(r chi.Router) {
@@ -4172,6 +5476,15 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/v1/commands", wrapper.ApplyCommands)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/food-rules", wrapper.ListFoodRules)
+	})
+	r.Group(func(r chi.Router) {
+		r.Delete(options.BaseURL+"/v1/food-rules/{subjectKind}/{subjectId}", wrapper.DeleteFoodRule)
+	})
+	r.Group(func(r chi.Router) {
+		r.Put(options.BaseURL+"/v1/food-rules/{subjectKind}/{subjectId}", wrapper.PutFoodRule)
 	})
 	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/v1/invites", wrapper.ListInvites)
@@ -4458,6 +5771,44 @@ type TestAdminBackupChanneldefaultApplicationProblemPlusJSONResponse struct {
 }
 
 func (response TestAdminBackupChanneldefaultApplicationProblemPlusJSONResponse) VisitTestAdminBackupChannelResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetAdminFoodRulesRequestObject struct {
+}
+
+type GetAdminFoodRulesResponseObject interface {
+	VisitGetAdminFoodRulesResponse(w http.ResponseWriter) error
+}
+
+type GetAdminFoodRules200JSONResponse AdminFoodRules
+
+func (response GetAdminFoodRules200JSONResponse) VisitGetAdminFoodRulesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetAdminFoodRulesdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response GetAdminFoodRulesdefaultApplicationProblemPlusJSONResponse) VisitGetAdminFoodRulesResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -5389,6 +6740,113 @@ func (response ApplyCommandsdefaultApplicationProblemPlusJSONResponse) VisitAppl
 	return err
 }
 
+type ListFoodRulesRequestObject struct {
+}
+
+type ListFoodRulesResponseObject interface {
+	VisitListFoodRulesResponse(w http.ResponseWriter) error
+}
+
+type ListFoodRules200JSONResponse FoodRules
+
+func (response ListFoodRules200JSONResponse) VisitListFoodRulesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListFoodRulesdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response ListFoodRulesdefaultApplicationProblemPlusJSONResponse) VisitListFoodRulesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteFoodRuleRequestObject struct {
+	SubjectKind string             `json:"subjectKind"`
+	SubjectId   openapi_types.UUID `json:"subjectId"`
+}
+
+type DeleteFoodRuleResponseObject interface {
+	VisitDeleteFoodRuleResponse(w http.ResponseWriter) error
+}
+
+type DeleteFoodRule204Response struct {
+}
+
+func (response DeleteFoodRule204Response) VisitDeleteFoodRuleResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteFoodRuledefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response DeleteFoodRuledefaultApplicationProblemPlusJSONResponse) VisitDeleteFoodRuleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutFoodRuleRequestObject struct {
+	SubjectKind string             `json:"subjectKind"`
+	SubjectId   openapi_types.UUID `json:"subjectId"`
+	Body        *PutFoodRuleJSONRequestBody
+}
+
+type PutFoodRuleResponseObject interface {
+	VisitPutFoodRuleResponse(w http.ResponseWriter) error
+}
+
+type PutFoodRule204Response struct {
+}
+
+func (response PutFoodRule204Response) VisitPutFoodRuleResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type PutFoodRuledefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response PutFoodRuledefaultApplicationProblemPlusJSONResponse) VisitPutFoodRuleResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListInvitesRequestObject struct {
 	Params ListInvitesParams
 }
@@ -6271,6 +7729,9 @@ type StrictServerInterface interface {
 	// Send a test message to the backup channel
 	// (POST /v1/admin/backups/test)
 	TestAdminBackupChannel(ctx context.Context, request TestAdminBackupChannelRequestObject) (TestAdminBackupChannelResponseObject, error)
+	// Every default rule and every household override (read-only)
+	// (GET /v1/admin/food-rules)
+	GetAdminFoodRules(ctx context.Context, request GetAdminFoodRulesRequestObject) (GetAdminFoodRulesResponseObject, error)
 	// Every household
 	// (GET /v1/admin/households)
 	AdminListHouseholds(ctx context.Context, request AdminListHouseholdsRequestObject) (AdminListHouseholdsResponseObject, error)
@@ -6343,6 +7804,15 @@ type StrictServerInterface interface {
 	// Apply a batch of offline commands
 	// (POST /v1/commands)
 	ApplyCommands(ctx context.Context, request ApplyCommandsRequestObject) (ApplyCommandsResponseObject, error)
+	// Stockpot's default shelf-life rules and the household's overrides
+	// (GET /v1/food-rules)
+	ListFoodRules(ctx context.Context, request ListFoodRulesRequestObject) (ListFoodRulesResponseObject, error)
+	// Remove the household's override, back to the Stockpot default
+	// (DELETE /v1/food-rules/{subjectKind}/{subjectId})
+	DeleteFoodRule(ctx context.Context, request DeleteFoodRuleRequestObject) (DeleteFoodRuleResponseObject, error)
+	// Override the shelf life of an ingredient or category for this household
+	// (PUT /v1/food-rules/{subjectKind}/{subjectId})
+	PutFoodRule(ctx context.Context, request PutFoodRuleRequestObject) (PutFoodRuleResponseObject, error)
 	// Invites of a household
 	// (GET /v1/invites)
 	ListInvites(ctx context.Context, request ListInvitesRequestObject) (ListInvitesResponseObject, error)
@@ -6581,6 +8051,30 @@ func (sh *strictHandler) TestAdminBackupChannel(w http.ResponseWriter, r *http.R
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(TestAdminBackupChannelResponseObject); ok {
 		if err := validResponse.VisitTestAdminBackupChannelResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetAdminFoodRules operation middleware
+func (sh *strictHandler) GetAdminFoodRules(w http.ResponseWriter, r *http.Request) {
+	var request GetAdminFoodRulesRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetAdminFoodRules(ctx, request.(GetAdminFoodRulesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetAdminFoodRules")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetAdminFoodRulesResponseObject); ok {
+		if err := validResponse.VisitGetAdminFoodRulesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -7236,6 +8730,91 @@ func (sh *strictHandler) ApplyCommands(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ListFoodRules operation middleware
+func (sh *strictHandler) ListFoodRules(w http.ResponseWriter, r *http.Request) {
+	var request ListFoodRulesRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListFoodRules(ctx, request.(ListFoodRulesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListFoodRules")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListFoodRulesResponseObject); ok {
+		if err := validResponse.VisitListFoodRulesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteFoodRule operation middleware
+func (sh *strictHandler) DeleteFoodRule(w http.ResponseWriter, r *http.Request, subjectKind string, subjectId openapi_types.UUID) {
+	var request DeleteFoodRuleRequestObject
+
+	request.SubjectKind = subjectKind
+	request.SubjectId = subjectId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteFoodRule(ctx, request.(DeleteFoodRuleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteFoodRule")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteFoodRuleResponseObject); ok {
+		if err := validResponse.VisitDeleteFoodRuleResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutFoodRule operation middleware
+func (sh *strictHandler) PutFoodRule(w http.ResponseWriter, r *http.Request, subjectKind string, subjectId openapi_types.UUID) {
+	var request PutFoodRuleRequestObject
+
+	request.SubjectKind = subjectKind
+	request.SubjectId = subjectId
+
+	var body PutFoodRuleJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutFoodRule(ctx, request.(PutFoodRuleRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutFoodRule")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutFoodRuleResponseObject); ok {
+		if err := validResponse.VisitPutFoodRuleResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListInvites operation middleware
 func (sh *strictHandler) ListInvites(w http.ResponseWriter, r *http.Request, params ListInvitesParams) {
 	var request ListInvitesRequestObject
@@ -7849,184 +9428,207 @@ func (sh *strictHandler) GetSyncEvents(w http.ResponseWriter, r *http.Request) {
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"7H37c+M20uC/gtJt1cjf0rLnkezFU1tXjjPZcWJn5rNnNle3mrMgskUhJgEGAC1rpvy/f4UG+BJBibJl",
-	"Z5NNfpjYJolHd6PR7/4yCEWaCQ5cq8HRl8EcaAQSf7wEfSLENQPzSwQqlCzTTPDBkXmkiJAkTIBKRfQc",
-	"yOTq6q1Qel9pEV5nQl8pUIoJPiEhDjIaBAMVziGlZji9zGBwNFBaMh4P7u7ugkFGJU1Bu8mPo5Txk1wq",
-	"IdvTv8vorzmQEB+TmRQpLiGTcMNErkhGY3imyITDrbZjTMz0zHz7aw5yOQgGnKZmBXaMxtpSensGPNbz",
-	"wdFXz18ErbUGdnE/iOnpd+Z9HDajel6NyqJBMJDwa84kRIMjLXOozzATMqXavMf1168GwSBlnKV5Ojh6",
-	"Xk7HuIYYZDXfGUuZLudb2UaCD+tzRDCjeaIHR88PDwOzJzvBV/jb+ukuLeZOo47dqfJ5r03mOYKjDcaP",
-	"CmTnJLl9+JAZ7szHKhNcAdLUeymmCaTmx1BwDRzBSbMsYSE1pHWQ2Tf++osydPalNtdfJMwGR4P/dVAd",
-	"lwP7VB0U4+KMTUp9I6WQZHjx/Qn55tVXfyNuAhKJME+B672BgTeLOUSnfM3CtlvQOfjWYqchjL/G0+Kw",
-	"6I4nYYooMCTU5AD7FQvwzehePqh4xR3O7FZSnuTjMASl3tMYR8qkyEBqZtHCNKTNH9btrTbcBYRCRgaC",
-	"DvNUSro0v1cH38ds6jT1Lzfrp3IQMf0FQj0ojl1jqtbao1wigs5VbaLyLAWDucgVzEUSWTrfQLGBYRw+",
-	"/tAemGWenQWDFPRcRN5HeLx8DwwwQOlT/2dS5NpzA5xTHc4hIviYZFRrkPw1gTTTS7KYAydc6DnjMUnt",
-	"myPfdlWd02wEjtJU5x2A1iyFxiAR1bCPf/WMZJjLcezOmfdpzyWZV3+iduoNZIbf2/VUEC8xVgA6KNig",
-	"22xQJ7H6wrsJNo+YfnPjNtckVxpa9H0ZwC1Ns8Ryc60Zj0d5ZkDm2yQNtegLEHy3AyLBgM40eO7zS04z",
-	"NRea4HPkTuGc8hjIkE4VcF1QFIe9kRlnCjMhYc1A9oUeIz31AV1/2LY7D5rKGLqGsg8/4J99j7c4L2so",
-	"2RFUY7rawtYT6e6ug4rkH/cy+JaG13l2kXPP0cqyf4JU7ni14B1BAhp+EtqPDjBygvfJjHGm5hAd6/7s",
-	"jfWjn4xK3cFOM5lziNoH7AKMdGLEBppIoNGSSEjFDURkKCTRkkFEtHB/3CNMK/IBEoglTUkKStEYVO0m",
-	"mAqRAOWDUmKogbDHGVPsM3y71BYBfd7XVOrtQFndOcCNxPyvgcw5Nw+DgbgeBIMZZQnUKb12xiSLY8vv",
-	"io/NLqPcfGBkcp7TxPOl97y5sWoXQ7WbOiQKtJY43EDMqk3KhmNySNoPpkIbmZ13sfcINGWJn7O14IjQ",
-	"40JfhYLPWJxLBIo9CBth4obz7S2c0y6eWJupRdnfCk20uAYemBtDExYRyiNCYyDXsCRUAqFJYmRkP/0C",
-	"p9PEN/CHORDO4rlOlqRAv5G2BSfDWULj0dTiYc8/7pwa4ZNlrCmtNN/4YBbuf3oNkPnPuOGLFzm3p6G5",
-	"5uPirmSJvUQbC5/NzFL7nR9ZX3sbMAa8WT5NWIhQHnKhiYJQgt7zCowy56o90k+wAKXJjEmF2Ol/c1QM",
-	"3XNxFHfkymQOl+ZpQN6+PTo/9y7VPP8seA/RsCCdBoGWV2w5jsNlDeEr1BGUJ9cBatPR/yAiuvQcBXxK",
-	"5kATPSczYSUycQPyhsFihKylzhZqpN+mv4Qq/abzdjNP311vw5DNF5cPYMpK08SD1Td2DwGZ5ppwQVSO",
-	"et8sT4g9n4RxBIOZn7z8msxFLpW99fCv2lCgzDmxc3tPcyfe7aI60fUd1XRKFVT7bskeH1Dk6nkPNmWV",
-	"Hh+Y7fFw2dByeZ5O7VMJNJybrfgpQLIbkNX62qPjC23hqX5x45k9yaX0cpLvaaLAcauUxVZfUsizM+CR",
-	"0W78MsdW8sMK9qpd1+GzutZOnP4gph5Eylj5GeUvYvrM7ChGs5EiVBGlhTR6tUGo1kbz9gPPPdxO7gkl",
-	"0C0/wat7S8n9BzG1zMHDfmeM04R9fpDo203S14z7hYSU3h5biHXKxkxIppf+p7/mkPulo1L221b+hL6g",
-	"vMSXUfmLm4ho304NYPskTgRQsYBiXxWpNQFVg0pgqbikhzotNYHg1rnuiJQ3x8o52QKCa89Gl961AhCq",
-	"GztfFVLb696ZamvYxOPqtCXd1K5TekNZ4nhbSHkISSGfpJnRY83PEVMhlRH+7Lgsmra0XLovq0u5Unt8",
-	"V7J1b5ydl+LICrLLxfivF2tROaFZz5PvPuirNKJScM8bwk1UDhLUNtOJkDMRv+Fa+iChtWWwNIqYuRxo",
-	"8r72gvWPtAbtzRITuLFa30aqPBPxGb5s+KWK72Hp2t5e28sotsZUZXdn1xs4UK7DwVkBjeJQRDDNY3Qj",
-	"zsQgGCyo5GsU1mqgnfGCkjAelyG8c4K+R/+vLAY9NSunYtwFg2nOEn2sO/Ty1Pk22yYFJ/r2mnNFTi5l",
-	"khev5j2PwC9iuuaA9RqiKbv9IKYkFDnXJANJLoykS/BKfU3qBumcl4yhJqpWiEmStB+JFFzUfCPiS8av",
-	"2/LkGeOgiJ4zRTIpjJpDFlJoIFqgMnO5VBpSkohYEW2WFKApJJIiyyAiOY9AkkTQqK0Kund6gmohmdbA",
-	"78Nbi0+DckofPd/D4Jdn5sklhIJHfVF+U+kuq+bSBKgComlMhnKcHx6+DDn+D/aIkGQ8iOBmPPDaDwx/",
-	"YTzuTbwrACrWVJ6u6gg2TYfNDddOXCeDuLQeI483tIg5WIXDP2mSA8kVRE5L44JblzPqMKVzZiakM/8o",
-	"655pDONhD0xdgs9+RW5wxnKG10ToOcgFU9ae5VZK0MfeZZK+hmXTVSYL6/eIZtlVIuKriC6VD3mFdrHx",
-	"wDpY/mjevwsGAnfg0QF/Nlwik2DAFFh7DE+WhIYhGNXO7lfVjV+eS0KFImvIeQpP+qDmBvPbTBAlnkVJ",
-	"pmHfLOS1AzjyiQK2EggHw/Ak6Fzyhg+4BmbreNzykOIn3y57+TlwaR6Tz2wGoWY34NbeQYQr58oQRaUc",
-	"IUCbZFqCq6DOTefoR0crBVIMaFDMsCdVWhEaI0A6xQw31BlTeieiRnHEN2qK60UJN8xH61puLawDMT/B",
-	"wqIkIGLmYlVwnGeKGMCTIc+TxBxuCTNkKtPlyms3NGERmoHQEGfetxqEkZFbrBKX0bmJj8r6cGiSvJsN",
-	"jv61Hnz49l3gMdFJcbMdlRff9CTz8gz3x/Xb4pNzSKcg1ZxlG1Fem6YNsk91oHWhve0LongOrVJpbaJe",
-	"NoTc6kIkG6XBy+rNuzsPXk9AQir48nt0rno8YO55T0d8KCEyFwNNNilnbcPe5D26P36E5Uk5yoQwjr7T",
-	"Hy7f/WT4UUqGEy3Mb8O9yZ5XQiycciuiHp1CghyNEg4LklGlrmEZEBjFIzIesPdzwcFKILW4x68PN2lW",
-	"NQg19v9pDbQvjdTxYGDDbcYkqG0OUu1W7Y+cn2F6nOs592LoRAJyl3d25AkZApciwZA+IuSY+z66sBpx",
-	"9Y1iMd9nfM/5FpisED7mwynjVC7JjEESKWJEsq9f5TLZG415mwDWoafYfh12Xjyl0QnVNBHxKY8lRAy4",
-	"xo1CN+RmNFGwqgWEifn0w1Yqfu+YhaXRPLZcEE0YVbDBJJrS21P78OVhW3YKqYZYyA4qbV4wvu2FVoKt",
-	"H7JXfb7rB5bi9NeGf+4ifcvf/REgwPU9t5QlubQcb3XWDZ/6jDS4AR9R6mVTZA0thY5YSaIja1/uG0hh",
-	"Q5QKOgrqxLr+UJwJG4z7xzgSPQe/XhFOZ5JFsVntTAJ8xoCUjKJRKhigiuW9ue9JnkrY+6KMXn9+iP/V",
-	"Itj3yz91EF2XflxRndvkNsSXOFJ4atL7DqPI/iNIrw3AeyHIxt09GYIqkfdP3vC75g33IjYXQv3YxPZe",
-	"iigP/yCi2VRSS0VbChEPlsicmao4uT/eh5j7TvLf2hNm9R2ELKUJsW+PPGt2aRWDo8H//9fh/jef/joc",
-	"j0f2p73/85dB93yXWkh4GFw+cqZX0fJ1j8/hVkta6Q+nK9aIzZKsf4JSDn9kQZrVVn4v8HnY2Yse7Iy7",
-	"yPDmKehzDDIaXjsP428hh2eWGT2VJOR435+C0JboeSI5yKHnEnTFAn7vWHooR2txsCfhRD68Noa8DxUp",
-	"0FfVIE9FTX8MofpPQedPQedPQeffRNC5D/N7Iu0OSfqPoduFIrHxaDV8vXzxm1u9n8asuA2JYZDKU4nQ",
-	"SGB/CtBboeaJxGdEzR9D3PnPPPvbU9bj3ioiTZ3UuVJBiQMRs1nCOOyHNDObJAvJNIzIxIwyIQoSCLWt",
-	"7eTmIza8YkTcsGrMMS0WY+giwjgRMgIZEKDhnMAtDXWyJIKHgMGvExZNyJASu+b9GDhIqiEa848fT7+7",
-	"+dveiHxvfd1mBREpoG+rTNlaDiLJU25DZjFWiyp87fWYF8FbdgSzrgRmmuTc1n+IrNc8YgYKKeNUF9SZ",
-	"ZS6Wsduz2BFlssZfHnS6ijaOteJmDDp9Gr1Hcrw+6DRY9x7pY1EjpMP6s3Ggpuk66DJT9B2ntbMORbXv",
-	"eE27RdAlAvYdrgWuxj2/cZS6JBj4L6R+Y7TA1GA9/cZwe7kr+fzSVnmxTOcuGAgOPcLjukjhLtjyu3I9",
-	"W37nYLH1d03S6P95HYlbfrX1FuvI7v/VCsPZ/sOt17nCmPp/2OKzGHDorqNvqQ7nW0sp9ibrHTFZ3KiN",
-	"eKFC8Ch+bSvzK2WG2mGA5QvunrPLIguQQDD10uVdjMgHDHSVNyAJ5WoBUpFXh9+M+aQc4iplCqtuTWwJ",
-	"CxvjXhbkwtuzVgHumSI2/nLMq1UwRShH8w8RHOzluZ2cXd9yUAF6jZhyAcplD9zLHZ1V5f1WkRw1BLDY",
-	"VlNgHKOE7camLIrAH2DdWdVkNebOTFO+3pGOshr4amUnLPNlq/3Z+mDmC28UrE8qXFMMpQFZT+UAWT3Y",
-	"hvwdpjaFChej+1b2FqtLeHLMqjyxlVya70/Iy5cvvwnqReZyfs3FgnsTaMI5hNdrs7k8qK7P+B4kiSAD",
-	"HgEPlwEZD8T1eGDzdmoJW+MBGVqkKxKLIonKHdFExP543TU5bx21ciKIJY06YqN3kYJUS3R5/mLQswRP",
-	"sD7TyCHBSwFlzkn7xG5ffaAnk0gx0P1E5LwjI5z3r+bnosfq6e314dfuuRZw39r9tjXpOusxyR6h8uWK",
-	"ymj5bibuNozDrt1dEaNf0u+Co2PBgsdLwOW3lwvm7vGHQGXNPnwrP+U3zJeqUORXbZW24b7pmbZxD1p3",
-	"n2w3wbfLzrKM9wip35ZGy/c7F9HX7tNVQu8exF5ntes+s9RRZBX7WEHznDQ365bmll7H3ipumrykwsra",
-	"K94u7hiJ7luIGe8WgFZcSRtMZRFTWUJLqlkHIHynSx6qDdO9/hO3xIcv3LeKNfOWjpa13GbVoYmeQ1Xc",
-	"9VZ8rmT40WZh2esIQ//ZI3DxToZdh0HUDX6P87Bgl5uPDeZrysSbhn5tIKjmVMJrp/dEmLTram3NJI1T",
-	"4Hq02ahvpwoKojMTdm/4lM9Ee7cP4YI/PcEV3GQm61N5GhyrdhFXhVqKWwrVjRtxbasv4qB+CfPs7Py9",
-	"FDcsMvINn7HYb1UGruWyyNtMknSUuY9UkZ7ZrhowpQquHI14KkCwZHnlqolchbbMS3PeQ/J3wgUJaTby",
-	"l2TAIbAGy/0GWFvhjvkrnPyiBL9qdTyop5czn2X+OKKZRiP6KB4RkQGn7MoQDdVeLScVESQdBVgU6Cv9",
-	"uT3H6fFPx+Sz4EAWc6GApCzCCpUEP7E2f4QZ+TUXmnaWNxS5vlJVpQRPYQS2UtOtqxReveJUSQ3F5spx",
-	"mkANagX02kTSxnoNIr4jU6PvH23i/zYJZhlzHzX8US+2vKzcMBuW11UGMCyP5Tpu0z7HDRvHatmBpWut",
-	"Yb8gTPFnhk5otPSSxZwqBwhfpaaUMs54fFGrwOQvPMr0XOSaUOJQWhzNXuWd3CwfysJNG+ZAEtlqBrv8",
-	"sl5Vr28U6HsVfmsuHiEfkCJPOiBcXGFCr7OEXJlDFJjNZOYp3M5prjRE2K1FiITx+CrqspjYKlXbbCvn",
-	"2k82wAndvIqKrmyJCNW3sGxLyENCLsmvKlvXxFVzixVWOg5cZ73NekWy1cojGm51RbYiTyIydeagiHCx",
-	"2LJ8MJYITpL0yr3h/zxOxJQmFwXp98Re8VW9gNp2F2N5ufe2ILb5mCdE9klO2PbU7rtL/59AVzpySQtP",
-	"d3WGNCNDIwDlisZwpT/7KxpXV+QqIRU0ZBgVYSmNQfWlp85Cs/XCfuWlWiERt7jp0LSoZuM5+gBKu/e3",
-	"vFczKVztxtq9+uqwT2qz25RPSk2WxAipRQUsd7NFm9UMt5y12/T7MBoVdHuQWrdYV99Ym6bh1m9Ttig8",
-	"7aiva5++y7020RUY4BS1ZVRSWjlHfcB6cdwOuH1U3gp5Uiy2Yis4zIVYeEt5f95s07WkbyZdt04zgedC",
-	"iM88JZJrEA5pOIe3rHfVyVWm1NWbZUZZksvexelmQHUuYXvCkp0i2wlNEqMyUBQLsSlQQ2Ic4tbJnGlF",
-	"4DZM8shVx+5de/OUb1Wq05HxtgXTLHOrkXUBq6BeyLPCYw32naTfoAsfVZ2Dv0nPDbxdZ4A6rpUONMDO",
-	"FUgyhUTwGI1SXGxpjHqs2kG2dOemoWzNpBV84IfB+nJDBoBdVYYear7cZLc8B019Oli3Ww89gtuFaGoa",
-	"P6ZLb43f0NVjt6INU+T4/SkJBdeShpoMGZ+Jkft2rznR4ej56HDjTVo5Dc0Wa67DGpR8UP+pHfb5vzcL",
-	"A+9t2aMdOhq9fQk+qu2G6nTcqSUPvU1KaHgNEckzc8gpCRORR+QaluGcMk6GOSqFRFRM4ZmyhQ9JBDcs",
-	"BNWnLUGXb9MtyoeVWmfFttO+2fjQOsrbNsDC1rzS0Avrj5KUhnPGYd9ov/gHrOuK5uIm8eWc5noOXGMo",
-	"RTRYG87RnOptnlJem+E2SyjHMKXyDIgwxLL+IYz8KTVKUx6C78RaUZ5FnrHIkCZKEMbJ/913L+6fRn5t",
-	"oRYaUOz51eFz713ItPPBlsD5iMARkn2GNYmKq2t3uMWgXPLx4vQ1GQ/oVOT6aJpQfj0e1AKKcHVE0aUi",
-	"TBOaJE3s1D7byCBcqLPdRq3rUac/x3Ut3ckZD7s6TXyoNc5M6TXjscWmkxA6dPvtHQt9k7iyTl50CcC3",
-	"Kqm5piWij0HUOUNtvqbbshq0gqkfdzrPOpyXW9/jHrdMn4900UNptf/vNgZc7fry1Be9up5OAHSZmzhA",
-	"5LsNfhKERinjBG6Z0oosu3pT4apO1jS/qsUUzqkilLuBlVmWs49qQcKEstSc7AXT8x43iVt4ewFeECx5",
-	"6C+Vnnp7Pb5heLG5JtBm2eY9YhS41yTLk4TQ2NyKVGMKgh8y3OnLK1dBGQbpRteCKOARoYpMFOMhTIj5",
-	"EntA9VRlzPv/QMtJez77d+Kiszsnta9tP3WhSHeFwZXi/lZtBVYF/RWt0GZdIDqwPCteqkaqCIji9Bqu",
-	"QiPC2oQOFRCepyBZiI1toka+sPKGz2mRTpUWHPrtbOsk/RWHWaTMxY2bsZH3EUGUWK814itobnO0sUYj",
-	"oqWxE0ePDWIJLPn7T0y9HmoZUmpOruO9XkduUc/2wbfkCme+7yVmbo8zETN+v76MmxTLysp87/qxrcuv",
-	"yd6rjozVZ/UL0oe72so63PObK+Le3blmFG2bTKGoTUEvwElnl64zfxU9HmGR2fc/H4/Im4hpK8rMWAJY",
-	"YZwTmfMxn6T0GkgMfGI7exZ5WzjmP0R9tA/LDC5xGSgtqtGYj/mbG5BLYkjNCtMRhAmVoMjkdl+KBNTE",
-	"1jPHn43MKBa2iWhIk8RcNkPKl0RwGHOVz2aoxRyRie0aOCFDLgqJbC8wjDLmEF0xPrHfuUcBYTxMcgNc",
-	"1IvUmCvNkoQsKNPmj1giF+st08SMY17CIUhRhRm/M4+qOHsMa5yMees1spgLIhZcubKuqwFCZhg8pxMy",
-	"tERjL9y90ZjX7mJb3hotOlixn7CZuZsrWCY0vDaiNgLaCcA2+Q1fo7/mQCZXV2+F0vvKof/KgWTiOr+P",
-	"SOVq0HOqx9xc28pAHJFazEFi0Iq8OnxuHRIYqjNZ0bcmr103xzEvF6lcEXibrGA/RmuhGSEgSriEQCNE",
-	"R0xCqHG/tjQuEXzMUZWwWQhjjh2h7B47u+orMpx0tfWf7NklUEMBfuVyYlY2cWV2rRo1KA/P8fvTWsxz",
-	"Ye7AIsPAacYGR4OXo8PRS9fJG4/3wbwMdo99dfTfiySxVcyxoxJ9Zm6ZLBFLojRkris24DmS1vbzmlDC",
-	"Bd9/cXvrADvmUlhDLBQvYefCEXlxeGibBZR6WtHioUwgcaxgzC0DRGnKzle207PMYZozIxVRKRkeb6wu",
-	"7BB9GhlRBrSL7EevUCa4q7v74vDQxSjooiZQDUNY3f7oy6CKl1lrerQzIANckdzwCd7gXx2+fIIJj2sZ",
-	"AoQpgl5t1xTSAdOADebY4MFcQnmaUrnE+Lcb4KAs9A3xMfytLHnfYNJlV46iuVvZvOFTMHCMFG8QPH6D",
-	"T2aqg5vnB8hWDig2s6zRXxNpZ0xp20jbvoeFgWkKGh27//oyMHrZ4NccsCiMtVoVPZmCGgg3xmT7Rypb",
-	"4FcjFRfiP958GASD9+8u8X8f8d/jDydvB8Hguzdnbz688abItF0UCvYZV8AVQ0aMPnoXZIh994mrQIMN",
-	"NDxLLJrzVyvcELbZXoS97Y0OpVTXNJUk0YLEi9vbQTB4if++wn+/ur3t2L13aCOu+rG1Ns6iA/kY93Gf",
-	"0XzHrKI2233CNbLq+/oZS5ke3H16RI5TOx2oo3o5QUZjDAUo3UVVkaGu8csFHxQm1CaPOH5/Wg5HhvYY",
-	"Y05RQHit6XGNK1jxv8kU3N9WeEIeWUeF90r6eS6Iy5wniznVR8WNrIJSTlJBEdKJbOoXMXWfKGwYNebD",
-	"mRQpOX++5y4Tw8TcKyPyIywV6P2Mxowb2cFeyxOrTE18d0vFpnDpvbgUDbW4B5taMTXcGlnaCHECmXsk",
-	"tFlwJmHGbl2k5sSBYmJeKH5xKdaTrvNuh+ziK5hWWi+NRfc/fzL/HO5/c/Xpv7BGVvNPe//1l/5nWGNL",
-	"3g/WzupdwFeHWw62AugePPJPVvU4rMqckM2cCnmAOZx8N9yqNtzDGVSt26CXRZ2iRmd0RpKYSx1TDQvx",
-	"6QMkEEuakqnQZBiDPoc9KwAX8Z5MFc38WxJsvYHh4LFRVczjQZRrxK6Ktr4PRE9tuFwFxDWLd3CzQmgI",
-	"HLuYqwcg7EDm1owvlAdr/51DjjhzbdV/EdMROa4S2cnEPrjiQl9V/fAtW3WPXGPZSRt5FzmvAbWNuxcd",
-	"C4p2BF6SZ4SLxUOgp12UnB9876W4AavlGcoOKSfmRfMHCb0AGRhIfnX4gky0OyNX6E2d2Au4ODjPjD5O",
-	"leBtIH8AVT8iJ5aO2sB+5fHn2uIZDwX1JdrFCfbcT0Epw85cLpYjq7Bc1NaIaMbCeBUmx8uVflu9+0A+",
-	"sV3MjSf1vq0Ll2sj0yXapHcAeWvNq9oFrsB3H41rfaBcdFpdr5D+YN5qCXqrxs40pfsKzEtomDfsUlnP",
-	"c5ZgWIGLLe1SuZrCxlbNuauW66u9FvUSDUdG2Bh4VNKVRRvh+ZrxqPe6yw6ErWWvSpAbfR2tpf6OBZ+i",
-	"9/pasQdpbzcMP5Yit7rPDiQeM8rBFxbdHdim693XwDFxdyASDlOEqmtrNVdaZK8JJc6VgGZc14Uzt/kV",
-	"zaN2gjOVveZbZ60Pcn8Q09Pvnga5PsR+mAOCwdpJ0SOHOuYOUGyhQ6gZ/2EYxcb43Qg9p9coFc2wIyFE",
-	"AZlRltiMmbJ7vt1lEcJPWJpCxKiGZIlG/CZFVJXv2lKSWcufKPej/CLnFt8ufuCe4lySpAdlYoUlAReB",
-	"GJWlV5tYsdWwVtIQ+whVF5CKG4her2bqEXXNXMduzQwRX8PSqT27gBPOajiNm/GZDRK1DXILeCVJ2gEt",
-	"v/kmo+g6cJcciwZ176uNRPDaF75+tc5U4rOKfAoGWe6RPS5Be3CAJrhvRbTcGXmvTHLXdDRjn9peErXr",
-	"b72KeyMHE8aJFBpXtwup20zlRTgZLspW0AEBHsoldqXGnACl93oRROv4VD5+r/7/hoZzUik21e5twpRW",
-	"VhIkw66cyTHfkDQZNJIV9wKiRUSXzxTBlC5r4yzTTc3nKiBZkpfPDf+wulkrNazDd1YlHT4iY60m8XDW",
-	"f1ANC7p0VoIdUM3Z2XmJGhU4h7jFDOVRCVLMNL8fnazXmI+NHpsEBDmNwWnOQ5umggEGQ5fmYR3wV2as",
-	"vRH52ZBQseoxV6AD60NFz3X9nGnJIKoU768OX5IkSa9q9cGs2YmLMS+/M2q7ptdAmA4Kjzg4fRurX9gg",
-	"ZR+RGOXbso4004/Hmuope71Y0+HuZ7c15vyXv4QsWe7YkmCz+4ieS5HHFiWxPQ33o8u8yGvz6rj2tNvc",
-	"tw0a7nd0qWzwTSakdmzIRbRARIasCPhHOwhLAYs77HV5HSK6bPoYSxj+LagKY39Tr4ntCTF/VNmvhIwH",
-	"/fgAY/FKjcuAw2pdu+FXFpIZSDNyUJ13w7CqtLBtSULE3ZfZqjfsCFt1l+4wgp40e8fDDRO5ssrsTEgi",
-	"EuRRCeOgRuR77PWNBnHDQgKSiSRxvjWUlidG/iusZQ5+DHP2xtxG4hA0Gr0mbGbZnYvcwchgMuFwq63y",
-	"PwlsyC3OTKiU7AaiMddzysmMacvejWhuR1VzTF6WkAgarfXvnRlIbTgT55Y0SQI3kHRROj5skPpGheNM",
-	"xGf41bZxBIUd0sBfa8mmubNC+Rb26y78ZI71dzvdjFD8O/O5eVK1LXnZoC2SUBljsjYZljTeyeiQ3v3L",
-	"KKKlSw536EsQ/V2bws5EvNkUlojYAngX7r9qvdW4D7eKiRuQNwwW625S3PC74sXHhmw5kQe01bOHyyY2",
-	"MtTJyppQEifUHtOtgeiCPtXBF/fTaXS3zhiB+7zAwmBFYtW2dqLLYiIfrXvNGLYM2Q4Ax2JOsLZPFQF8",
-	"f0+Fi+XovrsvIZSgyQ1N0LMpS4Mr1rQxyvmEqUvQE5sZt5hDUVcbrTGowI+6b8PLYv7HJms3kZnYR9nF",
-	"OgKihNQ2XvUaljtzKklza6TQiCkqlLNZglnC9yB7u+aDL9ewXEvwF1jCpAaGpwJ3l4ZTgqE0cWKVlZ1Y",
-	"7owESMsZtLAhpm7UfmDuY767Lo1nG+13L7aPdfrreqveSjo7TViEnra6VcZB4JltOWNjIPIEFBm+evGi",
-	"CEgTEUyIKxZ/hYfc5lQvmIK9ETl25fVRHGHchbplUoSg1IhgTIzvfL/P2+S2e1W+PkXRp+Fp1fn70fru",
-	"PDg4UEXt9+Ei9qrYGAzwUdkaSj3CEj2Bvn3zmB4sOPb3b9u6HJsjDezGH44rHGe9wNj/2sYXD77YMHVk",
-	"/VnRIGTFuoJ2YUN+isU2Zccm8RgJAk/zwgbXvONlqV+bHkuThbnQrQnY41u1QMRT91G5zqrbSFAfbYi9",
-	"xfgj8QYzx2/IGFzplzZJZZZb544EHyphYAW00geAdQgtY8BrwArahp4wKnIlm2tXNHjgRq3bqj0Ec2zf",
-	"ejjF/BZ4O24Abic6pXRuRhfQsFOM2E4rGxBygS/9PvFx4VrJ7AofdrwVdJChO1fIPFOUo0pemho+urcz",
-	"jBWKbL/ruMiJ/M0Q1+uyLTTsHldtsaGApEJpF7GbLA0aop2ZwI+L2kE2m3YfK0GUgNwej7meHyQiZvxg",
-	"Wtb48B43LAGCueCPqX2dgIRU8OWlptKr6bpyUWVarMAHaicudCrx9LgZXFJNHaq5nm/K6avgacOFup2f",
-	"KFF5k5zRTmHxixZsITCGYIm+SXR1SqCRddeOOQ1DkXNNhq7Ez8Qd/8leedjNMfdZ9b/HJVZI3b0cU+DT",
-	"zrSFGLMeg5cInNNdRE78EySbuUraDvMl2O6LfZGvubfO7PNeASSWBuzrc6BFNd9L0PsnmCHetWv38sEl",
-	"aPeiO0u7Md5hwrHHetcGUZn0X0Gp3tjPfzRc+Ai+hrGR5hgwrYhYcKIl5cpmZwVlY9sRmbh+bRPydxIJ",
-	"DsGYT8rGbeaPuGYWkQVVZV/cKcyEhIBMirZu5kWb2h/hkUTXG1p5ozKVHdPrh4UHTdEUy7oVOeBliwWq",
-	"CYv2fMfuOMuSZdGo97EOXr3x4hNrDyud7XyWeI4mszzR6Ml1qK7QuSOPxxJzWXQ4NxhxPZXLBo6NdG0e",
-	"rtCtLdFSkKztYdJtZn634LaLBrggmjIK/5mhXfz4tdVMFVq+a88x6QOpp9bk8Zkq/MJJ8neDr4kNfDGH",
-	"b1JrgOMKdLS63HS4cE/dPnoZQpqNkx6cSk6TptuxVaDqSeS5qvHNJnHOwapp8yBDqq149+LwcG8HZOpm",
-	"Qd3Wm7tRkF6TPFcKnQyCuvHXe+3YTkKnRTOex+A5jbZNvXjO80eZO+qyZVpYloUbBLfubsfR1RwLRBj5",
-	"iovFLpBrl0MoUYzHCRiBvFhDwmyhxXtiucmXDmzHoF4ivO1G9gR0UG979tQXUF8tAgtBYeb4jtUIOzB6",
-	"ykghoGOcEOUFBQwLcRO4FEkKvKGJ+wliVeBcwX9b5fDJ+09AAfcR+58/qdjvjqa9PJ0CVdhNSj1suiw8",
-	"b3sdSsF2aGJcZSs2rTaTQmakJb2BpOy2NhXRkihBmCZK06VCIVzMyMeLM1ujJhGxx8h9aud7CqYvoic3",
-	"UtcaxnVe30VR4x1QzM823q44voimX4QR6IYlnw7QUB0QLLS6vP95NuN2H+MfBONGGPyD4vXcHxdlT2kt",
-	"JtsACaJae3ZXmO/hqDYALnusV+PbOLeCAgKCQZeVHW7F+u3HuFevOPhif9gQ+GOjcEqs98jRcaOu9fRv",
-	"EuefOEDIjlSzYpf9Ix8oK6Vr473PYfBbkfQOgIaO+gYhBquKqCpjfp2yaDvtl6Ybt5Zu601QOWmb0LP+",
-	"wPPHYkRlG4l/Jza0u+gHLPpna5YSV9l/PU6aHCSFqigC3hjevDns2/22pl0+BqJW24T/wfB1Tg1bcpeC",
-	"K2XjfDH1Q2YPl7Ud+o2k/bDqtIP1hRjOl++L157CeFL06uhhPSnXtRvm5gCdVbu9Jzj76chRVGz1D62l",
-	"0sjqOwVcHwDWnqpnE7D/HornK1+n32g30c6YluuyeXYA5S/up42CYipuoGQOvWTFcuS+YaHPX/nyYT5t",
-	"kRW/00x3d1aGXNj40YQqbWScve3BvTGOwbLeWgDDf14cQo0pr49E2ChXtuHeNxHCqgolIn6PWRC1DqUF",
-	"NB8EQ9v3zOujOivah7//+ZiouVhg8VDCNKZK0+TaxZsbNSEUEqt9Y1QCUdewgGjMbaMqEiYivCbDwp8m",
-	"cj0Vt5jbqjRNM7XXkUCPXdkeVQDU1H8esFyzAU5EzSsPry6EpbYtoFw1f1d13JZXrVeJRmhtWxoam7us",
-	"U1frTWkeEaT1afxpJ2XRwp1Y2Gz2jYGe9ba5VjfYDmBOMdF6CrbXDUTbxWYgSHtJf7irR5JPat2U/oN8",
-	"IidYxhJtD63eRWhXR2kU/SCJ7dvVIIBK8L8PyvtJpo+J9N+VN6R+8Axuarbte8dFYXzFOm5mnvdLzmjl",
-	"Qpc7Pwy2TyHunKLs8POIEyXMtdVsT/HcttEu6j18VXTV/m0qPpTtv9amK5f1xUUSVTkiu7KTqaIsQj1E",
-	"xra9tL2fbM8n6jo+bRPcY144cIWWOwsa4WPsrrEkXGC59CMywa+OimrsE5ckVRRSD8jkiGSMx5MxD0Vq",
-	"25/YOLEXXxEFoeCRGpET12MFG6MJTibFcB1ylEGHXc/mq1/DrbZ721daAk2bWPd0LfLsm7hPd1HSxchE",
-	"+9gh2ULcBsopuiTjgRIp6DnWa7IQCCxMuFiMB/0wWvbytSwkl8ngaHBAM4Yivhvgi7czCbI320SlEBVH",
-	"Na5gxbZ2HQSMaScZ5ZA0GwYpDCXZq41hHRLtIb43J2Vf5u5iDFZDkC3jdXpBfTzDedvD9XEGBOV4OHhh",
-	"YKgPXhpOu1vwOU/MaNXjpDxffVRQj3DmEUkppzGYU0GGrsXSCqxcBHt7sLOz86L+jwU2U9r1whnWClqZ",
-	"LQW2fFVgC8fUp0gSHz7fObXGEBkBHpuf98ugQUuRFmguS8nScYNUeDi4+3T3PwEAAP//",
+	"7L17cxs3sij+VVD8nSpLZ0eU/Mr+YtfWLcVx1srKsY9kb27dla8IzjRJhDPABMCIYlz+7rfQwLwx5AxF",
+	"KZus94+szJnBo7vR6Hd/HoUiSQUHrtXoxefRAmgEEv+8BP1KiCUD848IVChZqpngoxfmkSJCkjAGKhXR",
+	"CyCT6+s3QukjpUW4TIW+VqAUE3xCQhxkPApGKlxAQs1wep3C6MVIacn4fPTly5dglFJJE9Bu8tMoYfxV",
+	"JpWQ7enfpfTXDEiIj8lMigSXkEq4YSJTJKVzeKTIhMOttmNMzPTMfPtrBnI9CkacJmYFdoza2hJ6ew58",
+	"rhejF88fPwlaaw3s4n4U07Pvzfs4bEr1ohyVRaNgJOHXjEmIRi+0zKA6w0zIhGrzHtffPBsFo4RxlmTJ",
+	"6MXjYjrGNcxBlvOds4TpYr7GNmJ8WJ0jghnNYj168fjkJDB7shM8x39tnu7SYu4s6tidKp732mSWITja",
+	"YPyoQHZOktmHd5nhi/lYpYIrQJp6L8U0hsT8GQqugSM4aZrGLKSGtI5T+8ZfflGGzj5X5vovCbPRi9H/",
+	"d1wel2P7VB3n4+KMdUp9LaWQ5ODih1fk22fP/0rcBCQSYZYA14cjA2825xCd8Q0LG7agt+Bbi52GMP4S",
+	"T4vDojuehCmiwJBQnQMclSzAN6N7+bjkFV9wZreS4iSfhiEo9Z7OcaRUihSkZhYtTENS/2PT3irDXUAo",
+	"ZGQg6DBPpaRr8+/y4PuYTZWm/uVm/VQMIqa/QKhH+bGrTdVae5RJRNBbVZmoOEvBaCEyBQsRR5bOt1Bs",
+	"YBiHjz+0B2apZ2fBKAG9EJH3ER4v3wMDDFD6zP+ZFJn23ABvqQ4XEBF8TFKqNUj+kkCS6jVZLYATLvSC",
+	"8TlJ7Jtj33ZVldNsBY7SVGcdgNYsgdogEdVwhL96RjLM5XTuzpn3ac8lmVd/onbqLWSG39v1lBAvMJYD",
+	"OsjZoNtsUCWx6sK7CTaLmH594zZXJ1caWvR9HsEtTdLYcnOtGZ+Ps9SAzLdJGmrRFyD4bgdEghGdafDc",
+	"55ecpmohNMHnyJ3CBeVzIAd0qoDrnKI4HI7NOFOYCQkbBrIv9BjpoQ/o5sM27DxoKufQNZR9+AF/9j0e",
+	"cF42ULIjqNp0lYVtJtL9XQclyd/vZfAdDZdZepFxz9FK03+CVO54teAdQQwafhLajw4wcoL3yYxxphYQ",
+	"ner+7I31o5+USt3BTlOZcYjaB+wCjHRixAYaS6DRmkhIxA1E5EBIoiWDiGjhfjwkTCvyAWKYS5qQBJSi",
+	"c1CVm2AqRAyUjwqJoQLCHmdMsd/gu7W2COjzvqZSDwNleecANxLzv0Yy49w8DEZiOQpGM8piqFJ65YxJ",
+	"Np9bfpd/bHYZZeYDI5PzjMaeL73nzY1VuRjK3VQhkaO1wOEWYlZtUjYck0PcfjAV2sjsvIu9R6Api/2c",
+	"rQVHhB4X+joUfMbmmUSg2IOwFSZuON/ewgXt4omVmVqU/Z3QRIsl8MDcGJqwiFAeEToHsoQ1oRIIjWMj",
+	"I/vpFzidxr6BPyyAcDZf6HhNcvQbaVtwcjCL6Xw8tXg49I+7oEb4ZCmrSyv1Nz6YhfufLgFS/xk3fPEi",
+	"4/Y01Nd8mt+VLLaXaG3hs5lZar/zI6trbwPGgDfNpjELEcoHXGiiIJSgD70Co8y4ao/0E6xAaTJjUiF2",
+	"+t8cJUP3XBz5HdmYzOHSPA3Imzcv3r71LtU8/03wHqJhTjo1Ai2u2GIch8sKwhvUERQn1wFq29H/ICK6",
+	"9hwFfEoWQGO9IDNhJTJxA/KGwWqMrKXKFiqk36a/mCr9uvN2M0/fLYcwZPPF5R2YstI09mD1td1DQKaZ",
+	"JlwQlaHeN8tiYs8nYRzBYOYnT78hC5FJZW89/FUbCpQZJ3Zu72nuxLtdVCe6vqeaTqmCct8t2eMDilw9",
+	"78G6rNLjA7M9Hq5rWi7Pkql9KoGGC7MVPwVIdgOyXF97dHyhLTxVL248s68yKb2c5AcaK3DcKmFzqy8p",
+	"5Nkp8MhoN36ZY5D80MBeuesqfJpr7cTpD0JEF5mFGY3jd7PRi39tZljFF1+CJgEUWkw/XbT+enuJn5qL",
+	"9NCcsy/2l9Qry29xWsNbJItgoNzfPWRjw8Viq1N1ouZHMfWcMTlX/jvsFzF9ZIhtjhY9RagiSgsJESqY",
+	"VGtI0g7Kdw+HiaShBDrwE5SqBgL3RzG1fNuDrxnjNGa/3Ukr6eY2S8b98ltCb08txDrVFiYk02v/018z",
+	"yPyCayGWD1UNoC8oL/Fl1MvndUS0BYdNlIzKAAIoX0C+r5LU6oCqQCWwVFzQQ5WW6kBw69x0RIpLvXFO",
+	"BkBw49noUokbAKG6tvOm/tBe996sDoZN3K+5oaCbiqRDbyiL3bUTUh5CnIuOSRqDxr8jpkIqI/zbXYBo",
+	"ddRy7b4s5aVSI/VJS9bzdP62kBQbyC4W47/5rbHrFU17nnz3QV99HvW1HS9vN1ExSFDZTCdCzsX8NdfS",
+	"BwmtLYOlUcTM5UDj95UXrOuqNWhvlhjDjVXIt1LluZif48uGX6r5DkbI4ab0XvbKDVZEuzu73sCBchMO",
+	"znNo5Icigmk2Rw/vTIyC0YpKvsGWUA60N15QEMb9MoR3TgfzmGZKY05Ppddpf1+C0TRjsT7VHSaTxLmd",
+	"29Yep5X0mrOhwhQyyZNni55H4Bcx3XDAeg1Rl91+FFMSioxrkoIkF0YJIXilviRVX0HGC8ZQ0SJKxMRx",
+	"0o9Eci5qvhHzS8aXbXnynHFQRC+YIqkURgMlKyk0EC1Qz7xcKw0JicVcEW2WFKCVKpIiTSEiGY9AkljQ",
+	"qK2lu3d6gmolmdbAd+Gt+adBMaWPnnewxWapeXIJoeBRX5TflGpl05IdA1VANJ2TA3mVnZw8DTn+HxwS",
+	"IcnVKIKbq5HXtGP4C+Pz3sTbAFC+puJ0lUewbtWtb7hy4joZxKV15nWqa204/JPGGZBMQeQUaC64jQZA",
+	"Habwm82EdJY5ZT1ntWE87IGpS/CZFskNzljM8JIIvQC5YsqaGt1KCYY/dHkLlrCuezFl7pgY0zS9jsX8",
+	"OqJr5UNerl1sPbAOlv8w7xsdFXfg0QF/NlwilWDAFFhTGY/XhIYhGNXO7ldV7ZKeS0KFIq3JeQpP+qji",
+	"ofSbsxAlnkVJpuHILOSlAzjyiRy2EggHw/Ak6Ezymnu+AmbrEx54SPGT79a9XFC4NI81bjaDULMbcGvv",
+	"IMLGuTJEUSpHCNA6mRbgyqlz2zn6h6OVHCkGNChm2JMqrQiNwTmdYoYb6pwpvRdRIz/iWzXFzaKEG+aj",
+	"9fq3FtaBmJ9gZVESEDFzYUQ4ziNFDODJAc/i2BxuCTNkKtN147UbGrMILXRoIzXvWw3CyMgtVonL6NzE",
+	"R2Xda/0MaPh223hG01SKm2FUnn/Tk8yLM9wf12/yT95CMgWpFizdivLKNBuMegYMXWhvu+konkOrVFpz",
+	"tZcNIbe6EPFWafCyfPPLFw9eX4GERPD1D+j39jgn3fOeMRKhhMhcDDTeppy1DXuT9+iZ+gesXxWjTAjj",
+	"6Nb+8fLdT4YfJeRgooX518Hh5NArIeb+0oaoR6cQI0ejhMOKpFSpJawDAuP5mFyN2PuF4GAlkEpI6jcn",
+	"2zSrCoRq+/+0AdqXRuq4M7DhNmUS1JCDVLlV+yPnZ5ieZnrBvRh6JQG5yzs78oQcAJcixmhLIuQV9310",
+	"YTXi8hvF5vyI8UPn9mGyRPgVP5gyTuWazBjEkSJGJPvmWSbjw/EVbxPAJvTk26/CzounJHpFNY3F/IzP",
+	"JUQMuMaNQjfkZjRW0NQCwth8+mGQit87nGRtNI+BC6Ixowq2mEQTentmHz49actOIdUwF7KDSusXjG97",
+	"oZVgq4fsWZ/v+oElP/2V4R+7IOzi3/7gHOB6xy2lcSYtx2vOuuVTn5GG+51E+Q/lVRFaCh2zgkTH1r7c",
+	"N8bFRo/ldBRUiXXzoTgXNk76z3Ekeg6+bAinM8miuVntTAL8hrFCKUWjVDBCFct7c+9InkrY+6JILHh8",
+	"gv+rJBccFT91EF2XflxSndvkEOKLHSk8NOl9jwF+/xGk1wbgTgiyIZEPhqBS5P3KG/7QvGEnYnPR7fdN",
+	"bO+liLLwTyKaTSW1VDRQiLizRObMVPnJ/ccuxNx3kv/Rngi47yFkCY2JfXvsWbPLeBm9GP3ff50cffvp",
+	"LwdXV2P71+H/+q9R93yXWki4G1w+cqabaPmmx+dwqyUt9YezhjViuyTrn6CQw+9ZkGaVle8EPg87e9KD",
+	"nXEXtF8/BX2OQUrDpfMw/h5yeGqZ0UNJQo73fRWEBqLngeQgh55L0CUL+KNj6a4crcXBHoQT+fBaG3IX",
+	"KlKgr8tBHoqa/hxC9VdB56ug81XQ+TcRdHZhfg+k3SFJ/zl0u1DENh6tgq+nT353q/fDmBWHkBgGqTyU",
+	"CI0E9lWAHoSaBxKfETV/DnHnP/PsD6es+75VzvgNcC3k+lKLcHkaRX94X24iMq6bUizc0lAb0AiZO7tt",
+	"wLfP5Aw3nWJPV7jBO97afufb6+biMgXXUyNPT0Hpa1dX5NPugIuboemzLMbQdqGwuBKNZ2b/YjUKRjQ2",
+	"v16LTHtnzG3XPaHBYeWUsj+K9vNvLQ4PEh46Jed2vEs/YhUpcIh6UnZxsNrMs8I7TwJvwhxSTE8S+zWj",
+	"XLN+euRwvVGJTIY1duwqZAQjtRBpaoMtQ5rqTGL2kxDLjhTvTs2zHa7qVzF7EEPOqWoHNajywGJLfa4e",
+	"ll8GY6ygOKZR9HA3zy+Z+uPbAgfcHH0XsvvBus+jsokadyM1xP8DUdsrwVWWwFdy25HcHj80uWGBB9Wy",
+	"eD3x3m9356e7UHDoaOqBSPh7m1/7lYQ3UEop/afM1rNRqWA2VznjK8ptqnLClKZL2BCGsvnudRPuQjQu",
+	"S/qhiOYHtOF/pZm76jm9JOjeAtsuhGO9MQ9FN2+pXJ6L1VfCuec7JKFyeW0U84fCq7j5yg3+BNwgMXh8",
+	"IJp5l9qU7K80s18i2AXvwuDigfB+CbqoefEV9/djcN3CJBoW6/50okBfd9m774dY0ph9teY8zM1SKaLc",
+	"K6u3RNB7KnU9te251fLdvx73KQRW0qddxk70ieTyQLT5YUG/SrJ/AqFHGzw+EM185MlXFehBVKCMP7QS",
+	"9OcIqLA+n4d3lu/R2fxv6urY0aBcga2PDPcWZNAjEnVI0MHeAnB2DOTcOz+51wAakSQucKHRHY4DEbNZ",
+	"zDgchTQ1+yUryTSMycSMMiEKYgi17Vvn5iNWQhsTN6y64ljyH4tQRYRxImQEMiBAwwXBUxqvieAhYPW4",
+	"CYsm5IASu+ajOXCQVEN0xT9+PPv+5q+HY/KDLRZhVhCRHBG2g57tUyPiLOG25hwWO6IKX3t5xfPqR3YE",
+	"s64YZppk3Pa2iWzZiYgZKCSMU52Hd1mnuWGZnan5HYLqhoITQWeu9daxGnn6QWdScO+RXLBk0Jnx2Xuk",
+	"j3n/o470qa0D1XM/g648n77jtHbWkenRd7x64k/QFUPdd7gWuGqBsltHqYZSB/6Izn5jtMBUi93rN0ax",
+	"F18QRvcQ7fi9oMu33n8QfD3o9HD2HSj3sgedbq++I+XOzqDLD9J3IOcAC7ot731Hyl0igd8Y23sYceNb",
+	"Dhr2+o6BFtlgg9Gn70CFiS/o0NB7D4RvB36Vre8gqKcHmxSEviOV2lvQJR/0Hsq+/qWQpNe23YGVDVAv",
+	"hh5l4Lo49pdg4HfFegZ+51jW4O/qHLz/51VeO/CrwVus8uT+XzXkguEfDl5nQ37o/2FLHOrxafuiGPxR",
+	"zs93mA1vlMHfFfxo8Jc5dx78Yckqhs9pWPnwPSKrHPwZ8vzBXyFLHfyVuzQHf5ff2sOR4E7Sp1LF+o7q",
+	"cDE4x8SqUb0t47k6VzOJ52kjXTbxVv/OdhHH4gWnZNllkRVIINg4w1XNHpMPWKZU3oAklKsVSEWenXx7",
+	"xSfFENcJU9jOdmJ7w9kKxUWnW1TdKq2VHyliq2de8XIVTBHKMdaJCA5Wcxtm5qtuOSgBvUFHvgDlaj/v",
+	"VEwoLftmN5Ec1fT/uW1TxjjWeLUbm7IoAn953M52gc2KiWaa4vWOYuLNsqVWccf+ubaNtm28a76AvjFf",
+	"G7oM1iDraY8kywdDyN9haluh13x038qqjaU6ukT5zopr+Sc4oeTS9fDP60WPt9NoMFILiGfnbLa9Amzx",
+	"ovkqw4X37QBt327a01hDr8WkFC/JDS5o3ew7WVlAdfHV7Vdn2YSgM55mQ43GuwC5uYXiyabF+Ug6//mO",
+	"7b6atIzD+tbyBhsQenpdlP0qGjX9f3hFnj59+m1Q7UOe8SUXK+4t5B8uIFxu7CrhYVrVGd+DJBGkwCPg",
+	"4TogVyOxvBrZ/gGVxhFXI3Jg2Zcic5E3c3CXTSzm/rrBG3pvdLRTjWAuadRRo3kfrRAqBfcfPxn17NIa",
+	"bO544JDgpYCi9n377hneBa3ndZdgwe1XuUvH0zi1f8N3V8Wy2marOvzGPVcKf29j5b1Tcj3t/beX7C5W",
+	"VFTt7hZH3IZx2I27y2uFF/S74ljgxILHS8DFt5cr5iTSu0Blwz58Kz/jN8xXMj3v8zCofLz7pmf5+B1o",
+	"3X0ybILv1p2d+3co7T2URrc1sRzs/toHsVdZ7abPLHXk3Y18rKB+TuqbdUtzS69ir4mbOi8psbJRWLWL",
+	"O0Wi+w7mjHeL8o2SNltS9iOm0pgWVLMJQPhOl2RfGaZ7/a/cEu++cN8qNsxbFHwZIE5/7zqO5ne9VQRL",
+	"bbSXSO3x4/qzru7OxTsZdhUGUTf4PVnbObvcfmxQMpextx3W0kBQLaiEl06Dj7B5kGvHPJN0ngDX4+3R",
+	"MXaqICc6M2H3hs/4TLR3excu+NMDXMF1ZrK5pUCNY1Uu4rJhZH5LoeJ8I5a2Qb/L5/Jd0Ofnb99LccMi",
+	"I9/wGZv7nfPAtVzn/WPiOBmn7iOVt4lpdy+bUgXXjkY8nehYvL52XQ2vQ9tusj7vCfkb4YKENB37W8Ph",
+	"ENgLcrcBNjZBZ/5Oi78owa8tijua9zNfgMNpRFONsQjj+ZiIFDhl14ZoqPZqOYmIIO5oBKlAX+vf2nOc",
+	"nf50Sn4THMhqIRSQhEWczRea4Cc2dAJhRn7NhKadHfBFpq9V2bHN06CNNdp+d3VLr3a+Lagh31wxTh2o",
+	"QaXHeptI2livQMR3ZCr0/Q/bgGxIvFfK3Ee1sJwnAy8rN8yW5XV1ig+LY7mJ27TPcc1a12x/Zjs85YeY",
+	"MMUfGTqh0dpLFguqHCB8HWMTyjjj84tKJ1ivoWrF9EJkmlDiUJofzV5tZt0sH4oGslvmQBIZNINdftE3",
+	"t9c3CvRODajri0fIByTv1xQQLq6xsZCzhFybQxSYzaTmKdwuaKY0REbVD4WIGZ9fR10WE9std8i2Mq79",
+	"ZAOc0O2rKOnKtqpTNQz0t9w5yi/Ir2yfXcdVfYslVjoOXNdBq3VGbnZA1HCrS7IVWRyRqTMHRYSLlb8Z",
+	"X+WGqQ84i+l8HMfJtXvD//k8FlMaX+Sk3xN7+VfVRs7DLsbicu9tOmzzMU+p3gc5YcOp3XeX/h+BEYnI",
+	"JS083dUZ0pQcGAEoU3QO1/q3Q++ZK6/IJiHlNGQYFWEJnYPqS0+N41Hek9UG48WlWiIRt7jt0LSoZus5",
+	"+gBKu/cH3qupFK6HfOVefXbSp8WS25RPSo3XxAipeSded7NF29UMt5yN2/R742KqgYfrt31b23aLddWN",
+	"tWkabv02ZYvCM+6X0+zTd5nXJtqAAU5RWUYppRVzVAcMKlvvgNtH5e3ULcVqEFvBYS4wwKDFUOzJ3Yxc",
+	"S/pm0k3rvBAr34UwP68iuA3hkIYLeMN6d79vMqWuDLUZZXEmezfJngHFAluDCUt2imyvaBwblYGiWBgu",
+	"IKpLjAe4dbJgWhG4DeMsguiwp6RVpdrerzsyHtq42TK3ClnnsKpsvorHCuw7Sb9GFz6qeuu1OWt2A296",
+	"+HOLmIRMgSRTiAWfo1GKi4HGqPvqYRqMMtfFdXvv1gY+8MNgc9tTA8Cubqd3NV9us1u+BU19Oli3Ww89",
+	"gsMymzSd36dLb4Pf8J/2gRVtmCKn789IKLiWNNTkgPGZGLtvD+sTnYwfj0+23qSl09BsseI6rEDJB/Wf",
+	"2uUe///twsB72351j47GdroWVfqjGjZUp+NOrXnoUwa+o+ESIpKl5pBTEsYii8gS1uGCMk4OMlQKiSiZ",
+	"wiNlG7CTCG5YCOqwh7TY5dt0i/Jh5X0ZRNR22n/77PlfiQszIs5R3rYB5rbm+veXGneU0HDBOBwZ7Rd/",
+	"AClRlYygTnwZp5leANcYFBSNNgYm1ad6kyWUV2a4TWPKMYy0OAMiDDMpgYcw9tcyVZryEHwn1oryLPKM",
+	"RQ5orARhnPzvI/fi0Vnk1xYqoQH5np+deIvGaaadD7YAzkcEjpDsN9jQMKW5dodbzG0iHy/OXpKrEZ2K",
+	"TL+YxpQvr0aV0DhcHVF0rQjThMZxHTuVz7YyCJcxZrcRlNEGnf6cSxuXt5czblGj/UGHLgCQJHTJ+Nxi",
+	"00kIHbr9cMdC3+q5aScvugTgg1r7K5Cnc+C6Z/BDlTNU5qu7LctBS5j6caeztMN5Ofge97hl+nyEclvj",
+	"ann++MkwA64dpO70bK6nEwBd5iYOEPlug58EoVHCOIFbprQia+ggQFyVNfZmEqIussaApQVVhHI3sDLL",
+	"cvZRLUgYU5aYk71ietHjJnELby/AC4Jq9NtGE0HDGWu4DSUzIcxVCKkKyBSjwySYpWJIbkRWRj9ZUUUi",
+	"wcHshekxcWL036phZHXQ5715qonTT795vrVkp2vuM/QzWxn6esevXfugoZ/pBV3tOqmvyX+jDMrXyqv7",
+	"KfR7uebhe6+hJBHSc2+/Zij4hZlUwh5r8x6RYqVekjSLY0LnRmqkGjOd/ZyDO3tSQ1QqAt7d6FoQBTwi",
+	"VJGJYjyECTFfEnPZ9FT1zft/R8tiez77O3FJoJ2T2teGT50bmrrCRAt12P9CLdu+mT9fKsINq4lN7kZ0",
+	"GH5l5VwjdQdEcbqE69CoeDZvXAWEZwlIFiqz26hGe8obXqpFMlVacOi3s8HN9BoO5UgZwRY3YxN8I4Io",
+	"sVEdiK+gvk3PqltRKytrWil24uixRiyBJX//iVEakmYsIt5sTjbxBjp8dBaLO0uRDcll5/pBVOlzMWd8",
+	"qPtwe2Cb2WrphVE1eG0MQC/f9PKxuvhTyO6VCaoCpA93lZV1hK9oduPCy6xzw5P1gTqZDfVpnL7ckDEF",
+	"vQKnvRSJEUWeUESYVuT9z6dj8jpi2or6MxZDYD7gRGb8ik8SugQyBz4xHElCXh4Cx/y7qI72YZ3CJS4D",
+	"tSk1vuJX/PUNyDUxpGaVzQjCmEpQZHJ7JEUMaoKzEfzb6FRiBRFKYzSOjYRzQPmaCA5XXGWzGWr5L8gk",
+	"zaYxCyfkgItcYzkMDKOcGwmD8Yn9zj0KCONhnBngot1AXXGlWRyTFWXa/DgTktA0leKGxmYc8xIO4X6F",
+	"CL8zj8qMKgz7nVzx1mtktRBErDiGmjDZCqAzw+A5nZADSzRWID0cX/GKrCphlilAi6fSVGrCZkZ2LWEZ",
+	"03BpVFEEtFMQbY0NfI3+mgGZXF+/EUofKYf+aweSCQmFWDIYk9IVpxdUX3Ej1ioDcURqPgeZg1bk2clj",
+	"67DDULZJwx4xMTevwcsVLxapCIcyLc1+jNZ0M0JAlHB1R4ySGTEJocb9sjk/YpwIfsVR1bb5Zlf8tZRC",
+	"2j22jS8izBIc6mCCOVQ2TfbYPf/LL0rwyaFdAjUU4De+TMzKJja7zZkZRsXhOX1/VskJyM2BTralKRu9",
+	"GD0dn4yfWolpgcf7eFEkg8zBI2+8F3EMkbk/QiojoI/MLZPGYk2UhpTQmQZJAM+RtLbRl4QSLvjRk9tb",
+	"B9grLoV1VED+EpnScDkmT05OiODxurRjRFTTqXkhTxV0rOCKWwaI0pSdL2FzR2vIHKYZM1IRlZLh8R7h",
+	"vmVR/230d9Au8wW9pqngyt4vT05OXAyPznv3VjD0iyu8XsaTbTTN2xmQATYkN3yCN/jzk6cPMOFpJYPG",
+	"6GIY9SFsURwHTAM2WDAe4V2isiShRosZnbMb4KAs9A3xMfyX87U3mHSOMmtQVpiggozD3AuOkeINgsdv",
+	"9MlMdXzz+BjZyjENQ1CqQn91pJ0zpU/Ni6f2PazISBPQGPjwr88jZrb6awbYvNVadVG+sMljBQi35iz4",
+	"R0pAL0R9pPxC/PvrD6Ng9P7dJf7fR/zv6YdXb0bB6PvX568/vPYmQ7ZdeAqOGFfAFUNGjDEsLghXikwD",
+	"cdrNGDNA20vEl2or3BLW3F6Eve1JGFOluqYpJYkWJJ7c3o6C0VP87zP87/Pb247de4c24qofWxvjkDqQ",
+	"j3FRu4zmO2YltR0jGb5CgXrU9/VzljA9+vLpHjlO5XSgjurlBCmdY6hM4U4tmwF3jV8s+Dh3MdR5xOn7",
+	"s2I4cmCPMebcBYTDylzZMyax5k7OFaz4X2cK7rcGT8gi68jzXkk/LwRxBbrQtvQiv5FVUMhJKshDnpFN",
+	"/SKm7hPzDo+u+MFMioS8fXzoLhPDxNwrY/IPWCvQRymdM25kB3stT6wyNfHdLSWbwqX34lI01GIHNtUw",
+	"NdwaWdoIcQKZeyS0WXAqYcZuXSTzxIFiYl7I/+GKxEy6zrsdsouvYAGBqtmFHv32yfzn5Ojb60//jfaX",
+	"+k+H//1f/c+wpnIO+oP1Q3gX8Pxk4GANQPfgkV9Z1f2wKnNCtnMq5AEErXJ74VaV4e7OoIz0mqWqk0Wd",
+	"oUZndEYSm0sdU3Fz8ekDxDCXNCFTocnBHPRbOLQCcB4PzTBhY+yTYBGE37np7xtV+TweRNlHxMb63h09",
+	"leEyFSAj5hA7uFkhNASujdqv7oCwY5lZN5dQHqz9TwYZ4sy+bW6NMTktS5aQiX1wzYW+DguXimWr7pHM",
+	"ODesto28i4xXgNrG3ZOOBUV7Ai/JUsKxXNjO0NMuitQPvvdS3IDV8gxlh5QT86L5QUIvQAYGks9PnpCJ",
+	"dmfkGqMNJvYCzg/OI6OPUyV4G8gfQFWPyCtLR21gP/PEO9jiX3cF9SXaxYkBFUlAKcPOXK6iI6uwWNRg",
+	"RMyEiI6KehFehSnnEWXBifvmEuVMHj7hHtwZrNZU5wYhBgTIFqzwVlYBEjcgJYuAHBit9UjweH24C6Dr",
+	"QXleQLtLU+k35bt3BPWw4D9PBZC20aFYG5mu0fi/N1wUIGrC9witmH2g/IuY9tD8fzRvtSTqplU5SeiR",
+	"AvMSekDMvaRsCEwaY3yT83l26bZ1qa4XJvLVXeaXYNNTo/QaLXRGqht5dP/Goo2WsmQ86r1ul7XnWXZT",
+	"VN/qVGot9Q8sYf4optvlS6S9/dyscykyq2TuQbQ0oxx/ZtGX45Dy0CYi+O/bU+KEDSQcpghVS+ueUFqk",
+	"LwklzmeD9nJr6TbyU/vWfIUz5bBrn7U+yP1RTM++fxjk+hD7YQEIBmuQRtcnKvN7QLGFDqFm/LthVIIL",
+	"EvEj9C1dovg5Y5ypBUQBmVEW29Q9A4Moix2XKHKJCEsSiBjVEK/RW1KniLKSeVscNWv5inI/yi8ybvHt",
+	"AjV2lJvjODkuMrwsCbhQ6LwUd/PSs2VTG/nQfaTXC0jEDUQvmynDRC1ZmmIxRs0MES9h7fTLfcAJZzWc",
+	"xs34yEarL3HVObziOOmAlt9OllL00bhLjkWjqpvbhnx4DTnfPNtkk/KZnz4FI1crro6GS9AeHKCt8zsR",
+	"rfdG3o1JvtQ9+marX3qpLlpIH+6NwkEYJ1JoXN0+1BszlRfh5ACbQaDMHRDgoVynRqrB5CSlD3sRROv4",
+	"lMEUXkPLaxouSKlBlru3mZtaWUnQqgO+5O0rviV7O6hlTR8GRIuIrh8pgrml1phc5L2bz1VA0jgrnhv+",
+	"YZXgVo5qh5OyzH6+R8ZaTuLhrH+nGlZ07cwxe6Ca8/O3BWpU4CIPLGaMFpeDFEte7EYnm00Tp0QCjQOC",
+	"nMbgNOOhzZfDSI4Dl29mIx2uzViHY/KzIaF81VdcgQ6ssxpDBKrnTEsGUWnheH7ylMRxcl0pVGjte1xc",
+	"8eK7kHKi6RII00EeegDOsIFleGy2hI9IPoBy/ClJ9f2xpmrucC/WdLL/2W3ZVv/lLyGN13s22dg0Y6IX",
+	"UmRzi5K5PQ270WWWJ9h2GWuKJNwtGi7GWmOUUyqkdmzIhQ5BRA5YnnmEBieWAFaZOexy70R0XXfmFjD8",
+	"a1CG6n67LQb50/3SgIWMB/34AIMeC43LgMNqXfvhVxaSKUgzclCed8OwyvzUoSQh5t2XWdPt+IKkVKnC",
+	"70jQZWnveLhhIlNWmZ0JSUSMPCpmHNSY/CBk7nkwLCQgqYhj58REaXli5L/cLOngxzB5+IrbkCeCRqOX",
+	"hM0su3MhUpiiQCYcbrVV/ieBjW3GmQmVkt1AdMX1gnIyY9qydyOa21HVAqsoSIgFjTY6Us8NpLacibeW",
+	"NAl2BOmi9Nh1/xigcJyLuavRPzBgIzf4GvhrLdk0c1Yo38J+3YdD0rH+bu+mEYr/YM5NT80IS142Oo7E",
+	"VM6xagQ5KGi8k9EhvfuXkYelb2rD9wc3hZ2L+XZTWCzmFsD78LOW6y3HvbtVTNyAvGGw2ur2eJe/eN+Q",
+	"LSbygLZ8dnfZxIbgOllZE0rmMbXHdDAQXXStOv7s/jqLvmwyRuA+L7BCYZ7hOdROdJlP5KN1rxnD1kPc",
+	"A+DYnBMsMlaGWu/uqXBBM9139yWEEjS5oTG6kGVhcMXiWkY5nzB1CXpiU3RXC8hbVaA1BhX4cfdteJnP",
+	"f99k7SYyE/soO19HQJSQ2gYGL2G9N6eSNLdGArXgrVw5m8VYrmAHsrdrPv68hPVGgr/AWkoVMDwUuLs0",
+	"nAIMhYkTyz3txXJnJEBazIBpmSp3sPYEcx/z3bIwnm213z0ZHlT2l81WvUZdDRozbCBRs8o4CDyyLURt",
+	"sEkWgyIHz548ySP/RAQT4vqvXOMht8UdVkzB4Zicuo41KI4w7tzSqRQhKDUmGHzkO9/vsza57V+Vr06R",
+	"tyF6WHV+N1rfnwcHByqpfRcuYq+KrcEAH5Ut5tYj/tMTUd03YezOgmN//7YtELQ90sBu/O64wnE2C4z9",
+	"r2188fizzQdA1p/mPbca1hW0CxvyU2xuc6NstpSRIPA0r2wU0zte1By3efo0XpkL3ZqAPb5VC0Q8dR9t",
+	"WaVhEtRHm8tgMX5PvMHM8TsyBleDqk1Stt0PImIfEgaWYix8AFgQ1TIGvAasoG3oCcNPG2lz+6LBYzdq",
+	"1VbtIZhT+9bdKeb3wNtpDXB70SmlczO6gIa9YsQ2L9uCkAt86Y+JjwvXnW1f+LDjNdBBDty5QuaZoBxV",
+	"8NLE8NHDvWEsV2T7Xcd58unvhrhel22uYfe4avMNBSQRSrvQ6Hht0BDtzQR+mhcxs2nLR1iSpgDkcDxm",
+	"enEciznjx9Oi2JD3uGEtIky6v0/t6xVISARfX2oqvZquq1tX5B+L1FYy2YcLnUo8PW4Gl71UhWqmF9uS",
+	"J0t42nChbucnSlTebHK0U1j8ogVbCIwhWKNvEl2dEmhk3bVXnIahyLgmB67W2MQd/8lhcdjNMfdZ9X/A",
+	"JZZI3b8ck+PTzjRAjNmMwUsEztk+Iif+CZLNXEl/h/kCbLtiX2Qb7q1z+7xXAImlAfv6AmheVvwS9NEr",
+	"TMXv2rV7+fgStHvRnaX9GO8ws9tjvWuDqKiuUEKp2ivXfzRc+Ai+hrGR5hgwrYhYcaIl5cqmwQXmdyGx",
+	"ne3EtUCdkL9hRavgik+KXqjmR1wzi7DklXuXTGEmJARkkndKNS/aGgoRHkl0vaGVNypqBmAdg4Pcg6Zo",
+	"gvUl82T7otcL1YRFh75jd5qm8fpVDoV7OnjVXsYPrD00msX6LPEcTWZZrNGT61BdonNPHo81Jg3pcGEw",
+	"ImazmPGyJ3ItL56HDbq1tXByku2R4GHEmgdJ7tiY11H04TqoFjw+iw6tAOKqtOBRKJ4+UkV+xn7uUVv3",
+	"4lFhtiTYg/UoZjNwNrz88PjXUCKG5b26e2Ln+HOlY+2X4l9bHCo2urPo4DogrpMcWB4hAdkKFxwO9xe/",
+	"2QWhwEYQujiBZvfi/uDrYyeudwDuthcP7U1cuKe9051tnmxbOnZX/Oj7TNewvH+2W292vHPgKL3Zi7Pt",
+	"XZ52hReVOYQED6E1pJSoQpuLw5W79qoMYvCBtL3nur1y71bcdj8DF3NYpXL38UtryFPoKKw8x2REvGwr",
+	"beYfqTyMJo7/ZsA8sXGCRlaZVNigKxzV6k7YEfFy5vbRy25cb3h55xInNK5HabQKiz6I+ls2LNym/TpY",
+	"1U3E5IBqqw0/OTnZB2d0syAFdxEooqxOno0CXKOg6ivzSum2A+RZ3kTxPnhFrd1mL1bx+F7mjrpcPxaW",
+	"RUEhwW10kBOA1QILFxl1lIvVPpBrl0MoUYzPYzjKVLGGmNkC2Ttiuc6Xjm2nx14WD9tF9gHooNqu9qHl",
+	"9b5GFyxQiBVN9mx1sQNjYAHJ7RkYVonXFFLAQa6dA5ciToDXDJd+gmjq5w38ty00PvPIA1DALlaSxw9q",
+	"JXFH016ezt6Um5kLs9W0yAQ/7LChDEMT4yptuADaTAqZkZb0BuKiS+5URGuiBGGaKE3XCm0WYkY+Xpxb",
+	"3SMWc49P8MzO9xBMX0QP7tOrNPrtvL7zZhR7oJifbXhyfnwRTb8II9AdFHw6QL9eQLBA/nr382zG7T7G",
+	"PwrGjTD4J8XrW38YqT2llRQWAySIKkUZXMHYu6PaAJhQbtuqlOPbsOCcAgKCMeql26LhLPRj3KtXHH+2",
+	"f2xR623QYoH1HimNbtS76p4PGU9pR6o4/Yq+33eUlZKN6TFvYfR7kfQegIZxTTVCDJqKaGmjcsqi4LXg",
+	"XreWbmN3UMa01KFnwyfe3hcjKtp//Tuxof0Fi2ExWltLm7iOTJtxUucgCZQ1ZPDG8KYZr5gOF28q2uV9",
+	"IKoY3073Z8PXW2rYkrsUXIk157quHjJ7uAqbk8en1A+rTjvYbJ9/u36fv/YQxpO8x1oP60mxrv0wNwfo",
+	"tNztjuDspyNHUb7VP7WWSiOr7+RwvQNYe6qedcD+eyieHnHmNIr2kxyCVQxc8uMeoPzZ/bVVUEzEDRTM",
+	"oZesWIzcN4r+8TNf+uCnAc6mvRYGcWflgAsbbh9TpQm6rwaDe2vYl2W9lXiv/7ywrQpT3hy4tVWubMO9",
+	"b96YVRUKRPwRk8YqneVzaN4JhrZfrddHdQ7axpu///mUqIVY2YZptn+apvHSpecYNSEUErtQYBAXUUtY",
+	"QXTFbYNREsYiXJKDPPxAZHoqbrEUgNI0SdVhR70R7KZ7rwKgpv7zgG0EDHAial65ezE2bAFhAeW6zLhu",
+	"GLbsd7V7AUJraMsCbMq3SV2tNhO8R5BWp/Fn6RXFdPdiYbPJigZ61tvmWhRim5oFxboUU7A9CiEaFsqG",
+	"IO0l/eGu7kk+qXTB/A/yibzC8spoe2j1nES7Okqj6AeJbb/VGgGUgv8uKO8nmd4n0v9Q3pDqwTO4qdi2",
+	"dw4jxXC0TdzMPO+Xy9YqHVHs/CQYXnGhc4qi89w9ThQz1w69PcVj27gyL4/zfGsfy3tN+ijaUm6s7lD0",
+	"vRBxVKbU7ctOpvLosGqIjG1XbnsS2l6E1HUiHBILaV44dg0AOuu/4WPs+rQmXGAbjxdkgl+9yLuETFxO",
+	"ad7gIyCTFyRlfD654qFIbFsuG1b75DlREAoeqTF55Xp/YcNOwckkH65DjjLosOvZfvVruNV2b0dKS6BJ",
+	"HeuebnqefRP36T4qYBmZ6Ahb8lqI27hiRdfkaqREAnqB5e0sBAILEy5WV6N+GDWz4RyWhWQyHr0YHdOU",
+	"oYjvBvjs7ZiF7M0298pFxXGFK1ixrV02BlOASEo5xPVGdgpDSQ4rY1iHRHuIH8xJOZKZuxiDZsaGZbxO",
+	"L6iOZzhve7g+zoCgGA8Hzw0M1cELw2l3a1jniRk3PU7K89VHBdWEEB6RhHI6B3MqyIFr/deAlUv4aQ92",
+	"fv42L5dmgc2Udj3aDir1/8yWAlvtL7B1tqpTxLEPn++cWmOIjACfm7+PihhrS5EWaC6p09JxjVR46Bn4",
+	"sowZPpgJER260GHbGM25jAkozRLaAqqLUfzy6cv/CwAA//8=",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,
