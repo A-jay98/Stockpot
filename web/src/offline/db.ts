@@ -9,6 +9,13 @@ import type { ReplicaTables } from './replica'
 /** Key/value bookkeeping: `sync.rev`, `sync.revGlobal` (pull cursors), `sync.household`. */
 export type MetaRow = { key: string; value: unknown }
 
+/**
+ * A photo prepared on this device (resized, re-encoded, hashed) and not uploaded yet. `ref` is its
+ * SHA-256, the same ref the server computes, so commands can reference it before the upload
+ * (architecture-m2 §6). Local only, never synced.
+ */
+export type PendingBlobRow = { ref: string; blob: Blob; createdAt: string }
+
 export type OutboxStatus = 'pending' | 'sending' | 'rejected'
 
 /** A queued write command, sent to `POST /api/v1/commands` in order of `seq`. */
@@ -45,6 +52,13 @@ export class StockpotDB extends Dexie {
   stock_event!: Replica['stock_event']
   shopping_list!: Replica['shopping_list']
   shopping_item!: Replica['shopping_item']
+  recipe!: Replica['recipe']
+  recipe_version!: Replica['recipe_version']
+  recipe_photo!: Replica['recipe_photo']
+  cook_session!: Replica['cook_session']
+  recipe_import!: Replica['recipe_import']
+  substitution!: Replica['substitution']
+  pending_blob!: EntityTable<PendingBlobRow, 'ref'>
 
   constructor(name = 'stockpot') {
     super(name)
@@ -66,6 +80,20 @@ export class StockpotDB extends Dexie {
       shopping_list: 'id, sort',
       shopping_item: 'id, listId, productId, checkedAt',
     })
+    // v3 (M2): recipe tables, and the local-only pending_blob outbox for photos. Existing tables
+    // gained columns (conversions, recipeId, cookSessionId) whose rows weren't re-revved, so the
+    // pull cursors restart and the next pull refills everything.
+    this.version(3)
+      .stores({
+        recipe: 'id, saved, lastCookedAt, importId',
+        recipe_version: 'id, recipeId',
+        recipe_photo: 'id, recipeId, cookSessionId',
+        cook_session: 'id, recipeId, cookedOn',
+        recipe_import: 'id, batchId, status',
+        substitution: 'id, ingredientId, recipeId',
+        pending_blob: 'ref',
+      })
+      .upgrade((tx) => tx.table('meta').bulkDelete(['sync.rev', 'sync.revGlobal']))
   }
 }
 

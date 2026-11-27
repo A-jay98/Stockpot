@@ -56,6 +56,8 @@ type ItemAdd struct {
 	ID     uuid.UUID `json:"id"`
 	ListID uuid.UUID `json:"listId"`
 	Sort   *int      `json:"sort"`
+	// RecipeID is the recipe the item is for ("Missing to list").
+	RecipeID *uuid.UUID `json:"recipeId"`
 	ItemFields
 }
 
@@ -294,12 +296,25 @@ func (h *handlers) itemAdd(ctx context.Context, tx pgx.Tx, p ItemAdd) error {
 	if !ok {
 		return commands.Gone("list no longer exists")
 	}
+	if p.RecipeID != nil {
+		ok, err := exists(ctx, tx, `SELECT 1 FROM recipe WHERE id = $1 AND household_id = $2 AND deleted_at IS NULL`, *p.RecipeID, hh)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return commands.Invalid("unknown recipe")
+		}
+	}
 	cols, args := itemCols(&p.ItemFields, []any{p.ID, hh, p.ListID})
 	names := []string{"id", "household_id", "list_id"}
 	vals := []string{"$1", "$2", "$3"}
 	for _, c := range cols {
 		name, rest, _ := strings.Cut(c, " = ")
 		names, vals = append(names, name), append(vals, rest)
+	}
+	if p.RecipeID != nil {
+		args = append(args, *p.RecipeID)
+		names, vals = append(names, "recipe_id"), append(vals, fmt.Sprintf("$%d", len(args)))
 	}
 	if p.Sort != nil {
 		args = append(args, *p.Sort)
