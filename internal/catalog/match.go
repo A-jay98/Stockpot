@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/a-jay98/stockpot/internal/catalog/resolve"
 	"github.com/a-jay98/stockpot/internal/db/dbq"
@@ -65,4 +66,15 @@ func MatchText(ctx context.Context, q dbq.DBTX, res Resolver, household uuid.UUI
 	}
 	ps, err := ProductsMatching(ctx, q, household, m.IngredientID)
 	return MatchResult{Ingredient: m, Products: ps}, err
+}
+
+// Matcher serves GET /v1/catalog/match.
+type Matcher struct {
+	Pool *pgxpool.Pool
+	Res  Resolver
+}
+
+// Match resolves text for the household and finds matching stock.
+func (m Matcher) Match(ctx context.Context, household uuid.UUID, text string) (MatchResult, error) {
+	return MatchText(ctx, m.Pool, m.Res, household, text)
 }

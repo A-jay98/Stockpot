@@ -165,11 +165,13 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	sweepers = append(sweepers, identity.Sweepers(pool)...)
 	sweepers = append(sweepers, llm.Sweepers(pool)...)
 	sweepers = append(sweepers, backup.Sweepers(pool)...)
+	enricher := catalog.NewEnricher(catalog.EnrichDeps{Pool: pool, Settings: store, LLM: gateway})
+	sweepers = append(sweepers, enricher.Sweepers()...)
 	jobClient, err := jobs.New(jobs.Deps{
 		Pool:     pool,
 		Settings: store,
 		Sweepers: sweepers,
-		Workers:  []func(*river.Workers) error{backups.Registrar()},
+		Workers:  []func(*river.Workers) error{backups.Registrar(), enricher.Registrar()},
 		Logger:   slog.Default(),
 	})
 	if err != nil {
@@ -177,6 +179,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	}
 
 	backups.Attach(jobClient)
+	enricher.Attach(jobClient)
 
 	adminSvc = admin.New(admin.Deps{
 		Pool:      pool,
@@ -201,6 +204,8 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Commands: commands.NewService(pool, cmdRegistry),
 			Sync:     syncStore,
 			Backups:  backups,
+			Enrich:   enricher,
+			Matcher:  catalog.Matcher{Pool: pool, Res: resolve.Resolver{}},
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,
