@@ -10,6 +10,9 @@ import { SetupPage } from '../features/auth/SetupPage'
 import { HomePage } from '../features/home/HomePage'
 import { InventoryPage } from '../features/inventory/InventoryPage'
 import { RecipesPage } from '../features/recipes/RecipesPage'
+import { LocationsPage } from '../features/settings/LocationsPage'
+import { SettingsPage } from '../features/settings/SettingsPage'
+import { StoresPage } from '../features/settings/StoresPage'
 import { ShoppingPage } from '../features/shopping/ShoppingPage'
 import { AppShell } from './AppShell'
 import { ErrorPage } from './ErrorPage'
@@ -39,6 +42,9 @@ export const routes: RouteObject[] = [
           { path: 'add', Component: AddPage },
           { path: 'shopping', Component: ShoppingPage },
           { path: 'recipes', Component: RecipesPage },
+          { path: 'settings', Component: SettingsPage },
+          { path: 'settings/stores', Component: StoresPage },
+          { path: 'settings/locations', Component: LocationsPage },
         ],
       },
     ],

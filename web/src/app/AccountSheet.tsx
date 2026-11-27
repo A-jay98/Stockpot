@@ -1,8 +1,8 @@
-import { LogOut, Monitor, Moon, Shield, Sun } from 'lucide-react'
+import { LogOut, Monitor, Moon, Settings, Shield, Sun } from 'lucide-react'
 import type { ReactElement } from 'react'
 import { Link } from 'react-router'
 import { useMe, useSignOut, useSwitchHousehold } from '../features/auth/session'
-import { Button, Segmented, Sheet, SheetContent, SheetTrigger } from '../ui'
+import { Button, Segmented, Sheet, SheetClose, SheetContent, SheetTrigger } from '../ui'
 import { ServerStatus } from './ServerStatus'
 import { type ThemePreference, useTheme } from './theme'
 
@@ -71,6 +71,14 @@ export function AccountSheet({ trigger }: { trigger: ReactElement }) {
             ]}
           />
         </div>
+        <SheetClose asChild>
+          <Button variant="secondary" asChild>
+            <Link to="/settings">
+              <Settings aria-hidden />
+              Settings
+            </Link>
+          </Button>
+        </SheetClose>
         {me?.user.systemRole === 'admin' && (
           <Button variant="secondary" asChild>
             <Link to="/admin">

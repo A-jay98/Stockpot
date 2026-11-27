@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router'
 import { api, unwrap } from '../../api/client'
 import { ApiError } from '../../api/problem'
 import type { components } from '../../api/schema'
+import { resetReplica } from '../../offline/sync'
 import { createPasskey, getPasskey } from './webauthn'
 
 export type Me = components['schemas']['Me']
@@ -70,6 +71,7 @@ export function useSignOut() {
   return useMutation({
     mutationFn: () => unwrap(api.POST('/v1/auth/logout')),
     onSettled: () => {
+      void resetReplica() // the replica is the previous user's data
       qc.clear()
       void navigate('/login', { replace: true })
     },
@@ -82,7 +84,7 @@ export function useSwitchHousehold() {
     mutationFn: (householdId: string) =>
       unwrap(api.PUT('/v1/me/household', { body: { householdId } })),
     onSuccess: (me) => {
-      // Everything household-scoped is stale now.
+      // Everything household-scoped is stale now (useReplicaSync clears the replica).
       qc.clear()
       qc.setQueryData(meKey, me)
     },

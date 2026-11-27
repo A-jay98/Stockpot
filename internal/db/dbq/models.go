@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type AccessLog struct {
@@ -49,6 +50,17 @@ type AppUser struct {
 	LastLoginAt *time.Time
 }
 
+type AppliedCommand struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	UserID      uuid.UUID
+	Type        string
+	ClientTime  *time.Time
+	AppliedAt   time.Time
+	Status      string
+	Problem     []byte
+}
+
 type AuditEvent struct {
 	ID          int64
 	Time        time.Time
@@ -73,6 +85,19 @@ type AuthCeremony struct {
 	ExpiresAt time.Time
 }
 
+type Category struct {
+	ID          uuid.UUID
+	HouseholdID *uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Rev         int64
+	DeletedAt   *time.Time
+	Slug        string
+	Name        string
+	Icon        *string
+	Sort        int32
+}
+
 type Household struct {
 	ID        uuid.UUID
 	Name      string
@@ -89,6 +114,25 @@ type IdentityLink struct {
 	Data       []byte
 	CreatedAt  time.Time
 	LastUsedAt *time.Time
+}
+
+type Ingredient struct {
+	ID          uuid.UUID
+	HouseholdID *uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Rev         int64
+	DeletedAt   *time.Time
+	Slug        string
+	Name        string
+	Plural      *string
+	ParentID    *uuid.UUID
+	CategoryID  *uuid.UUID
+	Icon        *string
+	Aliases     []string
+	ShelfLife   []byte
+	DefaultUnit *string
+	Source      string
 }
 
 type Invite struct {
@@ -131,12 +175,79 @@ type LlmCall struct {
 	Error       *string
 }
 
+type Location struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Rev         int64
+	DeletedAt   *time.Time
+	Name        string
+	Kind        string
+	Sort        int32
+}
+
 type Membership struct {
 	UserID      uuid.UUID
 	HouseholdID uuid.UUID
 	Role        string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+type Product struct {
+	ID                  uuid.UUID
+	HouseholdID         uuid.UUID
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
+	Rev                 int64
+	DeletedAt           *time.Time
+	Name                string
+	Brand               *string
+	IngredientID        *uuid.UUID
+	ExtraIngredientIds  []uuid.UUID
+	CategoryID          *uuid.UUID
+	Icon                *string
+	DefaultStoreID      *uuid.UUID
+	DefaultQty          pgtype.Numeric
+	DefaultUnit         *string
+	Package             *string
+	DefaultLocationKind *string
+	ShelfLife           []byte
+	MatchSource         string
+	MatchConfidence     *float32
+	EnrichState         string
+	EnrichAttempts      int32
+	OffCode             *string
+	Note                *string
+}
+
+type ProductBarcode struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Rev         int64
+	DeletedAt   *time.Time
+	ProductID   uuid.UUID
+	Code        string
+}
+
+type ProductStat struct {
+	ID                 uuid.UUID
+	HouseholdID        uuid.UUID
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+	Rev                int64
+	DeletedAt          *time.Time
+	ProductID          uuid.UUID
+	StoreID            *uuid.UUID
+	TimesBought        int32
+	LastBoughtAt       *time.Time
+	TypicalQty         pgtype.Numeric
+	TypicalUnit        *string
+	MedianIntervalDays *float32
+	LastQty            pgtype.Numeric
 }
 
 type Session struct {
@@ -161,6 +272,93 @@ type Setting struct {
 	Secret      []byte
 	UpdatedAt   time.Time
 	UpdatedBy   *uuid.UUID
+}
+
+type ShoppingItem struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Rev         int64
+	DeletedAt   *time.Time
+	ListID      uuid.UUID
+	ProductID   *uuid.UUID
+	Text        string
+	Qty         pgtype.Numeric
+	Unit        *string
+	CategoryID  *uuid.UUID
+	StoreIds    []uuid.UUID
+	Note        *string
+	Sort        int32
+	CheckedAt   *time.Time
+	CheckedBy   *uuid.UUID
+	StockItemID *uuid.UUID
+}
+
+type ShoppingList struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Rev         int64
+	DeletedAt   *time.Time
+	Name        string
+	Sort        int32
+}
+
+type StockEvent struct {
+	ID             uuid.UUID
+	HouseholdID    uuid.UUID
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
+	Rev            int64
+	DeletedAt      *time.Time
+	StockItemID    uuid.UUID
+	Kind           string
+	Delta          pgtype.Numeric
+	Unit           *string
+	FromLocationID *uuid.UUID
+	ToLocationID   *uuid.UUID
+	Reason         *string
+	ActorID        *uuid.UUID
+	CommandID      *uuid.UUID
+}
+
+type StockItem struct {
+	ID           uuid.UUID
+	HouseholdID  uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Rev          int64
+	DeletedAt    *time.Time
+	ProductID    uuid.UUID
+	LocationID   *uuid.UUID
+	AmountKind   string
+	Quantity     pgtype.Numeric
+	Unit         *string
+	Portions     *int32
+	Level        *string
+	Low          bool
+	ExpiresOn    pgtype.Date
+	ExpiryKind   *string
+	OpenedOn     pgtype.Date
+	ThawedOn     pgtype.Date
+	FrozenOn     pgtype.Date
+	Source       string
+	ParentItemID *uuid.UUID
+	Note         *string
+}
+
+type Store struct {
+	ID          uuid.UUID
+	HouseholdID uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Rev         int64
+	DeletedAt   *time.Time
+	Name        string
+	Sort        int32
+	Color       *string
 }
 
 type WebauthnCredential struct {

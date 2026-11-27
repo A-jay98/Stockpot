@@ -1,6 +1,8 @@
 import { Plus, Shield, UserRound } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
 import { useMe } from '../features/auth/session'
+import { RejectedSheet } from '../offline/RejectedSheet'
+import { useReplicaSync } from '../offline/useReplicaSync'
 import { OfflineIndicator } from '../pwa/OfflineIndicator'
 import { Button, cn } from '../ui'
 import { AccountSheet } from './AccountSheet'
@@ -12,7 +14,9 @@ const sideLink =
 
 /** Phones: content + bottom tab bar. From `md` up: side nav + content. */
 export function AppShell() {
-  const isAdmin = useMe().data?.user.systemRole === 'admin'
+  const me = useMe().data
+  const isAdmin = me?.user.systemRole === 'admin'
+  useReplicaSync(me?.activeHouseholdId ?? undefined)
   return (
     <div className="flex min-h-dvh flex-col md:grid md:grid-cols-[232px_minmax(0,1fr)]">
       <nav
@@ -54,6 +58,7 @@ export function AppShell() {
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="sticky top-0 z-30 pt-[env(safe-area-inset-top)]">
           <OfflineIndicator />
+          <RejectedSheet />
         </div>
         <main className="flex flex-1 flex-col pb-[calc(84px+env(safe-area-inset-bottom))] md:pb-0">
           <Outlet />

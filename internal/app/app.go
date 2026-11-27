@@ -19,6 +19,8 @@ import (
 	"github.com/a-jay98/stockpot/internal/audit"
 	"github.com/a-jay98/stockpot/internal/blob"
 	"github.com/a-jay98/stockpot/internal/buildinfo"
+	"github.com/a-jay98/stockpot/internal/catalog"
+	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/config"
 	"github.com/a-jay98/stockpot/internal/db"
 	"github.com/a-jay98/stockpot/internal/httpapi"
@@ -30,6 +32,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/llm/openaicompat"
 	"github.com/a-jay98/stockpot/internal/logging"
 	"github.com/a-jay98/stockpot/internal/settings"
+	"github.com/a-jay98/stockpot/internal/syncdb"
 )
 
 // shutdownTimeout bounds each shutdown stage (HTTP drain, job drain).
@@ -42,7 +45,11 @@ func Migrate(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 	defer pool.Close()
-	return db.Migrate(ctx, pool)
+	if err := db.Migrate(ctx, pool); err != nil {
+		return err
+	}
+	// Reference data that ships with the binary; idempotent.
+	return catalog.Seed(ctx, pool)
 }
 
 // Serve runs the server until ctx ends, then shuts down in order: stop
@@ -122,6 +129,15 @@ func Serve(ctx context.Context, cfg config.Config) error {
 		return err
 	}
 
+	// Offline sync: commands are the only write path; each feature registers
+	// its handlers here (one line per area).
+	cmdRegistry := commands.NewRegistry()
+	catalog.Register(cmdRegistry, catalog.ExactResolver{})
+	syncStore, err := syncdb.New(ctx, pool)
+	if err != nil {
+		return err
+	}
+
 	// Every request is recorded in access_log, off the request path.
 	access := audit.NewAccessWriter(pool, audit.DefaultAccessQueue)
 	accessCtx, stopAccess := context.WithCancel(context.WithoutCancel(ctx))
@@ -162,6 +178,8 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Admin:    adminSvc,
 			Identity: ident,
 			LLM:      gateway,
+			Commands: commands.NewService(pool, cmdRegistry),
+			Sync:     syncStore,
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,

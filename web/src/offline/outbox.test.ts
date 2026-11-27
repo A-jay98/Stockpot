@@ -16,9 +16,25 @@ afterEach(async () => {
   await db.open()
 })
 
-test('schema v1 has only meta and outbox', () => {
-  expect(db.verno).toBe(1)
-  expect(db.tables.map((t) => t.name).sort()).toEqual(['meta', 'outbox'])
+test('schema v2 has meta, outbox and one table per synced server table', () => {
+  expect(db.verno).toBe(2)
+  expect(db.tables.map((t) => t.name).sort()).toEqual(
+    [
+      'meta',
+      'outbox',
+      'category',
+      'ingredient',
+      'store',
+      'location',
+      'product',
+      'product_barcode',
+      'product_stat',
+      'stock_item',
+      'stock_event',
+      'shopping_list',
+      'shopping_item',
+    ].sort(),
+  )
 })
 
 test('enqueueCommand stores pending commands in order with uuidv7 ids', async () => {
