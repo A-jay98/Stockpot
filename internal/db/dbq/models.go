@@ -116,6 +116,13 @@ type Category struct {
 	Sort        int32
 }
 
+type DigestRun struct {
+	UserID         uuid.UUID
+	HouseholdID    uuid.UUID
+	Day            pgtype.Date
+	NotificationID *uuid.UUID
+}
+
 type FoodRule struct {
 	ID           uuid.UUID
 	HouseholdID  *uuid.UUID
@@ -221,6 +228,39 @@ type Membership struct {
 	Role        string
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+}
+
+type Notification struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	HouseholdID    uuid.UUID
+	Kind           string
+	Title          string
+	Body           string
+	Payload        []byte
+	DedupeKey      string
+	CreatedAt      time.Time
+	ReadAt         *time.Time
+	SentTelegramAt *time.Time
+}
+
+type NotificationChannel struct {
+	UserID    uuid.UUID
+	Kind      string
+	ChatID    int64
+	Username  *string
+	Enabled   bool
+	LastError *string
+	LinkedAt  time.Time
+}
+
+type NotificationPref struct {
+	UserID     uuid.UUID
+	DigestTime *string
+	LeadDays   *int32
+	QuietStart *string
+	QuietEnd   *string
+	UpdatedAt  time.Time
 }
 
 type Product struct {
@@ -397,6 +437,17 @@ type Store struct {
 	Name        string
 	Sort        int32
 	Color       *string
+}
+
+type TelegramLink struct {
+	CodeHash  []byte
+	UserID    uuid.UUID
+	ExpiresAt time.Time
+}
+
+type TelegramPoll struct {
+	ID           bool
+	UpdateOffset int64
 }
 
 type WebauthnCredential struct {

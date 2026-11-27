@@ -10,6 +10,7 @@ import { SetupPage } from '../features/auth/SetupPage'
 import { HomePage } from '../features/home/HomePage'
 import { InventoryPage } from '../features/inventory/InventoryPage'
 import { ItemDetailPage } from '../features/inventory/ItemDetailPage'
+import { NotificationSettingsPage } from '../features/notifications/NotificationSettingsPage'
 import { RecipesPage } from '../features/recipes/RecipesPage'
 import { FoodRulesPage } from '../features/settings/FoodRulesPage'
 import { LocationsPage } from '../features/settings/LocationsPage'
@@ -56,6 +57,7 @@ export const routes: RouteObject[] = [
           { path: 'settings/stores', Component: StoresPage },
           { path: 'settings/locations', Component: LocationsPage },
           { path: 'settings/food-rules', Component: FoodRulesPage },
+          { path: 'settings/notifications', Component: NotificationSettingsPage },
         ],
       },
     ],

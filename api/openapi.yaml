@@ -40,6 +40,8 @@ tags:
     description: Offline sync engine - commands, pulls and change events.
   - name: inventory
     description: Shelf-life (food) rules behind expiry estimates.
+  - name: notifications
+    description: Inbox, alert preferences and Telegram linking.
 paths:
   /health:
     get:
@@ -1094,6 +1096,164 @@ paths:
                 $ref: "#/components/schemas/CommandResults"
         default:
           $ref: "#/components/responses/Problem"
+  /v1/notifications:
+    get:
+      operationId: listNotifications
+      summary: The user's inbox, newest first, with the unread count
+      tags: [notifications]
+      x-roles: [user]
+      parameters:
+        - name: unread
+          in: query
+          description: Only unread notifications.
+          schema:
+            type: boolean
+            default: false
+        - name: before
+          in: query
+          description: Only notifications older than this (the last `createdAt` of the previous page).
+          schema:
+            type: string
+            format: date-time
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+      responses:
+        "200":
+          description: A page of the inbox
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationList"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/notifications/read:
+    post:
+      operationId: markNotificationsRead
+      summary: Mark notifications read
+      description: With no `ids` (or an empty list) every unread notification is marked.
+      tags: [notifications]
+      x-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationsRead"
+      responses:
+        "204":
+          description: Marked
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/notifications/preferences:
+    get:
+      operationId: getNotificationPreferences
+      summary: The user's alert preferences (their own, else the system defaults)
+      tags: [notifications]
+      x-roles: [user]
+      responses:
+        "200":
+          description: Preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+        default:
+          $ref: "#/components/responses/Problem"
+    put:
+      operationId: setNotificationPreferences
+      summary: Change the user's alert preferences
+      description: Only the fields sent change; the rest keep following the system defaults.
+      tags: [notifications]
+      x-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationPreferencesUpdate"
+      responses:
+        "200":
+          description: Preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/notifications/telegram:
+    get:
+      operationId: getTelegramConnection
+      summary: Whether the bot is available and this user is connected
+      tags: [notifications]
+      x-roles: [user]
+      responses:
+        "200":
+          description: Connection
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelegramConnection"
+        default:
+          $ref: "#/components/responses/Problem"
+    delete:
+      operationId: disconnectTelegram
+      summary: Disconnect Telegram
+      tags: [notifications]
+      x-roles: [user]
+      responses:
+        "204":
+          description: Disconnected (also when it was not connected)
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/notifications/telegram/link:
+    post:
+      operationId: startTelegramLink
+      summary: Start connecting Telegram
+      description: Returns a deep link that opens the bot with a single-use code (valid 15 minutes). Answers 409 `telegram_not_configured` while no working bot token is set.
+      tags: [notifications]
+      x-roles: [user]
+      responses:
+        "201":
+          description: Link
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TelegramLink"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/notifications/telegram/test:
+    post:
+      operationId: testTelegramConnection
+      summary: Send a test message to the user's Telegram
+      description: Answers 409 `telegram_not_connected`, or 502 `telegram_error` with Telegram's reason.
+      tags: [notifications]
+      x-roles: [user]
+      responses:
+        "204":
+          description: Sent
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/telegram:
+    get:
+      operationId: getAdminTelegram
+      summary: Telegram bot status for Admin → Settings
+      description: Checks the token with getMe (cached for a minute) and reports linked chats and the poller's health.
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: Bot status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTelegram"
+        default:
+          $ref: "#/components/responses/Problem"
   /v1/sync:
     get:
       operationId: getSync
@@ -1508,6 +1668,142 @@ components:
           type: integer
         riverTarget:
           type: integer
+    Notification:
+      type: object
+      required: [id, householdId, kind, title, body, createdAt, read]
+      properties:
+        id:
+          type: string
+          format: uuid
+        householdId:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          enum: [expiry_digest]
+        title:
+          type: string
+        body:
+          type: string
+          description: Plain text, one item per line.
+        payload:
+          type: object
+          additionalProperties: true
+          description: Machine-readable content (for `expiry_digest`, `expired`, `expiring` and `low` item lists).
+        createdAt:
+          type: string
+          format: date-time
+        read:
+          type: boolean
+    NotificationList:
+      type: object
+      required: [items, unread]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        unread:
+          type: integer
+          description: Unread notifications in total, not only on this page.
+    NotificationsRead:
+      type: object
+      properties:
+        ids:
+          type: array
+          maxItems: 200
+          items:
+            type: string
+            format: uuid
+    NotificationPreferences:
+      type: object
+      required: [digestTime, leadDays, quietStart, quietEnd]
+      properties:
+        digestTime:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          description: When the daily digest is made, HH:MM (America/Toronto).
+        leadDays:
+          type: integer
+          minimum: 0
+          maximum: 30
+          description: Items expiring within this many days count as expiring soon.
+        quietStart:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          description: Telegram messages are held between quietStart and quietEnd. Equal values turn quiet hours off.
+        quietEnd:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+    NotificationPreferencesUpdate:
+      type: object
+      properties:
+        digestTime:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        leadDays:
+          type: integer
+          minimum: 0
+          maximum: 30
+        quietStart:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        quietEnd:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+    TelegramConnection:
+      type: object
+      required: [available, linked, enabled]
+      properties:
+        available:
+          type: boolean
+          description: A working bot token is set, so Connect Telegram can be offered.
+        botUsername:
+          type: string
+        linked:
+          type: boolean
+        enabled:
+          type: boolean
+          description: Messages are being sent (false after Telegram refused the chat).
+        username:
+          type: string
+          description: The connected Telegram account, when it has a username.
+        linkedAt:
+          type: string
+          format: date-time
+        lastError:
+          type: string
+    TelegramLink:
+      type: object
+      required: [url, expiresAt]
+      properties:
+        url:
+          type: string
+          description: t.me deep link that opens the bot with the code.
+        expiresAt:
+          type: string
+          format: date-time
+    AdminTelegram:
+      type: object
+      required: [status, linkedChats, polling]
+      properties:
+        status:
+          type: string
+          enum: [ok, not_configured, error]
+        botUsername:
+          type: string
+        detail:
+          type: string
+        linkedChats:
+          type: integer
+        polling:
+          type: boolean
+          description: The long-poll worker is running in the server.
+        lastPollAt:
+          type: string
+          format: date-time
+        lastError:
+          type: string
     AdminBackups:
       type: object
       required: [enabled, configured, time, timezone, keep, hasToken, hasRecipient, channel, runs]
