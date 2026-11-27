@@ -7,11 +7,15 @@ import { LoginPage } from '../features/auth/LoginPage'
 import { PendingPage } from '../features/auth/PendingPage'
 import { RequireSession } from '../features/auth/RequireSession'
 import { SetupPage } from '../features/auth/SetupPage'
+import { CookPage } from '../features/cook/CookPage'
 import { HomePage } from '../features/home/HomePage'
 import { InventoryPage } from '../features/inventory/InventoryPage'
 import { ItemDetailPage } from '../features/inventory/ItemDetailPage'
 import { NotificationSettingsPage } from '../features/notifications/NotificationSettingsPage'
+import { RecipeEditor } from '../features/recipes/RecipeEditor'
+import { RecipePage } from '../features/recipes/RecipePage'
 import { RecipesPage } from '../features/recipes/RecipesPage'
+import { VersionPage } from '../features/recipes/VersionPage'
 import { FoodRulesPage } from '../features/settings/FoodRulesPage'
 import { LocationsPage } from '../features/settings/LocationsPage'
 import { SettingsPage } from '../features/settings/SettingsPage'
@@ -53,6 +57,11 @@ export const routes: RouteObject[] = [
           { path: 'add', Component: AddPage },
           { path: 'shopping', Component: ShoppingPage },
           { path: 'recipes', Component: RecipesPage },
+          { path: 'recipes/import', Component: RecipesPage },
+          { path: 'recipes/:id', Component: RecipePage },
+          { path: 'recipes/:id/v/:n', Component: VersionPage },
+          { path: 'recipes/:id/edit', Component: RecipeEditor },
+          { path: 'recipes/:id/cook', Component: CookPage },
           { path: 'settings', Component: SettingsPage },
           { path: 'settings/stores', Component: StoresPage },
           { path: 'settings/locations', Component: LocationsPage },

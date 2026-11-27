@@ -2024,7 +2024,7 @@ export interface components {
          *     UUIDv7). Fields typed nullable clear the column when sent as null;
          *     absent fields are left unchanged.
          */
-        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"];
+        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"] | components["schemas"]["CmdRecipeCreate"] | components["schemas"]["CmdRecipeVersionCreate"] | components["schemas"]["CmdRecipeVersionRestore"] | components["schemas"]["CmdRecipeUpdate"] | components["schemas"]["CmdRecipeDelete"] | components["schemas"]["CmdRecipeLineSetIngredient"];
         CmdCatalogProductCreate: {
             /** Format: uuid */
             id: string;
@@ -2312,6 +2312,11 @@ export interface components {
                 id: string;
                 /** Format: uuid */
                 listId: string;
+                /**
+                 * Format: uuid
+                 * @description The recipe this item is for ("Missing to list").
+                 */
+                recipeId?: string | null;
                 sort?: number | null;
                 /** Format: uuid */
                 productId?: string | null;
@@ -2443,6 +2448,147 @@ export interface components {
                 /** Format: uuid */
                 listId: string;
             };
+        };
+        CmdRecipeCreate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.create";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                versionId: string;
+                subtitle?: string | null;
+                /** @enum {string|null} */
+                sourceKind?: "manual" | "url" | "text" | null;
+                sourceUrl?: string | null;
+                /** @description BCP 47; null means English. */
+                sourceLang?: string | null;
+                tags?: string[] | null;
+                title: string;
+                servings?: number | null;
+                totalMinutes?: number | null;
+                /** @description Raw ingredient lines in order; section headers ("For the rice:") included. The server parses them. */
+                ingredients: string[];
+                steps: components["schemas"]["RecipeStep"][];
+                notes?: string | null;
+            };
+        };
+        CmdRecipeVersionCreate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.version.create";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                recipeId: string;
+                /** Format: uuid */
+                versionId: string;
+                /** @enum {string} */
+                origin: "manual" | "chat";
+                /**
+                 * Format: uuid
+                 * @description Version the content was based on; defaults to the current one.
+                 */
+                parentVersionId?: string | null;
+                /** Format: uuid */
+                fromMessageId?: string | null;
+                changeSummary?: string | null;
+                title: string;
+                servings?: number | null;
+                totalMinutes?: number | null;
+                /** @description Raw ingredient lines in order; section headers ("For the rice:") included. The server parses them. */
+                ingredients: string[];
+                steps: components["schemas"]["RecipeStep"][];
+                notes?: string | null;
+            };
+        };
+        CmdRecipeVersionRestore: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.version.restore";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                recipeId: string;
+                /** Format: uuid */
+                versionId: string;
+                /** Format: uuid */
+                fromVersionId: string;
+            };
+        };
+        CmdRecipeUpdate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.update";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                tags?: string[] | null;
+                saved?: boolean | null;
+                coverBlob?: string | null;
+                subtitle?: string | null;
+            };
+        };
+        CmdRecipeDelete: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.delete";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        CmdRecipeLineSetIngredient: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.line.set_ingredient";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                versionId: string;
+                /** Format: uuid */
+                lineId: string;
+                /** Format: uuid */
+                ingredientId: string | null;
+            };
+        };
+        RecipeStep: {
+            text: string;
+            minutes?: number | null;
         };
         CommandBatch: {
             /**

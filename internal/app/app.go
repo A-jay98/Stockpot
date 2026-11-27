@@ -38,6 +38,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/llm/openaicompat"
 	"github.com/a-jay98/stockpot/internal/logging"
 	"github.com/a-jay98/stockpot/internal/media"
+	"github.com/a-jay98/stockpot/internal/recipes"
 	"github.com/a-jay98/stockpot/internal/settings"
 	"github.com/a-jay98/stockpot/internal/shopping"
 	"github.com/a-jay98/stockpot/internal/syncdb"
@@ -146,6 +147,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 		return shopping.RecordPurchase(ctx, tx, hh, product, store, uuid.Nil, at, qty, unit)
 	})
 	shopping.Register(cmdRegistry, resolve.Resolver{})
+	recipes.Register(cmdRegistry, resolve.Resolver{})
 	syncStore, err := syncdb.New(ctx, pool)
 	if err != nil {
 		return err

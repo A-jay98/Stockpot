@@ -40,6 +40,12 @@ var Tables = []Table{
 	{"stock_event", false},
 	{"shopping_list", false},
 	{"shopping_item", false},
+	{"recipe", false},
+	{"recipe_version", false},
+	{"recipe_photo", false},
+	{"cook_session", false},
+	{"recipe_import", false},
+	{"substitution", true},
 }
 
 const globalLockKey = "hh:global"

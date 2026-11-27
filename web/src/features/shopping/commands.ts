@@ -54,6 +54,7 @@ registerReducer('shopping.item.add', async (db, p, { clientTime }) => {
     checkedAt: null,
     checkedBy: null,
     stockItemId: null,
+    recipeId: p.recipeId ?? null,
   }
   await db.shopping_item.put(row)
 })
