@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/a-jay98/stockpot/internal/catalog"
+	"github.com/a-jay98/stockpot/internal/catalog/resolve"
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/syncdb"
 
@@ -55,7 +56,7 @@ func newEnv(t *testing.T) *env {
 		t.Fatal(err)
 	}
 	reg := commands.NewRegistry()
-	catalog.Register(reg, catalog.ExactResolver{})
+	catalog.Register(reg, resolve.Resolver{})
 	syncStore, err := syncdb.New(t.Context(), pool)
 	if err != nil {
 		t.Fatal(err)

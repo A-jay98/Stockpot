@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/a-jay98/stockpot/internal/catalog"
+	"github.com/a-jay98/stockpot/internal/catalog/resolve"
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/identity"
 	"github.com/a-jay98/stockpot/internal/shopping"
@@ -83,8 +84,8 @@ func newEnv(t *testing.T) *env {
 		t.Fatal(err)
 	}
 	reg := commands.NewRegistry()
-	catalog.Register(reg, catalog.ExactResolver{})
-	shopping.Register(reg, catalog.ExactResolver{})
+	catalog.Register(reg, resolve.Resolver{})
+	shopping.Register(reg, resolve.Resolver{})
 	e := &env{pool: pool, svc: commands.NewService(pool, reg)}
 	if err := pool.QueryRow(t.Context(), `INSERT INTO household (id, name) VALUES (gen_random_uuid(), 'Home') RETURNING id`).Scan(&e.hh); err != nil {
 		t.Fatal(err)

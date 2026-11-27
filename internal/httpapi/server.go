@@ -35,6 +35,10 @@ type Deps struct {
 	Backups BackupAdmin
 	// FoodRules serves /api/v1/food-rules and the admin view.
 	FoodRules FoodRuleService
+	// Enrich serves /api/v1/admin/catalog; nil answers 503.
+	Enrich CatalogEnricher
+	// Matcher serves /api/v1/catalog/match.
+	Matcher CatalogMatcher
 	// Alerts serves /api/v1/notifications* and /api/v1/admin/telegram; nil answers 503.
 	Alerts Alerts
 }
@@ -49,6 +53,8 @@ type Server struct {
 	commands  CommandApplier
 	sync      Syncer
 	backups   BackupAdmin
+	enrich    CatalogEnricher
+	matcher   CatalogMatcher
 	alerts    Alerts
 	foodRules FoodRuleService
 	now       func() time.Time
@@ -60,7 +66,7 @@ var _ StrictServerInterface = (*Server)(nil)
 func NewServer(d Deps) *Server {
 	return &Server{
 		checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM,
-		commands: d.Commands, sync: d.Sync, backups: d.Backups, alerts: d.Alerts, foodRules: d.FoodRules, now: time.Now,
+		commands: d.Commands, sync: d.Sync, backups: d.Backups, enrich: d.Enrich, matcher: d.Matcher, alerts: d.Alerts, foodRules: d.FoodRules, now: time.Now,
 	}
 }
 

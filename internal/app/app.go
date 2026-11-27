@@ -24,6 +24,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/blob"
 	"github.com/a-jay98/stockpot/internal/buildinfo"
 	"github.com/a-jay98/stockpot/internal/catalog"
+	"github.com/a-jay98/stockpot/internal/catalog/resolve"
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/config"
 	"github.com/a-jay98/stockpot/internal/db"
@@ -139,11 +140,11 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	// Offline sync: commands are the only write path; each feature registers
 	// its handlers here (one line per area).
 	cmdRegistry := commands.NewRegistry()
-	catalog.Register(cmdRegistry, catalog.ExactResolver{})
-	inventory.Register(cmdRegistry, catalog.ExactResolver{}, func(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, store *uuid.UUID, at time.Time, qty, unit *string) error {
+	catalog.Register(cmdRegistry, resolve.Resolver{})
+	inventory.Register(cmdRegistry, resolve.Resolver{}, func(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID, store *uuid.UUID, at time.Time, qty, unit *string) error {
 		return shopping.RecordPurchase(ctx, tx, hh, product, store, uuid.Nil, at, qty, unit)
 	})
-	shopping.Register(cmdRegistry, catalog.ExactResolver{})
+	shopping.Register(cmdRegistry, resolve.Resolver{})
 	syncStore, err := syncdb.New(ctx, pool)
 	if err != nil {
 		return err
@@ -174,12 +175,14 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	sweepers = append(sweepers, identity.Sweepers(pool)...)
 	sweepers = append(sweepers, llm.Sweepers(pool)...)
 	sweepers = append(sweepers, backup.Sweepers(pool)...)
+	enricher := catalog.NewEnricher(catalog.EnrichDeps{Pool: pool, Settings: store, LLM: gateway})
+	sweepers = append(sweepers, enricher.Sweepers()...)
 	sweepers = append(sweepers, alerts.Sweepers(alertSvc)...)
 	jobClient, err := jobs.New(jobs.Deps{
 		Pool:     pool,
 		Settings: store,
 		Sweepers: sweepers,
-		Workers:  []func(*river.Workers) error{backups.Registrar(), alertSvc.Registrar()},
+		Workers:  []func(*river.Workers) error{backups.Registrar(), enricher.Registrar(), alertSvc.Registrar()},
 		Periodic: []*river.PeriodicJob{alerts.PeriodicJob()},
 		Logger:   slog.Default(),
 	})
@@ -188,6 +191,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	}
 
 	backups.Attach(jobClient)
+	enricher.Attach(jobClient)
 
 	adminSvc = admin.New(admin.Deps{
 		Pool:      pool,
@@ -212,6 +216,8 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Commands:  commands.NewService(pool, cmdRegistry),
 			Sync:      syncStore,
 			Backups:   backups,
+			Enrich:    enricher,
+			Matcher:   catalog.Matcher{Pool: pool, Res: resolve.Resolver{}},
 			Alerts:    alertSvc,
 			FoodRules: inventory.NewRuleService(pool),
 		}),

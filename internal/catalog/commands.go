@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 
+	"github.com/a-jay98/stockpot/internal/catalog/resolve"
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/identity"
 	"github.com/a-jay98/stockpot/internal/units"
@@ -279,22 +280,29 @@ func uniqueViolation(err error) bool {
 }
 
 // resolve applies the resolver to a product row unless the user chose.
+// Anything under resolve.AutoAccept waits for the background enricher.
 func (h *handlers) resolve(ctx context.Context, tx pgx.Tx, hh, id uuid.UUID, name string, brand *string) error {
 	m, err := h.res.Resolve(ctx, tx, hh, name, brand)
 	if err != nil {
 		return err
 	}
 	if m == nil {
-		_, err = tx.Exec(ctx, `UPDATE product SET ingredient_id = NULL, match_source = 'none', match_confidence = NULL, enrich_state = 'pending'
+		_, err = tx.Exec(ctx, `UPDATE product SET ingredient_id = NULL, match_source = 'none', match_confidence = NULL, enrich_state = 'pending', enrich_attempts = 0
 			WHERE id = $1 AND match_source <> 'user'`, id)
 		return err
 	}
 	state := "pending"
-	if m.Confidence >= 0.85 {
+	if m.Confidence >= resolve.AutoAccept {
 		state = "done"
 	}
-	_, err = tx.Exec(ctx, `UPDATE product SET ingredient_id = $2, match_source = 'rule', match_confidence = $3, enrich_state = $4
-		WHERE id = $1 AND match_source <> 'user'`, id, m.IngredientID, m.Confidence, state)
+	var hint *string
+	if m.LocationHint != "" {
+		hint = &m.LocationHint
+	}
+	// A hint from the name ("frozen peas") only fills an empty default location.
+	_, err = tx.Exec(ctx, `UPDATE product SET ingredient_id = $2, match_source = 'rule', match_confidence = $3, enrich_state = $4, enrich_attempts = 0,
+		default_location_kind = coalesce(default_location_kind, $5)
+		WHERE id = $1 AND match_source <> 'user'`, id, m.IngredientID, m.Confidence, state, hint)
 	return err
 }
 
