@@ -26,7 +26,7 @@ type fakeAlerts struct {
 	unlinked int
 }
 
-func (f *fakeAlerts) List(_ context.Context, u uuid.UUID, p alerts.ListParams) ([]alerts.Notification, int, error) {
+func (f *fakeAlerts) List(_ context.Context, u uuid.UUID, _ alerts.ListParams) ([]alerts.Notification, int, error) {
 	f.user = u
 	return []alerts.Notification{{
 		ID: uuid.New(), HouseholdID: uuid.New(), Kind: "expiry_digest", Title: "1 expired", Body: "Expired\n• Milk",

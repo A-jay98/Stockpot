@@ -2,6 +2,7 @@ package alerts
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 	"time"
@@ -14,7 +15,7 @@ import (
 // The returned func stops it and waits.
 func (e *env) startBot(t *testing.T) func() {
 	t.Helper()
-	e.svc.d.Sleep = func(ctx context.Context, d time.Duration) error {
+	e.svc.d.Sleep = func(ctx context.Context, _ time.Duration) error {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -121,7 +122,7 @@ func TestLinkCodeExpires(t *testing.T) {
 	}
 	e.exec(t, `UPDATE telegram_link SET expires_at = now() - interval '1 minute'`)
 	code := strings.TrimPrefix(link.URL, "https://t.me/stockpot_test_bot?start=")
-	if _, err := e.svc.completeLink(t.Context(), code, 1, ""); err != ErrLinkNotFound {
+	if _, err := e.svc.completeLink(t.Context(), code, 1, ""); !errors.Is(err, ErrLinkNotFound) {
 		t.Fatalf("err = %v", err)
 	}
 }
@@ -132,7 +133,7 @@ func TestNewLinkCodeReplacesOld(t *testing.T) {
 	a, _ := e.svc.StartLink(t.Context(), u)
 	b, _ := e.svc.StartLink(t.Context(), u)
 	pre := "https://t.me/stockpot_test_bot?start="
-	if _, err := e.svc.completeLink(t.Context(), strings.TrimPrefix(a.URL, pre), 1, ""); err != ErrLinkNotFound {
+	if _, err := e.svc.completeLink(t.Context(), strings.TrimPrefix(a.URL, pre), 1, ""); !errors.Is(err, ErrLinkNotFound) {
 		t.Fatalf("old code still works: %v", err)
 	}
 	if _, err := e.svc.completeLink(t.Context(), strings.TrimPrefix(b.URL, pre), 1, ""); err != nil {
@@ -146,7 +147,7 @@ func TestChatCannotBeSharedBetweenUsers(t *testing.T) {
 	e.link(t, a, 555)
 	l, _ := e.svc.StartLink(t.Context(), b)
 	_, err := e.svc.completeLink(t.Context(), strings.TrimPrefix(l.URL, "https://t.me/stockpot_test_bot?start="), 555, "")
-	if err != ErrChatTaken {
+	if !errors.Is(err, ErrChatTaken) {
 		t.Fatalf("err = %v", err)
 	}
 	if chat, ok := e.channelChat(t, a); !ok || chat != 555 {

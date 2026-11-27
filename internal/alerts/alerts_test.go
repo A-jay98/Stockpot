@@ -3,6 +3,7 @@ package alerts
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"strings"
 	"sync"
@@ -558,7 +559,7 @@ func TestDisabledUserGetsNothing(t *testing.T) {
 	e.exec(t, `UPDATE app_user SET status = 'active' WHERE id = $1`, u)
 	l, _ := e.svc.StartLink(t.Context(), u)
 	e.exec(t, `UPDATE app_user SET status = 'disabled' WHERE id = $1`, u)
-	if _, err := e.svc.completeLink(t.Context(), strings.TrimPrefix(l.URL, "https://t.me/stockpot_test_bot?start="), 999, ""); err != ErrLinkNotFound {
+	if _, err := e.svc.completeLink(t.Context(), strings.TrimPrefix(l.URL, "https://t.me/stockpot_test_bot?start="), 999, ""); !errors.Is(err, ErrLinkNotFound) {
 		t.Fatalf("redeemed for a disabled user: %v", err)
 	}
 	// A disabled user gets no new digest either.

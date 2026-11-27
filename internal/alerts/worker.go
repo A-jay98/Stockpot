@@ -17,7 +17,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/telegram"
 )
 
-// Kind of the digest notification.
+// KindExpiryDigest is the kind of the daily digest notification.
 const KindExpiryDigest = "expiry_digest"
 
 // runEvery is the job's cadence: fine enough for digest times on the quarter
