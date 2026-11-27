@@ -144,6 +144,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/backups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Backup status, channel check and recent runs
+         * @description Includes a live check of the Telegram bot (getMe) when a token is set.
+         */
+        get: operations["getAdminBackups"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/backups/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Back up now
+         * @description Queues a backup job. Answers 409 `backup_not_configured` or `backup_running`.
+         */
+        post: operations["runAdminBackup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/backups/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Send a test message to the backup channel
+         * @description Proves the bot can post there. Answers 409 `backup_not_configured`, or 502 `telegram_error` with Telegram's reason.
+         */
+        post: operations["testAdminBackupChannel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/settings": {
         parameters: {
             query?: never;
@@ -916,6 +976,7 @@ export interface components {
                 dropped: number;
             };
             llm?: components["schemas"]["AdminLLMToday"];
+            backups?: components["schemas"]["AdminBackupsToday"];
         };
         AdminDatabaseStatus: {
             reachable: boolean;
@@ -930,6 +991,67 @@ export interface components {
             appTarget?: number;
             riverVersion?: number;
             riverTarget?: number;
+        };
+        AdminBackups: {
+            /** @description The nightly schedule is on (flag.backups). */
+            enabled: boolean;
+            /** @description Bot token, chat id and age key are all set. */
+            configured: boolean;
+            /** @description Nightly time, HH:MM. */
+            time: string;
+            timezone: string;
+            /**
+             * Format: date-time
+             * @description Absent while the schedule is off.
+             */
+            nextRunAt?: string;
+            keep: number;
+            hasToken: boolean;
+            chatId?: string;
+            hasRecipient: boolean;
+            /** @description The age public key (not secret). */
+            recipient?: string;
+            channel: {
+                /** @enum {string} */
+                status: "ok" | "not_configured" | "error";
+                botUsername?: string;
+                detail?: string;
+            };
+            /** @description Newest first. */
+            runs: components["schemas"]["AdminBackupRun"][];
+        };
+        AdminBackupRun: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            trigger: "scheduled" | "manual";
+            /** @enum {string} */
+            status: "running" | "ok" | "failed";
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            /** Format: int64 */
+            sizeBytes: number;
+            parts: number;
+            appVersion?: string;
+            /** Format: int64 */
+            schemaVersion?: number;
+            error?: string;
+            /** @description Retention already removed (or tried to remove) its Telegram messages. */
+            pruned: boolean;
+            deleteNote?: string;
+        };
+        /** @description Backup health for the overview. */
+        AdminBackupsToday: {
+            enabled: boolean;
+            /** Format: date-time */
+            lastOkAt?: string;
+            /** @enum {string} */
+            lastStatus?: "running" | "ok" | "failed";
+            lastError?: string;
+            /** @description Enabled, but no successful backup in the last 36 hours (or the latest run failed). */
+            stale: boolean;
         };
         AdminLLMToday: {
             /** Format: int64 */
@@ -1519,6 +1641,65 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AdminJob"];
                 };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getAdminBackups: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Backup state */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminBackups"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    runAdminBackup: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    testAdminBackupChannel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sent */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             default: components["responses"]["Problem"];
         };

@@ -223,6 +223,46 @@ paths:
                 $ref: "#/components/schemas/AdminJob"
         default:
           $ref: "#/components/responses/Problem"
+  /v1/admin/backups:
+    get:
+      operationId: getAdminBackups
+      summary: Backup status, channel check and recent runs
+      description: Includes a live check of the Telegram bot (getMe) when a token is set.
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: Backup state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminBackups"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/backups/run:
+    post:
+      operationId: runAdminBackup
+      summary: Back up now
+      description: Queues a backup job. Answers 409 `backup_not_configured` or `backup_running`.
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "202":
+          description: Queued
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/backups/test:
+    post:
+      operationId: testAdminBackupChannel
+      summary: Send a test message to the backup channel
+      description: Proves the bot can post there. Answers 409 `backup_not_configured`, or 502 `telegram_error` with Telegram's reason.
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "204":
+          description: Sent
+        default:
+          $ref: "#/components/responses/Problem"
   /v1/admin/settings:
     get:
       operationId: listAdminSettings
@@ -1288,6 +1328,8 @@ components:
               format: int64
         llm:
           $ref: "#/components/schemas/AdminLLMToday"
+        backups:
+          $ref: "#/components/schemas/AdminBackupsToday"
     AdminDatabaseStatus:
       type: object
       required: [reachable, latencyMs, schemaCurrent]
@@ -1312,6 +1354,106 @@ components:
           type: integer
         riverTarget:
           type: integer
+    AdminBackups:
+      type: object
+      required: [enabled, configured, time, timezone, keep, hasToken, hasRecipient, channel, runs]
+      properties:
+        enabled:
+          type: boolean
+          description: The nightly schedule is on (flag.backups).
+        configured:
+          type: boolean
+          description: Bot token, chat id and age key are all set.
+        time:
+          type: string
+          description: Nightly time, HH:MM.
+        timezone:
+          type: string
+        nextRunAt:
+          type: string
+          format: date-time
+          description: Absent while the schedule is off.
+        keep:
+          type: integer
+        hasToken:
+          type: boolean
+        chatId:
+          type: string
+        hasRecipient:
+          type: boolean
+        recipient:
+          type: string
+          description: The age public key (not secret).
+        channel:
+          type: object
+          required: [status]
+          properties:
+            status:
+              type: string
+              enum: [ok, not_configured, error]
+            botUsername:
+              type: string
+            detail:
+              type: string
+        runs:
+          type: array
+          description: Newest first.
+          items:
+            $ref: "#/components/schemas/AdminBackupRun"
+    AdminBackupRun:
+      type: object
+      required: [id, trigger, status, startedAt, sizeBytes, parts, pruned]
+      properties:
+        id:
+          type: string
+          format: uuid
+        trigger:
+          type: string
+          enum: [scheduled, manual]
+        status:
+          type: string
+          enum: [running, ok, failed]
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        sizeBytes:
+          type: integer
+          format: int64
+        parts:
+          type: integer
+        appVersion:
+          type: string
+        schemaVersion:
+          type: integer
+          format: int64
+        error:
+          type: string
+        pruned:
+          type: boolean
+          description: Retention already removed (or tried to remove) its Telegram messages.
+        deleteNote:
+          type: string
+    AdminBackupsToday:
+      type: object
+      required: [enabled, stale]
+      description: Backup health for the overview.
+      properties:
+        enabled:
+          type: boolean
+        lastOkAt:
+          type: string
+          format: date-time
+        lastStatus:
+          type: string
+          enum: [running, ok, failed]
+        lastError:
+          type: string
+        stale:
+          type: boolean
+          description: Enabled, but no successful backup in the last 36 hours (or the latest run failed).
     AdminLLMToday:
       type: object
       required: [requests, tokens, available]

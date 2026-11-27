@@ -13,10 +13,12 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/riverqueue/river"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/a-jay98/stockpot/internal/admin"
 	"github.com/a-jay98/stockpot/internal/audit"
+	"github.com/a-jay98/stockpot/internal/backup"
 	"github.com/a-jay98/stockpot/internal/blob"
 	"github.com/a-jay98/stockpot/internal/buildinfo"
 	"github.com/a-jay98/stockpot/internal/config"
@@ -30,6 +32,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/llm/openaicompat"
 	"github.com/a-jay98/stockpot/internal/logging"
 	"github.com/a-jay98/stockpot/internal/settings"
+	"github.com/a-jay98/stockpot/internal/telegram"
 )
 
 // shutdownTimeout bounds each shutdown stage (HTTP drain, job drain).
@@ -129,19 +132,34 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	go func() { access.Run(accessCtx); close(accessDone) }()
 	defer func() { stopAccess(); <-accessDone }()
 
+	// Telegram: one bot for backups (and alerts); the token is a live setting.
+	tg := telegram.New(func() string { return telegram.SettingBotToken.Get(store) },
+		telegram.WithHTTPClient(&http.Client{Transport: llmHTTPClient().Transport}))
+	backups := backup.NewService(backup.Deps{
+		Pool: pool, Settings: store, Telegram: tg, BlobDir: cfg.BlobDir, DatabaseURL: cfg.DatabaseURL,
+		SchemaVersion: func(ctx context.Context) (int64, error) {
+			v, err := schema.Versions(ctx)
+			return v.App, err
+		},
+	})
+
 	sweepers := []jobs.Sweeper{jobs.AppLogSweeper(pool)}
 	sweepers = append(sweepers, audit.Sweepers(pool)...)
 	sweepers = append(sweepers, identity.Sweepers(pool)...)
 	sweepers = append(sweepers, llm.Sweepers(pool)...)
+	sweepers = append(sweepers, backup.Sweepers(pool)...)
 	jobClient, err := jobs.New(jobs.Deps{
 		Pool:     pool,
 		Settings: store,
 		Sweepers: sweepers,
+		Workers:  []func(*river.Workers) error{backups.Registrar()},
 		Logger:   slog.Default(),
 	})
 	if err != nil {
 		return err
 	}
+
+	backups.Attach(jobClient)
 
 	adminSvc = admin.New(admin.Deps{
 		Pool:      pool,
@@ -151,6 +169,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 		LogSink:   sink,
 		StartedAt: startedAt,
 		LLMToday:  llmToday(gateway),
+		Backups:   backupsToday(backups),
 		Audit: func(ctx context.Context, tx pgx.Tx, action string, t admin.Target, before, after any) error {
 			return audit.Record(ctx, tx, action, audit.Target{Type: t.Type, ID: t.ID}, before, after)
 		},
@@ -162,6 +181,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Admin:    adminSvc,
 			Identity: ident,
 			LLM:      gateway,
+			Backups:  backups,
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,
@@ -252,5 +272,16 @@ func llmToday(g *llm.Router) func(context.Context) (admin.LLMToday, error) {
 			t.RequestCap = &c
 		}
 		return t, nil
+	}
+}
+
+// backupsToday adapts backup health to the admin overview tile.
+func backupsToday(b *backup.Service) func(context.Context) (admin.BackupsToday, error) {
+	return func(ctx context.Context) (admin.BackupsToday, error) {
+		h, err := b.Health(ctx)
+		if err != nil {
+			return admin.BackupsToday{}, err
+		}
+		return admin.BackupsToday{Enabled: h.Enabled, LastOK: h.LastOK, LastStatus: h.LastStatus, LastError: h.LastError, Stale: h.Stale}, nil
 	}
 }

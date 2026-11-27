@@ -1,7 +1,15 @@
-import { Activity, Database, ListChecks, Rocket, ScrollText, Sparkles } from 'lucide-react'
+import {
+  Activity,
+  Database,
+  DatabaseBackup,
+  ListChecks,
+  Rocket,
+  ScrollText,
+  Sparkles,
+} from 'lucide-react'
 import { Link } from 'react-router'
 import { useOverview } from './api'
-import { AdminPage, ErrorNote, formatBytes, formatDuration, number, Tile } from './ui'
+import { AdminPage, ErrorNote, formatBytes, formatDuration, formatTime, number, Tile } from './ui'
 
 /** Job states that mean "waiting or working", i.e. the queue depth. */
 const queued = ['available', 'scheduled', 'retryable', 'pending', 'running']
@@ -80,6 +88,23 @@ export function OverviewPage() {
               value={o.logSink.dropped > 0 ? `${number.format(o.logSink.dropped)} dropped` : 'OK'}
               tone={o.logSink.dropped > 0 ? 'soon' : undefined}
               detail={`${number.format(o.logSink.written)} lines stored since start`}
+            />
+          )}
+          {o.backups?.enabled && (
+            <Tile
+              icon={DatabaseBackup}
+              label="Backups"
+              value={o.backups.stale ? 'Needs attention' : 'OK'}
+              tone={o.backups.stale ? 'expired' : 'fresh'}
+              detail={
+                <Link to="/admin/backups" className="text-inherit">
+                  {o.backups.lastStatus === 'failed'
+                    ? `Last run failed${o.backups.lastError ? `: ${o.backups.lastError.slice(0, 60)}` : ''}`
+                    : o.backups.lastOkAt
+                      ? `Last: ${formatTime(o.backups.lastOkAt)}`
+                      : 'No successful backup yet'}
+                </Link>
+              }
             />
           )}
           {o.llm && (

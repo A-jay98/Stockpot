@@ -23,6 +23,7 @@ type Overview struct {
 	Errors24h, Warnings24h *int64
 	LogSink                *SinkCounts
 	LLM                    *LLMToday
+	Backups                *BackupsToday
 }
 
 // Database is the database part of the overview.
@@ -105,6 +106,15 @@ func (s *Service) Overview(ctx context.Context) Overview {
 			u, err := s.d.LLMToday(ctx)
 			if err == nil {
 				o.LLM = &u
+			}
+			return err
+		})
+	}
+	if s.d.Backups != nil {
+		probe("backups", func(ctx context.Context) error {
+			b, err := s.d.Backups(ctx)
+			if err == nil {
+				o.Backups = &b
 			}
 			return err
 		})

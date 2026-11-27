@@ -68,6 +68,14 @@ func (s *Server) GetAdminOverview(ctx context.Context, _ GetAdminOverviewRequest
 	if o.LLM != nil {
 		out.Llm = &AdminLLMToday{Requests: o.LLM.Requests, Tokens: o.LLM.Tokens, RequestCap: o.LLM.RequestCap, Available: o.LLM.Available}
 	}
+	if b := o.Backups; b != nil {
+		bt := &AdminBackupsToday{Enabled: b.Enabled, LastOkAt: b.LastOK, Stale: b.Stale, LastError: optString(b.LastError)}
+		if b.LastStatus != "" {
+			st := AdminBackupsTodayLastStatus(b.LastStatus)
+			bt.LastStatus = &st
+		}
+		out.Backups = bt
+	}
 	return GetAdminOverview200JSONResponse(out), nil
 }
 

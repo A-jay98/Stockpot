@@ -2,6 +2,7 @@
 //
 //	stockpot serve     run the HTTP API (socket-activated under systemd)
 //	stockpot migrate   apply pending database migrations
+//	stockpot restore   restore a backup from Telegram (see docs/restore.md)
 //	stockpot version   print the build
 package main
 
@@ -26,6 +27,7 @@ const usage = `usage: stockpot <command>
 commands:
   serve     run the HTTP API
   migrate   apply pending database migrations
+  restore   restore a backup (stockpot restore -h)
   version   print the build
 `
 
@@ -55,6 +57,8 @@ func run(ctx context.Context, args []string, stdout io.Writer) error {
 			return app.Serve(ctx, cfg)
 		}
 		return app.Migrate(ctx, cfg)
+	case "restore":
+		return runRestore(ctx, args[1:], os.Stdout)
 	case "version":
 		bi := buildinfo.Get()
 		_, err := fmt.Fprintf(stdout, "stockpot %s (%s, built %s)\n", bi.Version, bi.Commit, bi.BuiltAt)
