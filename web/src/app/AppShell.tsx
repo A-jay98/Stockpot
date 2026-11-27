@@ -1,6 +1,7 @@
 import { Plus, Shield, UserRound } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
 import { useMe } from '../features/auth/session'
+import { NotificationBell } from '../features/notifications/NotificationBell'
 import { RejectedSheet } from '../offline/RejectedSheet'
 import { useReplicaSync } from '../offline/useReplicaSync'
 import { OfflineIndicator } from '../pwa/OfflineIndicator'
@@ -8,6 +9,7 @@ import { Button, cn } from '../ui'
 import { AccountSheet } from './AccountSheet'
 import { Lockup } from './Logo'
 import { primaryNav, tabOrder } from './nav'
+import { ShellActionsContext } from './shell-context'
 
 const sideLink =
   'flex items-center gap-2.5 rounded-md px-2.5 py-[9px] font-semibold text-ink-muted no-underline hover:bg-surface-2 aria-[current=page]:bg-brand-soft aria-[current=page]:text-brand [&_svg]:size-5'
@@ -61,7 +63,9 @@ export function AppShell() {
           <RejectedSheet />
         </div>
         <main className="flex flex-1 flex-col pb-[calc(84px+env(safe-area-inset-bottom))] md:pb-0">
-          <Outlet />
+          <ShellActionsContext value={<NotificationBell />}>
+            <Outlet />
+          </ShellActionsContext>
         </main>
       </div>
 

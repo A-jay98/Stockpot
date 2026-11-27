@@ -33,6 +33,8 @@ type Deps struct {
 	Sync     Syncer
 	// Backups serves /api/v1/admin/backups; nil answers 503.
 	Backups BackupAdmin
+	// Alerts serves /api/v1/notifications* and /api/v1/admin/telegram; nil answers 503.
+	Alerts Alerts
 }
 
 // Server implements StrictServerInterface. Handlers live in one file per
@@ -45,6 +47,7 @@ type Server struct {
 	commands CommandApplier
 	sync     Syncer
 	backups  BackupAdmin
+	alerts   Alerts
 	now      func() time.Time
 }
 
@@ -54,7 +57,7 @@ var _ StrictServerInterface = (*Server)(nil)
 func NewServer(d Deps) *Server {
 	return &Server{
 		checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM,
-		commands: d.Commands, sync: d.Sync, backups: d.Backups, now: time.Now,
+		commands: d.Commands, sync: d.Sync, backups: d.Backups, alerts: d.Alerts, now: time.Now,
 	}
 }
 

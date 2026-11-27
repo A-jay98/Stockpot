@@ -129,3 +129,13 @@ Shared-file rules for parallel threads: OpenAPI paths go in the thread's own tag
 - Offline-created duplicate product names are not merged server-side; later commands referencing a rejected create fail and surface in the "Couldn't sync" sheet (m1-4 should resolve by name before create).
 - Seed ingredients: rows with no parent have their parent cleared on reseed; seed never deletes. `opened_fridge`/`thawed_fridge` shelf-life values are not in the seed; the m1-2 `food_rule` is expected to cover them.
 - A command that makes the server fail (400/5xx) is isolated by sending it alone, and set aside as rejected after 5 failed attempts so it cannot block the queue.
+
+## Implementation notes (m1-5)
+
+- Package `internal/alerts`. Job `alerts.expiry` runs every 15 minutes (not hourly: digest times are HH:MM), unique so only one run at a time: it creates due digests, then delivers unsent notifications to Telegram. `flag.alerts` (default on) gates it.
+- Settings are system scope (the registry has no household scope yet): `alerts.lead_days`, `alerts.digest_time`, `alerts.quiet_start`, `alerts.quiet_end`, `retention.notification_days`. A user's own values live in `notification_pref` and override them; the digest is per user and household.
+- Dedupe: `digest_run (user, household, local day)` is the claim, so an empty day is evaluated once and a digest is never created late in the day. A digest is only created within 6 h after its time. `notification.dedupe_key` is a second guard.
+- Groups: expired = before today (listed every digest until the item is used or discarded, capped at 8 per group), expiring = today through today + lead days, low = flagged low and not in another group. Food-rule adjustments for opened items are expected to be already reflected in `stock_item.expires_on` (m1-2).
+- Telegram delivery: 3 attempts per message with backoff (Telegram's `retry_after` up to 30 s), then retried by later runs for 24 h. Messages are held during quiet hours (inbox is not). A refused chat (403/400) disables the channel with `last_error` until the user reconnects. Only notifications created after the chat was linked are sent.
+- Linking: single-use code (hash stored, 15 min) → `t.me/<bot>?start=<code>`. `RunBot` long-polls `getUpdates` in a goroutine; one consumer across processes via a session advisory lock; the offset is stored in `telegram_poll` after each update. A Telegram chat belongs to one user. Commands: `/start <code>`, `/stop`, `/expiring`.
+- Link/unlink are audited (`telegram.link`, `telegram.unlink`). Admin → Settings shows `GET /v1/admin/telegram` (getMe, linked chats, poller health).

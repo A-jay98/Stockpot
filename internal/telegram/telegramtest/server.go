@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 // Token is the bot token the fake accepts.
@@ -39,6 +40,9 @@ type Server struct {
 	sent   []*Sent
 	files  map[string]*Sent
 	calls  map[string]int
+	// updates are the messages users "sent" to the bot, served by getUpdates.
+	updates  []map[string]any
+	updateID int64
 
 	// Fail, if set, is consulted before each API call; returning a status
 	// (and optional retry_after seconds) makes the call fail.
@@ -65,6 +69,23 @@ func (s *Server) Messages() []Sent {
 		out[i] = *m
 	}
 	return out
+}
+
+// Say makes a private chat user send text to the bot; getUpdates returns it
+// once. username may be empty.
+func (s *Server) Say(chatID int64, username, text string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.updateID++
+	s.updates = append(s.updates, map[string]any{
+		"update_id": s.updateID,
+		"message": map[string]any{
+			"message_id": s.updateID, "date": 1,
+			"chat": map[string]any{"id": chatID, "type": "private"},
+			"from": map[string]any{"id": chatID, "is_bot": false, "username": username},
+			"text": text,
+		},
+	})
 }
 
 // Calls counts the calls made to method.
@@ -182,10 +203,37 @@ func (s *Server) serve(w http.ResponseWriter, r *http.Request) {
 		m := s.add(&cp)
 		reply(w, 200, map[string]any{"ok": true, "result": s.msg(m)})
 	case "getUpdates":
-		reply(w, 200, map[string]any{"ok": true, "result": []any{}})
+		var p struct {
+			Offset  int64 `json:"offset"`
+			Timeout int   `json:"timeout"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&p)
+		out := s.pending(p.Offset)
+		if len(out) == 0 && p.Timeout > 0 {
+			// A real long poll waits; a short wait keeps tests from spinning.
+			select {
+			case <-time.After(50 * time.Millisecond):
+			case <-r.Context().Done():
+			}
+			out = s.pending(p.Offset)
+		}
+		reply(w, 200, map[string]any{"ok": true, "result": out})
 	default:
 		fail(w, 404, "Not Found", 0)
 	}
+}
+
+// pending returns the queued updates with id >= offset.
+func (s *Server) pending(offset int64) []map[string]any {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	out := []map[string]any{}
+	for _, u := range s.updates {
+		if id, _ := u["update_id"].(int64); id >= offset {
+			out = append(out, u)
+		}
+	}
+	return out
 }
 
 func (s *Server) add(m *Sent) *Sent {
