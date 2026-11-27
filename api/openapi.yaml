@@ -1,4 +1,4 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: Stockpot API
   version: 0.1.0
@@ -36,6 +36,8 @@ tags:
     description: User approval and management (admin).
   - name: llm
     description: LLM gateway administration (providers, keys, quota, usage).
+  - name: sync
+    description: Offline sync engine - commands, pulls and change events.
 paths:
   /health:
     get:
@@ -1065,6 +1067,86 @@ paths:
           description: Removed; the provider is skipped until a key is set
         default:
           $ref: "#/components/responses/Problem"
+  /v1/commands:
+    post:
+      operationId: applyCommands
+      summary: Apply a batch of offline commands
+      description: |
+        Each command runs in its own transaction, in order. `applied` = done,
+        `duplicate` = this id was applied before, `rejected` = refused for the
+        stated problem code (and the same on every retry of that id).
+      tags: [sync]
+      x-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommandBatch"
+      responses:
+        "200":
+          description: One result per command, in order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommandResults"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/sync:
+    get:
+      operationId: getSync
+      summary: Changes to the household's synced rows since a cursor
+      tags: [sync]
+      x-roles: [user]
+      parameters:
+        - name: since
+          in: query
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            default: 0
+        - name: sinceGlobal
+          in: query
+          schema:
+            type: integer
+            format: int64
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 5000
+            default: 1000
+      responses:
+        "200":
+          description: A page of changes, oldest first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncPage"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/sync/events:
+    get:
+      operationId: getSyncEvents
+      summary: Server-sent events that say "something changed, pull now"
+      description: |
+        Events carry no data: `event: changed` after a change, `: ping`
+        comments every 25 seconds. Clients pull on `changed`.
+      tags: [sync]
+      x-roles: [user]
+      responses:
+        "200":
+          description: Event stream
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        default:
+          $ref: "#/components/responses/Problem"
 components:
   headers:
     SetCookie:
@@ -1619,7 +1701,8 @@ components:
       required: [value]
       properties:
         value:
-          description: New value, of the setting's kind.
+          nullable: true
+          description: New value, of the setting's kind (null is refused by the setting's validation).
     SetupStatus:
       type: object
       required: [needed, tokenConfigured]
@@ -2092,3 +2175,539 @@ components:
           type: string
           minLength: 1
           maxLength: 1024
+    Command:
+      description: |
+        One offline-capable write. `type` selects the payload schema. Commands
+        are applied in order, each exactly once per `id` (a client-generated
+        UUIDv7). Fields typed nullable clear the column when sent as null;
+        absent fields are left unchanged.
+      oneOf:
+        - $ref: "#/components/schemas/CmdCatalogProductCreate"
+        - $ref: "#/components/schemas/CmdCatalogProductUpdate"
+        - $ref: "#/components/schemas/CmdCatalogProductDelete"
+        - $ref: "#/components/schemas/CmdCatalogProductSetIngredient"
+        - $ref: "#/components/schemas/CmdCatalogStoreCreate"
+        - $ref: "#/components/schemas/CmdCatalogStoreUpdate"
+        - $ref: "#/components/schemas/CmdCatalogStoreDelete"
+        - $ref: "#/components/schemas/CmdCatalogLocationCreate"
+        - $ref: "#/components/schemas/CmdCatalogLocationUpdate"
+        - $ref: "#/components/schemas/CmdCatalogLocationDelete"
+        - $ref: "#/components/schemas/CmdCatalogIngredientCreate"
+      discriminator:
+        propertyName: type
+        mapping:
+          catalog.product.create: "#/components/schemas/CmdCatalogProductCreate"
+          catalog.product.update: "#/components/schemas/CmdCatalogProductUpdate"
+          catalog.product.delete: "#/components/schemas/CmdCatalogProductDelete"
+          catalog.product.set_ingredient: "#/components/schemas/CmdCatalogProductSetIngredient"
+          catalog.store.create: "#/components/schemas/CmdCatalogStoreCreate"
+          catalog.store.update: "#/components/schemas/CmdCatalogStoreUpdate"
+          catalog.store.delete: "#/components/schemas/CmdCatalogStoreDelete"
+          catalog.location.create: "#/components/schemas/CmdCatalogLocationCreate"
+          catalog.location.update: "#/components/schemas/CmdCatalogLocationUpdate"
+          catalog.location.delete: "#/components/schemas/CmdCatalogLocationDelete"
+          catalog.ingredient.create: "#/components/schemas/CmdCatalogIngredientCreate"
+    CmdCatalogProductCreate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.product.create]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, name]
+          properties:
+            id:
+                type: string
+                format: uuid
+            name:
+                type: string
+                minLength: 1
+                maxLength: 200
+            brand:
+                type: string
+                nullable: true
+                maxLength: 100
+            ingredientId:
+                type: string
+                nullable: true
+                format: uuid
+            extraIngredientIds:
+                type: array
+                nullable: true
+                items:
+                  type: string
+                  format: uuid
+            categoryId:
+                type: string
+                nullable: true
+                format: uuid
+            icon:
+                type: string
+                nullable: true
+                maxLength: 64
+            defaultStoreId:
+                type: string
+                nullable: true
+                format: uuid
+            defaultQty:
+                type: string
+                nullable: true
+                pattern: '^[0-9]+(\.[0-9]+)?$'
+                description: "Decimal string."
+            defaultUnit:
+                type: string
+                nullable: true
+                maxLength: 16
+            package:
+                type: string
+                nullable: true
+                maxLength: 100
+            defaultLocationKind:
+                type: string
+                nullable: true
+                enum: [fridge, freezer, pantry, other]
+            note:
+                type: string
+                nullable: true
+                maxLength: 1000
+    CmdCatalogProductUpdate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.product.update]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+                type: string
+                format: uuid
+            name:
+                type: string
+                minLength: 1
+                maxLength: 200
+            brand:
+                type: string
+                nullable: true
+                maxLength: 100
+            ingredientId:
+                type: string
+                nullable: true
+                format: uuid
+            extraIngredientIds:
+                type: array
+                nullable: true
+                items:
+                  type: string
+                  format: uuid
+            categoryId:
+                type: string
+                nullable: true
+                format: uuid
+            icon:
+                type: string
+                nullable: true
+                maxLength: 64
+            defaultStoreId:
+                type: string
+                nullable: true
+                format: uuid
+            defaultQty:
+                type: string
+                nullable: true
+                pattern: '^[0-9]+(\.[0-9]+)?$'
+                description: "Decimal string."
+            defaultUnit:
+                type: string
+                nullable: true
+                maxLength: 16
+            package:
+                type: string
+                nullable: true
+                maxLength: 100
+            defaultLocationKind:
+                type: string
+                nullable: true
+                enum: [fridge, freezer, pantry, other]
+            note:
+                type: string
+                nullable: true
+                maxLength: 1000
+    CmdCatalogProductDelete:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.product.delete]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+                type: string
+                format: uuid
+    CmdCatalogProductSetIngredient:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.product.set_ingredient]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, ingredientId]
+          properties:
+            id:
+                type: string
+                format: uuid
+            ingredientId:
+                type: string
+                nullable: true
+                format: uuid
+            extraIngredientIds:
+                type: array
+                items:
+                  type: string
+                  format: uuid
+    CmdCatalogStoreCreate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.store.create]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, name]
+          properties:
+            id:
+                type: string
+                format: uuid
+            name:
+                type: string
+                minLength: 1
+                maxLength: 100
+            sort:
+                type: integer
+                nullable: true
+                minimum: -1000000
+                maximum: 1000000
+            color:
+                type: string
+                nullable: true
+                maxLength: 32
+    CmdCatalogStoreUpdate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.store.update]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+                type: string
+                format: uuid
+            name:
+                type: string
+                minLength: 1
+                maxLength: 100
+            sort:
+                type: integer
+                nullable: true
+                minimum: -1000000
+                maximum: 1000000
+            color:
+                type: string
+                nullable: true
+                maxLength: 32
+    CmdCatalogStoreDelete:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.store.delete]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+                type: string
+                format: uuid
+    CmdCatalogLocationCreate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.location.create]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, name, kind]
+          properties:
+            id:
+                type: string
+                format: uuid
+            name:
+                type: string
+                minLength: 1
+                maxLength: 100
+            kind:
+                type: string
+                enum: [fridge, freezer, pantry, other]
+            sort:
+                type: integer
+                nullable: true
+                minimum: -1000000
+                maximum: 1000000
+    CmdCatalogLocationUpdate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.location.update]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+                type: string
+                format: uuid
+            name:
+                type: string
+                minLength: 1
+                maxLength: 100
+            kind:
+                type: string
+                enum: [fridge, freezer, pantry, other]
+            sort:
+                type: integer
+                nullable: true
+                minimum: -1000000
+                maximum: 1000000
+    CmdCatalogLocationDelete:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.location.delete]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+                type: string
+                format: uuid
+    CmdCatalogIngredientCreate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.ingredient.create]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, name]
+          properties:
+            id:
+                type: string
+                format: uuid
+            name:
+                type: string
+                minLength: 1
+                maxLength: 100
+            plural:
+                type: string
+                nullable: true
+                maxLength: 100
+            parentId:
+                type: string
+                nullable: true
+                format: uuid
+            categoryId:
+                type: string
+                nullable: true
+                format: uuid
+            icon:
+                type: string
+                nullable: true
+                maxLength: 64
+            aliases:
+                type: array
+                items:
+                  type: string
+                maxItems: 30
+    CommandBatch:
+      type: object
+      required: [householdId, commands]
+      additionalProperties: false
+      properties:
+        householdId:
+          type: string
+          format: uuid
+          description: |
+            The household the commands were queued under. The server answers 409
+            `household_mismatch` and applies nothing when the session's active
+            household is another one.
+        commands:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/Command"
+    CommandResult:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [applied, duplicate, rejected]
+        problem:
+          type: object
+          required: [code, detail]
+          properties:
+            code:
+              type: string
+              enum: [gone, invalid, forbidden]
+            detail:
+              type: string
+    CommandResults:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/CommandResult"
+    SyncPage:
+      type: object
+      required: [rows, tombstones, next, nextGlobal, more]
+      properties:
+        rows:
+          type: object
+          description: Changed rows by table name, snake_case columns, numerics as decimal strings.
+          additionalProperties:
+            type: array
+            items:
+              type: object
+              additionalProperties: true
+        tombstones:
+          type: object
+          description: Ids of rows deleted since the cursor, by table name.
+          additionalProperties:
+            type: array
+            items:
+              type: string
+              format: uuid
+        next:
+          type: integer
+          format: int64
+          description: Household cursor to send as `since` next time.
+        nextGlobal:
+          type: integer
+          format: int64
+          description: Global catalog cursor to send as `sinceGlobal` next time.
+        more:
+          type: boolean
+          description: Either cursor has more rows; pull again at once.

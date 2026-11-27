@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path"
@@ -221,6 +222,309 @@ func (e AdminUserUpdateStatus) Valid() bool {
 	case AdminUserUpdateStatusActive:
 		return true
 	case AdminUserUpdateStatusDisabled:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogIngredientCreateType.
+const (
+	CmdCatalogIngredientCreateTypeCatalogIngredientCreate CmdCatalogIngredientCreateType = "catalog.ingredient.create"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogIngredientCreateType enum.
+func (e CmdCatalogIngredientCreateType) Valid() bool {
+	switch e {
+	case CmdCatalogIngredientCreateTypeCatalogIngredientCreate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogLocationCreatePayloadKind.
+const (
+	CmdCatalogLocationCreatePayloadKindFreezer CmdCatalogLocationCreatePayloadKind = "freezer"
+	CmdCatalogLocationCreatePayloadKindFridge  CmdCatalogLocationCreatePayloadKind = "fridge"
+	CmdCatalogLocationCreatePayloadKindOther   CmdCatalogLocationCreatePayloadKind = "other"
+	CmdCatalogLocationCreatePayloadKindPantry  CmdCatalogLocationCreatePayloadKind = "pantry"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogLocationCreatePayloadKind enum.
+func (e CmdCatalogLocationCreatePayloadKind) Valid() bool {
+	switch e {
+	case CmdCatalogLocationCreatePayloadKindFreezer:
+		return true
+	case CmdCatalogLocationCreatePayloadKindFridge:
+		return true
+	case CmdCatalogLocationCreatePayloadKindOther:
+		return true
+	case CmdCatalogLocationCreatePayloadKindPantry:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogLocationCreateType.
+const (
+	CmdCatalogLocationCreateTypeCatalogLocationCreate CmdCatalogLocationCreateType = "catalog.location.create"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogLocationCreateType enum.
+func (e CmdCatalogLocationCreateType) Valid() bool {
+	switch e {
+	case CmdCatalogLocationCreateTypeCatalogLocationCreate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogLocationDeleteType.
+const (
+	CmdCatalogLocationDeleteTypeCatalogLocationDelete CmdCatalogLocationDeleteType = "catalog.location.delete"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogLocationDeleteType enum.
+func (e CmdCatalogLocationDeleteType) Valid() bool {
+	switch e {
+	case CmdCatalogLocationDeleteTypeCatalogLocationDelete:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogLocationUpdatePayloadKind.
+const (
+	CmdCatalogLocationUpdatePayloadKindFreezer CmdCatalogLocationUpdatePayloadKind = "freezer"
+	CmdCatalogLocationUpdatePayloadKindFridge  CmdCatalogLocationUpdatePayloadKind = "fridge"
+	CmdCatalogLocationUpdatePayloadKindOther   CmdCatalogLocationUpdatePayloadKind = "other"
+	CmdCatalogLocationUpdatePayloadKindPantry  CmdCatalogLocationUpdatePayloadKind = "pantry"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogLocationUpdatePayloadKind enum.
+func (e CmdCatalogLocationUpdatePayloadKind) Valid() bool {
+	switch e {
+	case CmdCatalogLocationUpdatePayloadKindFreezer:
+		return true
+	case CmdCatalogLocationUpdatePayloadKindFridge:
+		return true
+	case CmdCatalogLocationUpdatePayloadKindOther:
+		return true
+	case CmdCatalogLocationUpdatePayloadKindPantry:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogLocationUpdateType.
+const (
+	CmdCatalogLocationUpdateTypeCatalogLocationUpdate CmdCatalogLocationUpdateType = "catalog.location.update"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogLocationUpdateType enum.
+func (e CmdCatalogLocationUpdateType) Valid() bool {
+	switch e {
+	case CmdCatalogLocationUpdateTypeCatalogLocationUpdate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogProductCreatePayloadDefaultLocationKind.
+const (
+	CmdCatalogProductCreatePayloadDefaultLocationKindFreezer CmdCatalogProductCreatePayloadDefaultLocationKind = "freezer"
+	CmdCatalogProductCreatePayloadDefaultLocationKindFridge  CmdCatalogProductCreatePayloadDefaultLocationKind = "fridge"
+	CmdCatalogProductCreatePayloadDefaultLocationKindOther   CmdCatalogProductCreatePayloadDefaultLocationKind = "other"
+	CmdCatalogProductCreatePayloadDefaultLocationKindPantry  CmdCatalogProductCreatePayloadDefaultLocationKind = "pantry"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogProductCreatePayloadDefaultLocationKind enum.
+func (e CmdCatalogProductCreatePayloadDefaultLocationKind) Valid() bool {
+	switch e {
+	case CmdCatalogProductCreatePayloadDefaultLocationKindFreezer:
+		return true
+	case CmdCatalogProductCreatePayloadDefaultLocationKindFridge:
+		return true
+	case CmdCatalogProductCreatePayloadDefaultLocationKindOther:
+		return true
+	case CmdCatalogProductCreatePayloadDefaultLocationKindPantry:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogProductCreateType.
+const (
+	CmdCatalogProductCreateTypeCatalogProductCreate CmdCatalogProductCreateType = "catalog.product.create"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogProductCreateType enum.
+func (e CmdCatalogProductCreateType) Valid() bool {
+	switch e {
+	case CmdCatalogProductCreateTypeCatalogProductCreate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogProductDeleteType.
+const (
+	CmdCatalogProductDeleteTypeCatalogProductDelete CmdCatalogProductDeleteType = "catalog.product.delete"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogProductDeleteType enum.
+func (e CmdCatalogProductDeleteType) Valid() bool {
+	switch e {
+	case CmdCatalogProductDeleteTypeCatalogProductDelete:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogProductSetIngredientType.
+const (
+	CmdCatalogProductSetIngredientTypeCatalogProductSetIngredient CmdCatalogProductSetIngredientType = "catalog.product.set_ingredient"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogProductSetIngredientType enum.
+func (e CmdCatalogProductSetIngredientType) Valid() bool {
+	switch e {
+	case CmdCatalogProductSetIngredientTypeCatalogProductSetIngredient:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogProductUpdatePayloadDefaultLocationKind.
+const (
+	CmdCatalogProductUpdatePayloadDefaultLocationKindFreezer CmdCatalogProductUpdatePayloadDefaultLocationKind = "freezer"
+	CmdCatalogProductUpdatePayloadDefaultLocationKindFridge  CmdCatalogProductUpdatePayloadDefaultLocationKind = "fridge"
+	CmdCatalogProductUpdatePayloadDefaultLocationKindOther   CmdCatalogProductUpdatePayloadDefaultLocationKind = "other"
+	CmdCatalogProductUpdatePayloadDefaultLocationKindPantry  CmdCatalogProductUpdatePayloadDefaultLocationKind = "pantry"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogProductUpdatePayloadDefaultLocationKind enum.
+func (e CmdCatalogProductUpdatePayloadDefaultLocationKind) Valid() bool {
+	switch e {
+	case CmdCatalogProductUpdatePayloadDefaultLocationKindFreezer:
+		return true
+	case CmdCatalogProductUpdatePayloadDefaultLocationKindFridge:
+		return true
+	case CmdCatalogProductUpdatePayloadDefaultLocationKindOther:
+		return true
+	case CmdCatalogProductUpdatePayloadDefaultLocationKindPantry:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogProductUpdateType.
+const (
+	CmdCatalogProductUpdateTypeCatalogProductUpdate CmdCatalogProductUpdateType = "catalog.product.update"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogProductUpdateType enum.
+func (e CmdCatalogProductUpdateType) Valid() bool {
+	switch e {
+	case CmdCatalogProductUpdateTypeCatalogProductUpdate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogStoreCreateType.
+const (
+	CmdCatalogStoreCreateTypeCatalogStoreCreate CmdCatalogStoreCreateType = "catalog.store.create"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogStoreCreateType enum.
+func (e CmdCatalogStoreCreateType) Valid() bool {
+	switch e {
+	case CmdCatalogStoreCreateTypeCatalogStoreCreate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogStoreDeleteType.
+const (
+	CmdCatalogStoreDeleteTypeCatalogStoreDelete CmdCatalogStoreDeleteType = "catalog.store.delete"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogStoreDeleteType enum.
+func (e CmdCatalogStoreDeleteType) Valid() bool {
+	switch e {
+	case CmdCatalogStoreDeleteTypeCatalogStoreDelete:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CmdCatalogStoreUpdateType.
+const (
+	CmdCatalogStoreUpdateTypeCatalogStoreUpdate CmdCatalogStoreUpdateType = "catalog.store.update"
+)
+
+// Valid indicates whether the value is a known member of the CmdCatalogStoreUpdateType enum.
+func (e CmdCatalogStoreUpdateType) Valid() bool {
+	switch e {
+	case CmdCatalogStoreUpdateTypeCatalogStoreUpdate:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CommandResultProblemCode.
+const (
+	CommandResultProblemCodeForbidden CommandResultProblemCode = "forbidden"
+	CommandResultProblemCodeGone      CommandResultProblemCode = "gone"
+	CommandResultProblemCodeInvalid   CommandResultProblemCode = "invalid"
+)
+
+// Valid indicates whether the value is a known member of the CommandResultProblemCode enum.
+func (e CommandResultProblemCode) Valid() bool {
+	switch e {
+	case CommandResultProblemCodeForbidden:
+		return true
+	case CommandResultProblemCodeGone:
+		return true
+	case CommandResultProblemCodeInvalid:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CommandResultStatus.
+const (
+	CommandResultStatusApplied   CommandResultStatus = "applied"
+	CommandResultStatusDuplicate CommandResultStatus = "duplicate"
+	CommandResultStatusRejected  CommandResultStatus = "rejected"
+)
+
+// Valid indicates whether the value is a known member of the CommandResultStatus enum.
+func (e CommandResultStatus) Valid() bool {
+	switch e {
+	case CommandResultStatusApplied:
+		return true
+	case CommandResultStatusDuplicate:
+		return true
+	case CommandResultStatusRejected:
 		return true
 	default:
 		return false
@@ -643,7 +947,7 @@ type AdminSettingList struct {
 
 // AdminSettingUpdate defines model for AdminSettingUpdate.
 type AdminSettingUpdate struct {
-	// Value New value, of the setting's kind.
+	// Value New value, of the setting's kind (null is refused by the setting's validation).
 	Value interface{} `json:"value"`
 }
 
@@ -689,6 +993,248 @@ type CeremonyStart struct {
 	// `PublicKeyCredentialRequestOptions` (sign-in) in their JSON form
 	// (binary fields base64url).
 	Options map[string]interface{} `json:"options"`
+}
+
+// CmdCatalogIngredientCreate defines model for CmdCatalogIngredientCreate.
+type CmdCatalogIngredientCreate struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Aliases    *[]string           `json:"aliases,omitempty"`
+		CategoryId *openapi_types.UUID `json:"categoryId,omitempty"`
+		Icon       *string             `json:"icon,omitempty"`
+		Id         openapi_types.UUID  `json:"id"`
+		Name       string              `json:"name"`
+		ParentId   *openapi_types.UUID `json:"parentId,omitempty"`
+		Plural     *string             `json:"plural,omitempty"`
+	} `json:"payload"`
+	Type CmdCatalogIngredientCreateType `json:"type"`
+}
+
+// CmdCatalogIngredientCreateType defines model for CmdCatalogIngredientCreate.Type.
+type CmdCatalogIngredientCreateType string
+
+// CmdCatalogLocationCreate defines model for CmdCatalogLocationCreate.
+type CmdCatalogLocationCreate struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Id   openapi_types.UUID                  `json:"id"`
+		Kind CmdCatalogLocationCreatePayloadKind `json:"kind"`
+		Name string                              `json:"name"`
+		Sort *int                                `json:"sort,omitempty"`
+	} `json:"payload"`
+	Type CmdCatalogLocationCreateType `json:"type"`
+}
+
+// CmdCatalogLocationCreatePayloadKind defines model for CmdCatalogLocationCreate.Payload.Kind.
+type CmdCatalogLocationCreatePayloadKind string
+
+// CmdCatalogLocationCreateType defines model for CmdCatalogLocationCreate.Type.
+type CmdCatalogLocationCreateType string
+
+// CmdCatalogLocationDelete defines model for CmdCatalogLocationDelete.
+type CmdCatalogLocationDelete struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Id openapi_types.UUID `json:"id"`
+	} `json:"payload"`
+	Type CmdCatalogLocationDeleteType `json:"type"`
+}
+
+// CmdCatalogLocationDeleteType defines model for CmdCatalogLocationDelete.Type.
+type CmdCatalogLocationDeleteType string
+
+// CmdCatalogLocationUpdate defines model for CmdCatalogLocationUpdate.
+type CmdCatalogLocationUpdate struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Id   openapi_types.UUID                   `json:"id"`
+		Kind *CmdCatalogLocationUpdatePayloadKind `json:"kind,omitempty"`
+		Name *string                              `json:"name,omitempty"`
+		Sort *int                                 `json:"sort,omitempty"`
+	} `json:"payload"`
+	Type CmdCatalogLocationUpdateType `json:"type"`
+}
+
+// CmdCatalogLocationUpdatePayloadKind defines model for CmdCatalogLocationUpdate.Payload.Kind.
+type CmdCatalogLocationUpdatePayloadKind string
+
+// CmdCatalogLocationUpdateType defines model for CmdCatalogLocationUpdate.Type.
+type CmdCatalogLocationUpdateType string
+
+// CmdCatalogProductCreate defines model for CmdCatalogProductCreate.
+type CmdCatalogProductCreate struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Brand               *string                                            `json:"brand,omitempty"`
+		CategoryId          *openapi_types.UUID                                `json:"categoryId,omitempty"`
+		DefaultLocationKind *CmdCatalogProductCreatePayloadDefaultLocationKind `json:"defaultLocationKind,omitempty"`
+
+		// DefaultQty Decimal string.
+		DefaultQty         *string               `json:"defaultQty,omitempty"`
+		DefaultStoreId     *openapi_types.UUID   `json:"defaultStoreId,omitempty"`
+		DefaultUnit        *string               `json:"defaultUnit,omitempty"`
+		ExtraIngredientIds *[]openapi_types.UUID `json:"extraIngredientIds,omitempty"`
+		Icon               *string               `json:"icon,omitempty"`
+		Id                 openapi_types.UUID    `json:"id"`
+		IngredientId       *openapi_types.UUID   `json:"ingredientId,omitempty"`
+		Name               string                `json:"name"`
+		Note               *string               `json:"note,omitempty"`
+		Package            *string               `json:"package,omitempty"`
+	} `json:"payload"`
+	Type CmdCatalogProductCreateType `json:"type"`
+}
+
+// CmdCatalogProductCreatePayloadDefaultLocationKind defines model for CmdCatalogProductCreate.Payload.DefaultLocationKind.
+type CmdCatalogProductCreatePayloadDefaultLocationKind string
+
+// CmdCatalogProductCreateType defines model for CmdCatalogProductCreate.Type.
+type CmdCatalogProductCreateType string
+
+// CmdCatalogProductDelete defines model for CmdCatalogProductDelete.
+type CmdCatalogProductDelete struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Id openapi_types.UUID `json:"id"`
+	} `json:"payload"`
+	Type CmdCatalogProductDeleteType `json:"type"`
+}
+
+// CmdCatalogProductDeleteType defines model for CmdCatalogProductDelete.Type.
+type CmdCatalogProductDeleteType string
+
+// CmdCatalogProductSetIngredient defines model for CmdCatalogProductSetIngredient.
+type CmdCatalogProductSetIngredient struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		ExtraIngredientIds *[]openapi_types.UUID `json:"extraIngredientIds,omitempty"`
+		Id                 openapi_types.UUID    `json:"id"`
+		IngredientId       *openapi_types.UUID   `json:"ingredientId"`
+	} `json:"payload"`
+	Type CmdCatalogProductSetIngredientType `json:"type"`
+}
+
+// CmdCatalogProductSetIngredientType defines model for CmdCatalogProductSetIngredient.Type.
+type CmdCatalogProductSetIngredientType string
+
+// CmdCatalogProductUpdate defines model for CmdCatalogProductUpdate.
+type CmdCatalogProductUpdate struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Brand               *string                                            `json:"brand,omitempty"`
+		CategoryId          *openapi_types.UUID                                `json:"categoryId,omitempty"`
+		DefaultLocationKind *CmdCatalogProductUpdatePayloadDefaultLocationKind `json:"defaultLocationKind,omitempty"`
+
+		// DefaultQty Decimal string.
+		DefaultQty         *string               `json:"defaultQty,omitempty"`
+		DefaultStoreId     *openapi_types.UUID   `json:"defaultStoreId,omitempty"`
+		DefaultUnit        *string               `json:"defaultUnit,omitempty"`
+		ExtraIngredientIds *[]openapi_types.UUID `json:"extraIngredientIds,omitempty"`
+		Icon               *string               `json:"icon,omitempty"`
+		Id                 openapi_types.UUID    `json:"id"`
+		IngredientId       *openapi_types.UUID   `json:"ingredientId,omitempty"`
+		Name               *string               `json:"name,omitempty"`
+		Note               *string               `json:"note,omitempty"`
+		Package            *string               `json:"package,omitempty"`
+	} `json:"payload"`
+	Type CmdCatalogProductUpdateType `json:"type"`
+}
+
+// CmdCatalogProductUpdatePayloadDefaultLocationKind defines model for CmdCatalogProductUpdate.Payload.DefaultLocationKind.
+type CmdCatalogProductUpdatePayloadDefaultLocationKind string
+
+// CmdCatalogProductUpdateType defines model for CmdCatalogProductUpdate.Type.
+type CmdCatalogProductUpdateType string
+
+// CmdCatalogStoreCreate defines model for CmdCatalogStoreCreate.
+type CmdCatalogStoreCreate struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Color *string            `json:"color,omitempty"`
+		Id    openapi_types.UUID `json:"id"`
+		Name  string             `json:"name"`
+		Sort  *int               `json:"sort,omitempty"`
+	} `json:"payload"`
+	Type CmdCatalogStoreCreateType `json:"type"`
+}
+
+// CmdCatalogStoreCreateType defines model for CmdCatalogStoreCreate.Type.
+type CmdCatalogStoreCreateType string
+
+// CmdCatalogStoreDelete defines model for CmdCatalogStoreDelete.
+type CmdCatalogStoreDelete struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Id openapi_types.UUID `json:"id"`
+	} `json:"payload"`
+	Type CmdCatalogStoreDeleteType `json:"type"`
+}
+
+// CmdCatalogStoreDeleteType defines model for CmdCatalogStoreDelete.Type.
+type CmdCatalogStoreDeleteType string
+
+// CmdCatalogStoreUpdate defines model for CmdCatalogStoreUpdate.
+type CmdCatalogStoreUpdate struct {
+	ClientTime time.Time          `json:"clientTime"`
+	Id         openapi_types.UUID `json:"id"`
+	Payload    struct {
+		Color *string            `json:"color,omitempty"`
+		Id    openapi_types.UUID `json:"id"`
+		Name  *string            `json:"name,omitempty"`
+		Sort  *int               `json:"sort,omitempty"`
+	} `json:"payload"`
+	Type CmdCatalogStoreUpdateType `json:"type"`
+}
+
+// CmdCatalogStoreUpdateType defines model for CmdCatalogStoreUpdate.Type.
+type CmdCatalogStoreUpdateType string
+
+// Command One offline-capable write. `type` selects the payload schema. Commands
+// are applied in order, each exactly once per `id` (a client-generated
+// UUIDv7). Fields typed nullable clear the column when sent as null;
+// absent fields are left unchanged.
+type Command struct {
+	union json.RawMessage
+}
+
+// CommandBatch defines model for CommandBatch.
+type CommandBatch struct {
+	Commands []Command `json:"commands"`
+
+	// HouseholdId The household the commands were queued under. The server answers 409
+	// `household_mismatch` and applies nothing when the session's active
+	// household is another one.
+	HouseholdId openapi_types.UUID `json:"householdId"`
+}
+
+// CommandResult defines model for CommandResult.
+type CommandResult struct {
+	Id      openapi_types.UUID `json:"id"`
+	Problem *struct {
+		Code   CommandResultProblemCode `json:"code"`
+		Detail string                   `json:"detail"`
+	} `json:"problem,omitempty"`
+	Status CommandResultStatus `json:"status"`
+}
+
+// CommandResultProblemCode defines model for CommandResult.Problem.Code.
+type CommandResultProblemCode string
+
+// CommandResultStatus defines model for CommandResult.Status.
+type CommandResultStatus string
+
+// CommandResults defines model for CommandResults.
+type CommandResults struct {
+	Results []CommandResult `json:"results"`
 }
 
 // Health defines model for Health.
@@ -985,6 +1531,24 @@ type SetupStatus struct {
 	TokenConfigured bool `json:"tokenConfigured"`
 }
 
+// SyncPage defines model for SyncPage.
+type SyncPage struct {
+	// More Either cursor has more rows; pull again at once.
+	More bool `json:"more"`
+
+	// Next Household cursor to send as `since` next time.
+	Next int64 `json:"next"`
+
+	// NextGlobal Global catalog cursor to send as `sinceGlobal` next time.
+	NextGlobal int64 `json:"nextGlobal"`
+
+	// Rows Changed rows by table name, snake_case columns, numerics as decimal strings.
+	Rows map[string][]map[string]interface{} `json:"rows"`
+
+	// Tombstones Ids of rows deleted since the cursor, by table name.
+	Tombstones map[string][]openapi_types.UUID `json:"tombstones"`
+}
+
 // SystemRole defines model for SystemRole.
 type SystemRole string
 
@@ -1108,6 +1672,13 @@ type ListInvitesParams struct {
 	All         *bool               `form:"all,omitempty" json:"all,omitempty"`
 }
 
+// GetSyncParams defines parameters for GetSync.
+type GetSyncParams struct {
+	Since       *int64 `form:"since,omitempty" json:"since,omitempty"`
+	SinceGlobal *int64 `form:"sinceGlobal,omitempty" json:"sinceGlobal,omitempty"`
+	Limit       *int   `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // SetLLMProviderKeyJSONRequestBody defines body for SetLLMProviderKey for application/json ContentType.
 type SetLLMProviderKeyJSONRequestBody = LLMProviderKey
 
@@ -1122,6 +1693,9 @@ type AdminUpdateUserJSONRequestBody = AdminUserUpdate
 
 // FinishLoginJSONRequestBody defines body for FinishLogin for application/json ContentType.
 type FinishLoginJSONRequestBody = CeremonyFinish
+
+// ApplyCommandsJSONRequestBody defines body for ApplyCommands for application/json ContentType.
+type ApplyCommandsJSONRequestBody = CommandBatch
 
 // CreateInviteJSONRequestBody defines body for CreateInvite for application/json ContentType.
 type CreateInviteJSONRequestBody = InviteCreate
@@ -1152,6 +1726,365 @@ type BeginSetupJSONRequestBody = SetupBegin
 
 // FinishSetupJSONRequestBody defines body for FinishSetup for application/json ContentType.
 type FinishSetupJSONRequestBody = CeremonyFinish
+
+// AsCmdCatalogProductCreate returns the union data inside the Command as a CmdCatalogProductCreate
+func (t Command) AsCmdCatalogProductCreate() (CmdCatalogProductCreate, error) {
+	var body CmdCatalogProductCreate
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogProductCreate overwrites any union data inside the Command as the provided CmdCatalogProductCreate
+func (t *Command) FromCmdCatalogProductCreate(v CmdCatalogProductCreate) error {
+	v.Type = "catalog.product.create"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogProductCreate performs a merge with any union data inside the Command, using the provided CmdCatalogProductCreate
+func (t *Command) MergeCmdCatalogProductCreate(v CmdCatalogProductCreate) error {
+	v.Type = "catalog.product.create"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdCatalogProductUpdate returns the union data inside the Command as a CmdCatalogProductUpdate
+func (t Command) AsCmdCatalogProductUpdate() (CmdCatalogProductUpdate, error) {
+	var body CmdCatalogProductUpdate
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogProductUpdate overwrites any union data inside the Command as the provided CmdCatalogProductUpdate
+func (t *Command) FromCmdCatalogProductUpdate(v CmdCatalogProductUpdate) error {
+	v.Type = "catalog.product.update"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogProductUpdate performs a merge with any union data inside the Command, using the provided CmdCatalogProductUpdate
+func (t *Command) MergeCmdCatalogProductUpdate(v CmdCatalogProductUpdate) error {
+	v.Type = "catalog.product.update"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdCatalogProductDelete returns the union data inside the Command as a CmdCatalogProductDelete
+func (t Command) AsCmdCatalogProductDelete() (CmdCatalogProductDelete, error) {
+	var body CmdCatalogProductDelete
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogProductDelete overwrites any union data inside the Command as the provided CmdCatalogProductDelete
+func (t *Command) FromCmdCatalogProductDelete(v CmdCatalogProductDelete) error {
+	v.Type = "catalog.product.delete"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogProductDelete performs a merge with any union data inside the Command, using the provided CmdCatalogProductDelete
+func (t *Command) MergeCmdCatalogProductDelete(v CmdCatalogProductDelete) error {
+	v.Type = "catalog.product.delete"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdCatalogProductSetIngredient returns the union data inside the Command as a CmdCatalogProductSetIngredient
+func (t Command) AsCmdCatalogProductSetIngredient() (CmdCatalogProductSetIngredient, error) {
+	var body CmdCatalogProductSetIngredient
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogProductSetIngredient overwrites any union data inside the Command as the provided CmdCatalogProductSetIngredient
+func (t *Command) FromCmdCatalogProductSetIngredient(v CmdCatalogProductSetIngredient) error {
+	v.Type = "catalog.product.set_ingredient"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogProductSetIngredient performs a merge with any union data inside the Command, using the provided CmdCatalogProductSetIngredient
+func (t *Command) MergeCmdCatalogProductSetIngredient(v CmdCatalogProductSetIngredient) error {
+	v.Type = "catalog.product.set_ingredient"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdCatalogStoreCreate returns the union data inside the Command as a CmdCatalogStoreCreate
+func (t Command) AsCmdCatalogStoreCreate() (CmdCatalogStoreCreate, error) {
+	var body CmdCatalogStoreCreate
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogStoreCreate overwrites any union data inside the Command as the provided CmdCatalogStoreCreate
+func (t *Command) FromCmdCatalogStoreCreate(v CmdCatalogStoreCreate) error {
+	v.Type = "catalog.store.create"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogStoreCreate performs a merge with any union data inside the Command, using the provided CmdCatalogStoreCreate
+func (t *Command) MergeCmdCatalogStoreCreate(v CmdCatalogStoreCreate) error {
+	v.Type = "catalog.store.create"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdCatalogStoreUpdate returns the union data inside the Command as a CmdCatalogStoreUpdate
+func (t Command) AsCmdCatalogStoreUpdate() (CmdCatalogStoreUpdate, error) {
+	var body CmdCatalogStoreUpdate
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogStoreUpdate overwrites any union data inside the Command as the provided CmdCatalogStoreUpdate
+func (t *Command) FromCmdCatalogStoreUpdate(v CmdCatalogStoreUpdate) error {
+	v.Type = "catalog.store.update"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogStoreUpdate performs a merge with any union data inside the Command, using the provided CmdCatalogStoreUpdate
+func (t *Command) MergeCmdCatalogStoreUpdate(v CmdCatalogStoreUpdate) error {
+	v.Type = "catalog.store.update"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdCatalogStoreDelete returns the union data inside the Command as a CmdCatalogStoreDelete
+func (t Command) AsCmdCatalogStoreDelete() (CmdCatalogStoreDelete, error) {
+	var body CmdCatalogStoreDelete
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogStoreDelete overwrites any union data inside the Command as the provided CmdCatalogStoreDelete
+func (t *Command) FromCmdCatalogStoreDelete(v CmdCatalogStoreDelete) error {
+	v.Type = "catalog.store.delete"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogStoreDelete performs a merge with any union data inside the Command, using the provided CmdCatalogStoreDelete
+func (t *Command) MergeCmdCatalogStoreDelete(v CmdCatalogStoreDelete) error {
+	v.Type = "catalog.store.delete"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdCatalogLocationCreate returns the union data inside the Command as a CmdCatalogLocationCreate
+func (t Command) AsCmdCatalogLocationCreate() (CmdCatalogLocationCreate, error) {
+	var body CmdCatalogLocationCreate
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogLocationCreate overwrites any union data inside the Command as the provided CmdCatalogLocationCreate
+func (t *Command) FromCmdCatalogLocationCreate(v CmdCatalogLocationCreate) error {
+	v.Type = "catalog.location.create"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogLocationCreate performs a merge with any union data inside the Command, using the provided CmdCatalogLocationCreate
+func (t *Command) MergeCmdCatalogLocationCreate(v CmdCatalogLocationCreate) error {
+	v.Type = "catalog.location.create"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdCatalogLocationUpdate returns the union data inside the Command as a CmdCatalogLocationUpdate
+func (t Command) AsCmdCatalogLocationUpdate() (CmdCatalogLocationUpdate, error) {
+	var body CmdCatalogLocationUpdate
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogLocationUpdate overwrites any union data inside the Command as the provided CmdCatalogLocationUpdate
+func (t *Command) FromCmdCatalogLocationUpdate(v CmdCatalogLocationUpdate) error {
+	v.Type = "catalog.location.update"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogLocationUpdate performs a merge with any union data inside the Command, using the provided CmdCatalogLocationUpdate
+func (t *Command) MergeCmdCatalogLocationUpdate(v CmdCatalogLocationUpdate) error {
+	v.Type = "catalog.location.update"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdCatalogLocationDelete returns the union data inside the Command as a CmdCatalogLocationDelete
+func (t Command) AsCmdCatalogLocationDelete() (CmdCatalogLocationDelete, error) {
+	var body CmdCatalogLocationDelete
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogLocationDelete overwrites any union data inside the Command as the provided CmdCatalogLocationDelete
+func (t *Command) FromCmdCatalogLocationDelete(v CmdCatalogLocationDelete) error {
+	v.Type = "catalog.location.delete"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogLocationDelete performs a merge with any union data inside the Command, using the provided CmdCatalogLocationDelete
+func (t *Command) MergeCmdCatalogLocationDelete(v CmdCatalogLocationDelete) error {
+	v.Type = "catalog.location.delete"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+// AsCmdCatalogIngredientCreate returns the union data inside the Command as a CmdCatalogIngredientCreate
+func (t Command) AsCmdCatalogIngredientCreate() (CmdCatalogIngredientCreate, error) {
+	var body CmdCatalogIngredientCreate
+	err := json.Unmarshal(t.union, &body)
+	return body, err
+}
+
+// FromCmdCatalogIngredientCreate overwrites any union data inside the Command as the provided CmdCatalogIngredientCreate
+func (t *Command) FromCmdCatalogIngredientCreate(v CmdCatalogIngredientCreate) error {
+	v.Type = "catalog.ingredient.create"
+	b, err := json.Marshal(v)
+	t.union = b
+	return err
+}
+
+// MergeCmdCatalogIngredientCreate performs a merge with any union data inside the Command, using the provided CmdCatalogIngredientCreate
+func (t *Command) MergeCmdCatalogIngredientCreate(v CmdCatalogIngredientCreate) error {
+	v.Type = "catalog.ingredient.create"
+	b, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+
+	merged, err := runtime.JSONMerge(t.union, b)
+	t.union = merged
+	return err
+}
+
+func (t Command) Discriminator() (string, error) {
+	var discriminator struct {
+		Discriminator string `json:"type"`
+	}
+	err := json.Unmarshal(t.union, &discriminator)
+	return discriminator.Discriminator, err
+}
+
+func (t Command) ValueByDiscriminator() (interface{}, error) {
+	discriminator, err := t.Discriminator()
+	if err != nil {
+		return nil, err
+	}
+	switch discriminator {
+	case "catalog.ingredient.create":
+		return t.AsCmdCatalogIngredientCreate()
+	case "catalog.location.create":
+		return t.AsCmdCatalogLocationCreate()
+	case "catalog.location.delete":
+		return t.AsCmdCatalogLocationDelete()
+	case "catalog.location.update":
+		return t.AsCmdCatalogLocationUpdate()
+	case "catalog.product.create":
+		return t.AsCmdCatalogProductCreate()
+	case "catalog.product.delete":
+		return t.AsCmdCatalogProductDelete()
+	case "catalog.product.set_ingredient":
+		return t.AsCmdCatalogProductSetIngredient()
+	case "catalog.product.update":
+		return t.AsCmdCatalogProductUpdate()
+	case "catalog.store.create":
+		return t.AsCmdCatalogStoreCreate()
+	case "catalog.store.delete":
+		return t.AsCmdCatalogStoreDelete()
+	case "catalog.store.update":
+		return t.AsCmdCatalogStoreUpdate()
+	default:
+		return nil, errors.New("unknown discriminator value: " + discriminator)
+	}
+}
+
+func (t Command) MarshalJSON() ([]byte, error) {
+	b, err := t.union.MarshalJSON()
+	return b, err
+}
+
+func (t *Command) UnmarshalJSON(b []byte) error {
+	err := t.union.UnmarshalJSON(b)
+	return err
+}
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
@@ -1242,6 +2175,9 @@ type ServerInterface interface {
 	// Sign out this session
 	// (POST /v1/auth/logout)
 	Logout(w http.ResponseWriter, r *http.Request)
+	// Apply a batch of offline commands
+	// (POST /v1/commands)
+	ApplyCommands(w http.ResponseWriter, r *http.Request)
 	// Invites of a household
 	// (GET /v1/invites)
 	ListInvites(w http.ResponseWriter, r *http.Request, params ListInvitesParams)
@@ -1302,6 +2238,12 @@ type ServerInterface interface {
 	// Create the first admin and household, and sign in
 	// (POST /v1/setup/finish)
 	FinishSetup(w http.ResponseWriter, r *http.Request)
+	// Changes to the household's synced rows since a cursor
+	// (GET /v1/sync)
+	GetSync(w http.ResponseWriter, r *http.Request, params GetSyncParams)
+	// Server-sent events that say "something changed, pull now"
+	// (GET /v1/sync/events)
+	GetSyncEvents(w http.ResponseWriter, r *http.Request)
 }
 
 // Unimplemented server implementation that returns http.StatusNotImplemented for each endpoint.
@@ -1482,6 +2424,12 @@ func (_ Unimplemented) Logout(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
+// Apply a batch of offline commands
+// (POST /v1/commands)
+func (_ Unimplemented) ApplyCommands(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
 // Invites of a household
 // (GET /v1/invites)
 func (_ Unimplemented) ListInvites(w http.ResponseWriter, r *http.Request, params ListInvitesParams) {
@@ -1599,6 +2547,18 @@ func (_ Unimplemented) BeginSetup(w http.ResponseWriter, r *http.Request) {
 // Create the first admin and household, and sign in
 // (POST /v1/setup/finish)
 func (_ Unimplemented) FinishSetup(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Changes to the household's synced rows since a cursor
+// (GET /v1/sync)
+func (_ Unimplemented) GetSync(w http.ResponseWriter, r *http.Request, params GetSyncParams) {
+	w.WriteHeader(http.StatusNotImplemented)
+}
+
+// Server-sent events that say "something changed, pull now"
+// (GET /v1/sync/events)
+func (_ Unimplemented) GetSyncEvents(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotImplemented)
 }
 
@@ -2575,6 +3535,20 @@ func (siw *ServerInterfaceWrapper) Logout(w http.ResponseWriter, r *http.Request
 	handler.ServeHTTP(w, r)
 }
 
+// ApplyCommands operation middleware
+func (siw *ServerInterfaceWrapper) ApplyCommands(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApplyCommands(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListInvites operation middleware
 func (siw *ServerInterfaceWrapper) ListInvites(w http.ResponseWriter, r *http.Request) {
 
@@ -2923,6 +3897,79 @@ func (siw *ServerInterfaceWrapper) FinishSetup(w http.ResponseWriter, r *http.Re
 	handler.ServeHTTP(w, r)
 }
 
+// GetSync operation middleware
+func (siw *ServerInterfaceWrapper) GetSync(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetSyncParams
+
+	// ------------- Optional query parameter "since" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "since", r.URL.Query(), &params.Since, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "since"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "since", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "sinceGlobal" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "sinceGlobal", r.URL.Query(), &params.SinceGlobal, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "sinceGlobal"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sinceGlobal", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetSync(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetSyncEvents operation middleware
+func (siw *ServerInterfaceWrapper) GetSyncEvents(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetSyncEvents(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 type UnescapedCookieParamError struct {
 	ParamName string
 	Err       error
@@ -3124,6 +4171,9 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 		r.Post(options.BaseURL+"/v1/auth/logout", wrapper.Logout)
 	})
 	r.Group(func(r chi.Router) {
+		r.Post(options.BaseURL+"/v1/commands", wrapper.ApplyCommands)
+	})
+	r.Group(func(r chi.Router) {
 		r.Get(options.BaseURL+"/v1/invites", wrapper.ListInvites)
 	})
 	r.Group(func(r chi.Router) {
@@ -3182,6 +4232,12 @@ func HandlerWithOptions(si ServerInterface, options ChiServerOptions) http.Handl
 	})
 	r.Group(func(r chi.Router) {
 		r.Post(options.BaseURL+"/v1/setup/finish", wrapper.FinishSetup)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/sync", wrapper.GetSync)
+	})
+	r.Group(func(r chi.Router) {
+		r.Get(options.BaseURL+"/v1/sync/events", wrapper.GetSyncEvents)
 	})
 
 	return r
@@ -4294,6 +5350,45 @@ func (response LogoutdefaultApplicationProblemPlusJSONResponse) VisitLogoutRespo
 	return err
 }
 
+type ApplyCommandsRequestObject struct {
+	Body *ApplyCommandsJSONRequestBody
+}
+
+type ApplyCommandsResponseObject interface {
+	VisitApplyCommandsResponse(w http.ResponseWriter) error
+}
+
+type ApplyCommands200JSONResponse CommandResults
+
+func (response ApplyCommands200JSONResponse) VisitApplyCommandsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyCommandsdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response ApplyCommandsdefaultApplicationProblemPlusJSONResponse) VisitApplyCommandsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListInvitesRequestObject struct {
 	Params ListInvitesParams
 }
@@ -5050,6 +6145,112 @@ func (response FinishSetupdefaultApplicationProblemPlusJSONResponse) VisitFinish
 	return err
 }
 
+type GetSyncRequestObject struct {
+	Params GetSyncParams
+}
+
+type GetSyncResponseObject interface {
+	VisitGetSyncResponse(w http.ResponseWriter) error
+}
+
+type GetSync200JSONResponse SyncPage
+
+func (response GetSync200JSONResponse) VisitGetSyncResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetSyncdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response GetSyncdefaultApplicationProblemPlusJSONResponse) VisitGetSyncResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetSyncEventsRequestObject struct {
+}
+
+type GetSyncEventsResponseObject interface {
+	VisitGetSyncEventsResponse(w http.ResponseWriter) error
+}
+
+type GetSyncEvents200TexteventStreamResponse struct {
+	Body          io.Reader
+	ContentLength int64
+}
+
+func (response GetSyncEvents200TexteventStreamResponse) VisitGetSyncEventsResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		// If w doesn't support flushing, fall back to io.Copy.
+		_, err := io.Copy(w, response.Body)
+		return err
+	}
+	// text/event-stream messages are typically small; use a
+	// modest buffer and flush after each chunk so clients see
+	// events immediately instead of waiting on OS buffering.
+	buf := make([]byte, 4096)
+	for {
+		n, err := response.Body.Read(buf)
+		if n > 0 {
+			if _, writeErr := w.Write(buf[:n]); writeErr != nil {
+				return writeErr
+			}
+			flusher.Flush()
+		}
+		if err != nil {
+			if err == io.EOF {
+				return nil
+			}
+			return err
+		}
+	}
+}
+
+type GetSyncEventsdefaultApplicationProblemPlusJSONResponse struct {
+	Body       Problem
+	StatusCode int
+}
+
+func (response GetSyncEventsdefaultApplicationProblemPlusJSONResponse) VisitGetSyncEventsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/problem+json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
 	// Liveness and readiness of the server and its database
@@ -5139,6 +6340,9 @@ type StrictServerInterface interface {
 	// Sign out this session
 	// (POST /v1/auth/logout)
 	Logout(ctx context.Context, request LogoutRequestObject) (LogoutResponseObject, error)
+	// Apply a batch of offline commands
+	// (POST /v1/commands)
+	ApplyCommands(ctx context.Context, request ApplyCommandsRequestObject) (ApplyCommandsResponseObject, error)
 	// Invites of a household
 	// (GET /v1/invites)
 	ListInvites(ctx context.Context, request ListInvitesRequestObject) (ListInvitesResponseObject, error)
@@ -5199,6 +6403,12 @@ type StrictServerInterface interface {
 	// Create the first admin and household, and sign in
 	// (POST /v1/setup/finish)
 	FinishSetup(ctx context.Context, request FinishSetupRequestObject) (FinishSetupResponseObject, error)
+	// Changes to the household's synced rows since a cursor
+	// (GET /v1/sync)
+	GetSync(ctx context.Context, request GetSyncRequestObject) (GetSyncResponseObject, error)
+	// Server-sent events that say "something changed, pull now"
+	// (GET /v1/sync/events)
+	GetSyncEvents(ctx context.Context, request GetSyncEventsRequestObject) (GetSyncEventsResponseObject, error)
 }
 
 type StrictHandlerFunc func(ctx context.Context, w http.ResponseWriter, r *http.Request, request any) (any, error)
@@ -5995,6 +7205,37 @@ func (sh *strictHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ApplyCommands operation middleware
+func (sh *strictHandler) ApplyCommands(w http.ResponseWriter, r *http.Request) {
+	var request ApplyCommandsRequestObject
+
+	var body ApplyCommandsJSONRequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ApplyCommands(ctx, request.(ApplyCommandsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ApplyCommands")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ApplyCommandsResponseObject); ok {
+		if err := validResponse.VisitApplyCommandsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListInvites operation middleware
 func (sh *strictHandler) ListInvites(w http.ResponseWriter, r *http.Request, params ListInvitesParams) {
 	var request ListInvitesRequestObject
@@ -6553,159 +7794,239 @@ func (sh *strictHandler) FinishSetup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetSync operation middleware
+func (sh *strictHandler) GetSync(w http.ResponseWriter, r *http.Request, params GetSyncParams) {
+	var request GetSyncRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetSync(ctx, request.(GetSyncRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetSync")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetSyncResponseObject); ok {
+		if err := validResponse.VisitGetSyncResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetSyncEvents operation middleware
+func (sh *strictHandler) GetSyncEvents(w http.ResponseWriter, r *http.Request) {
+	var request GetSyncEventsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetSyncEvents(ctx, request.(GetSyncEventsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetSyncEvents")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetSyncEventsResponseObject); ok {
+		if err := validResponse.VisitGetSyncEventsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // Base64 encoded, compressed with deflate, json marshaled OpenAPI spec.
 // Stored as a slice of fixed-width chunks rather than one concatenated
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"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",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

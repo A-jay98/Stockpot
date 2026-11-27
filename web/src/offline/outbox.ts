@@ -1,18 +1,15 @@
 import { v7 as uuidv7 } from 'uuid'
 import type { CommandPayloads, CommandType } from './commands'
 import { db, type OutboxRow, type StockpotDB } from './db'
+import { applyReducer } from './reducers'
 
-/**
- * Queue a write command for the server. It is stored durably first, so it survives
- * reloads and offline periods; the sync engine (M1) flushes the outbox in `seq` order.
- * Returns the command id (uuidv7), which also makes retries idempotent server-side.
- */
-export async function enqueueCommand<T extends CommandType>(
+function newRow<T extends CommandType>(
   type: T,
   payload: CommandPayloads[T],
-  database: StockpotDB = db,
-): Promise<string> {
-  const row: OutboxRow = {
+  householdId?: string,
+): OutboxRow {
+  return {
+    householdId,
     id: uuidv7(),
     type,
     payload,
@@ -20,9 +17,45 @@ export async function enqueueCommand<T extends CommandType>(
     status: 'pending',
     attempts: 0,
   }
+}
+
+/**
+ * Queue a write command for the server. It is stored durably first, so it survives
+ * reloads and offline periods; the sync engine flushes the outbox in `seq` order.
+ * Returns the command id (uuidv7), which also makes retries idempotent server-side.
+ */
+export async function enqueueCommand<T extends CommandType>(
+  type: T,
+  payload: CommandPayloads[T],
+  database: StockpotDB = db,
+): Promise<string> {
+  const row = newRow(type, payload)
   await database.outbox.add(row)
   return row.id
 }
+
+/**
+ * The app's write path: queue the command and apply its reducer in one transaction, so the UI
+ * (which reads only the replica) updates at once, then nudge the sync engine.
+ */
+export async function dispatch<T extends CommandType>(
+  type: T,
+  payload: CommandPayloads[T],
+  database: StockpotDB = db,
+): Promise<string> {
+  let row: OutboxRow | undefined
+  await database.transaction('rw', database.tables, async () => {
+    const household = (await database.meta.get('sync.household'))?.value
+    row = newRow(type, payload, typeof household === 'string' ? household : undefined)
+    await database.outbox.add(row)
+    await applyReducer(database, type, payload, row.clientTime)
+  })
+  syncHooks.requested()
+  return (row as OutboxRow).id
+}
+
+/** Set by the sync engine; a no-op until it runs (and in unit tests). */
+export const syncHooks = { requested: () => {} }
 
 /** Pending commands in send order. */
 export function pendingCommands(database: StockpotDB = db): Promise<OutboxRow[]> {

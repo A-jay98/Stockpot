@@ -841,6 +841,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply a batch of offline commands
+         * @description Each command runs in its own transaction, in order. `applied` = done,
+         *     `duplicate` = this id was applied before, `rejected` = refused for the
+         *     stated problem code (and the same on every retry of that id).
+         */
+        post: operations["applyCommands"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Changes to the household's synced rows since a cursor */
+        get: operations["getSync"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/sync/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Server-sent events that say "something changed, pull now"
+         * @description Events carry no data: `event: changed` after a change, `: ping`
+         *     comments every 25 seconds. Clients pull on `changed`.
+         */
+        get: operations["getSyncEvents"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1144,7 +1204,7 @@ export interface components {
             items: components["schemas"]["AdminSetting"][];
         };
         AdminSettingUpdate: {
-            /** @description New value, of the setting's kind. */
+            /** @description New value, of the setting's kind (null is refused by the setting's validation). */
             value: unknown;
         };
         SetupStatus: {
@@ -1425,6 +1485,285 @@ export interface components {
         };
         LLMProviderKey: {
             apiKey: string;
+        };
+        /**
+         * @description One offline-capable write. `type` selects the payload schema. Commands
+         *     are applied in order, each exactly once per `id` (a client-generated
+         *     UUIDv7). Fields typed nullable clear the column when sent as null;
+         *     absent fields are left unchanged.
+         */
+        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"];
+        CmdCatalogProductCreate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.product.create";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                brand?: string | null;
+                /** Format: uuid */
+                ingredientId?: string | null;
+                extraIngredientIds?: string[] | null;
+                /** Format: uuid */
+                categoryId?: string | null;
+                icon?: string | null;
+                /** Format: uuid */
+                defaultStoreId?: string | null;
+                /** @description Decimal string. */
+                defaultQty?: string | null;
+                defaultUnit?: string | null;
+                package?: string | null;
+                /** @enum {string|null} */
+                defaultLocationKind?: "fridge" | "freezer" | "pantry" | "other" | null;
+                note?: string | null;
+            };
+        };
+        CmdCatalogProductUpdate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.product.update";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                name?: string;
+                brand?: string | null;
+                /** Format: uuid */
+                ingredientId?: string | null;
+                extraIngredientIds?: string[] | null;
+                /** Format: uuid */
+                categoryId?: string | null;
+                icon?: string | null;
+                /** Format: uuid */
+                defaultStoreId?: string | null;
+                /** @description Decimal string. */
+                defaultQty?: string | null;
+                defaultUnit?: string | null;
+                package?: string | null;
+                /** @enum {string|null} */
+                defaultLocationKind?: "fridge" | "freezer" | "pantry" | "other" | null;
+                note?: string | null;
+            };
+        };
+        CmdCatalogProductDelete: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.product.delete";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        CmdCatalogProductSetIngredient: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.product.set_ingredient";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                ingredientId: string | null;
+                extraIngredientIds?: string[];
+            };
+        };
+        CmdCatalogStoreCreate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.store.create";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                sort?: number | null;
+                color?: string | null;
+            };
+        };
+        CmdCatalogStoreUpdate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.store.update";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                name?: string;
+                sort?: number | null;
+                color?: string | null;
+            };
+        };
+        CmdCatalogStoreDelete: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.store.delete";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        CmdCatalogLocationCreate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.location.create";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                /** @enum {string} */
+                kind: "fridge" | "freezer" | "pantry" | "other";
+                sort?: number | null;
+            };
+        };
+        CmdCatalogLocationUpdate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.location.update";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                name?: string;
+                /** @enum {string} */
+                kind?: "fridge" | "freezer" | "pantry" | "other";
+                sort?: number | null;
+            };
+        };
+        CmdCatalogLocationDelete: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.location.delete";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        CmdCatalogIngredientCreate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.ingredient.create";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                plural?: string | null;
+                /** Format: uuid */
+                parentId?: string | null;
+                /** Format: uuid */
+                categoryId?: string | null;
+                icon?: string | null;
+                aliases?: string[];
+            };
+        };
+        CommandBatch: {
+            /**
+             * Format: uuid
+             * @description The household the commands were queued under. The server answers 409
+             *     `household_mismatch` and applies nothing when the session's active
+             *     household is another one.
+             */
+            householdId: string;
+            commands: components["schemas"]["Command"][];
+        };
+        CommandResult: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            status: "applied" | "duplicate" | "rejected";
+            problem?: {
+                /** @enum {string} */
+                code: "gone" | "invalid" | "forbidden";
+                detail: string;
+            };
+        };
+        CommandResults: {
+            results: components["schemas"]["CommandResult"][];
+        };
+        SyncPage: {
+            /** @description Changed rows by table name, snake_case columns, numerics as decimal strings. */
+            rows: {
+                [key: string]: {
+                    [key: string]: unknown;
+                }[];
+            };
+            /** @description Ids of rows deleted since the cursor, by table name. */
+            tombstones: {
+                [key: string]: string[];
+            };
+            /**
+             * Format: int64
+             * @description Household cursor to send as `since` next time.
+             */
+            next: number;
+            /**
+             * Format: int64
+             * @description Global catalog cursor to send as `sinceGlobal` next time.
+             */
+            nextGlobal: number;
+            /** @description Either cursor has more rows; pull again at once. */
+            more: boolean;
         };
     };
     responses: {
@@ -2595,6 +2934,77 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    applyCommands: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CommandBatch"];
+            };
+        };
+        responses: {
+            /** @description One result per command, in order */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandResults"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getSync: {
+        parameters: {
+            query?: {
+                since?: number;
+                sinceGlobal?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description A page of changes, oldest first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncPage"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getSyncEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Event stream */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/event-stream": string;
+                };
             };
             default: components["responses"]["Problem"];
         };

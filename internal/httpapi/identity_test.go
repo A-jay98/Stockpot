@@ -11,6 +11,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/a-jay98/stockpot/internal/catalog"
+	"github.com/a-jay98/stockpot/internal/commands"
+	"github.com/a-jay98/stockpot/internal/syncdb"
+
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -50,7 +54,13 @@ func newEnv(t *testing.T) *env {
 	if err != nil {
 		t.Fatal(err)
 	}
-	h := newHandler(t, NewServer(Deps{Identity: svc}), Options{
+	reg := commands.NewRegistry()
+	catalog.Register(reg, catalog.ExactResolver{})
+	syncStore, err := syncdb.New(t.Context(), pool)
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := newHandler(t, NewServer(Deps{Identity: svc, Commands: commands.NewService(pool, reg), Sync: syncStore}), Options{
 		PublicURL: origin, Session: SessionLoader(svc), Authorizer: IdentityAuthorizer{},
 	})
 	return &env{t: t, h: h, pool: pool, store: store, svc: svc}

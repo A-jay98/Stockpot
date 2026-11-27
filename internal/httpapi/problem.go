@@ -20,6 +20,9 @@ const (
 	CodeInternal         = "internal"
 	CodeInvalidValue     = "invalid_value"
 	CodeNotChanged       = "not_changed"
+	// CodeHouseholdMismatch: commands were queued under another household than the session's.
+	CodeHouseholdMismatch = "household_mismatch"
+	CodeTooManyStreams    = "too_many_streams"
 	// CodeLLMUnavailable: no LLM provider could answer; the client offers
 	// the manual path.
 	CodeLLMUnavailable = "llm_unavailable"

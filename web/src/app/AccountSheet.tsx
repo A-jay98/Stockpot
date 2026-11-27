@@ -1,8 +1,8 @@
-import { LogOut, Monitor, Moon, Shield, Sun } from 'lucide-react'
+import { LogOut, Monitor, Moon, Settings, Shield, Sun } from 'lucide-react'
 import type { ReactElement } from 'react'
 import { Link } from 'react-router'
 import { useMe, useSignOut, useSwitchHousehold } from '../features/auth/session'
-import { Button, Segmented, Sheet, SheetContent, SheetTrigger, Switch } from '../ui'
+import { Button, Segmented, Sheet, SheetClose, SheetContent, SheetTrigger, Switch } from '../ui'
 import { FoodIcon, useColourfulIcons } from '../ui/food-icons'
 import { ServerStatus } from './ServerStatus'
 import { type ThemePreference, useTheme } from './theme'
@@ -73,6 +73,14 @@ export function AccountSheet({ trigger }: { trigger: ReactElement }) {
             ]}
           />
         </div>
+        <SheetClose asChild>
+          <Button variant="secondary" asChild>
+            <Link to="/settings">
+              <Settings aria-hidden />
+              Settings
+            </Link>
+          </Button>
+        </SheetClose>
         <div className="flex items-center justify-between gap-3">
           <label htmlFor="colourful-icons" className="flex items-center gap-2">
             <FoodIcon k="tangerine" size={20} />

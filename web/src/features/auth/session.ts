@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router'
 import { api, unwrap } from '../../api/client'
 import { ApiError } from '../../api/problem'
 import type { components } from '../../api/schema'
+import { db } from '../../offline/db'
+import { resetReplica, syncNow } from '../../offline/sync'
 import { createPasskey, getPasskey } from './webauthn'
 
 export type Me = components['schemas']['Me']
@@ -68,8 +70,20 @@ export function useSignOut() {
   const qc = useQueryClient()
   const navigate = useNavigate()
   return useMutation({
-    mutationFn: () => unwrap(api.POST('/v1/auth/logout')),
-    onSettled: () => {
+    mutationFn: async () => {
+      // Push what's queued first; signing out wipes the replica and the outbox.
+      await syncNow().catch(() => undefined)
+      const unsynced = await db.outbox.count()
+      if (
+        unsynced > 0 &&
+        !window.confirm(`${unsynced} change(s) haven't synced and will be lost. Sign out anyway?`)
+      )
+        throw new Error('cancelled')
+      return unwrap(api.POST('/v1/auth/logout'))
+    },
+    onSettled: (_data, error) => {
+      if (error?.message === 'cancelled') return
+      void resetReplica() // the replica is the previous user's data
       qc.clear()
       void navigate('/login', { replace: true })
     },
@@ -79,10 +93,12 @@ export function useSignOut() {
 export function useSwitchHousehold() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (householdId: string) =>
-      unwrap(api.PUT('/v1/me/household', { body: { householdId } })),
+    mutationFn: async (householdId: string) => {
+      await syncNow().catch(() => undefined) // commands are household-bound; flush before leaving
+      return unwrap(api.PUT('/v1/me/household', { body: { householdId } }))
+    },
     onSuccess: (me) => {
-      // Everything household-scoped is stale now.
+      // Everything household-scoped is stale now (useReplicaSync clears the replica).
       qc.clear()
       qc.setQueryData(meKey, me)
     },

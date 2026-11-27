@@ -1,0 +1,7070 @@
+[
+ {
+  "slug": "fruit",
+  "name": "Fruit",
+  "plural": "fruits",
+  "parent": null,
+  "category": "produce-fruit",
+  "icon": "red-apple",
+  "aliases": [],
+  "shelf_life": {},
+  "default_unit": null
+ },
+ {
+  "slug": "citrus",
+  "name": "Citrus",
+  "plural": "citrus",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "tangerine",
+  "aliases": [
+   "citrus fruit"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "mandarin",
+  "name": "Mandarin",
+  "plural": "Mandarins",
+  "parent": "citrus",
+  "category": "produce-fruit",
+  "icon": "tangerine",
+  "aliases": [
+   "mandarin orange",
+   "mandarine",
+   "manderin",
+   "naartjie",
+   "naranji",
+   "nārengi"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "clementine",
+  "name": "Clementine",
+  "plural": "Clementines",
+  "parent": "mandarin",
+  "category": "produce-fruit",
+  "icon": "tangerine",
+  "aliases": [
+   "cutie",
+   "cuties",
+   "halo",
+   "halos"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "tangerine",
+  "name": "Tangerine",
+  "plural": "Tangerines",
+  "parent": "mandarin",
+  "category": "produce-fruit",
+  "icon": "tangerine",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "orange",
+  "name": "Orange",
+  "plural": "Oranges",
+  "parent": "citrus",
+  "category": "produce-fruit",
+  "icon": "tangerine",
+  "aliases": [
+   "naval orange",
+   "navel orange",
+   "oranj",
+   "pertoghal",
+   "portaghal"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "blood-orange",
+  "name": "Blood orange",
+  "plural": "Blood oranges",
+  "parent": "orange",
+  "category": "produce-fruit",
+  "icon": "tangerine",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "lemon",
+  "name": "Lemon",
+  "plural": "Lemons",
+  "parent": "citrus",
+  "category": "produce-fruit",
+  "icon": "lemon",
+  "aliases": [
+   "lemmon",
+   "limoo",
+   "limu"
+  ],
+  "shelf_life": {
+   "fridge": 28
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "lime",
+  "name": "Lime",
+  "plural": "Limes",
+  "parent": "citrus",
+  "category": "produce-fruit",
+  "icon": "lime",
+  "aliases": [
+   "limoo ommani"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "grapefruit",
+  "name": "Grapefruit",
+  "plural": "Grapefruits",
+  "parent": "citrus",
+  "category": "produce-fruit",
+  "icon": "tangerine",
+  "aliases": [
+   "grapefruite",
+   "greyfurt"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "pomelo",
+  "name": "Pomelo",
+  "plural": "Pomelos",
+  "parent": "citrus",
+  "category": "produce-fruit",
+  "icon": "tangerine",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "apple",
+  "name": "Apple",
+  "plural": "Apples",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "red-apple",
+  "aliases": [
+   "apel",
+   "sib"
+  ],
+  "shelf_life": {
+   "fridge": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "gala-apple",
+  "name": "Gala apple",
+  "plural": "Gala apples",
+  "parent": "apple",
+  "category": "produce-fruit",
+  "icon": "red-apple",
+  "aliases": [
+   "gala"
+  ],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "honeycrisp-apple",
+  "name": "Honeycrisp apple",
+  "plural": "Honeycrisp apples",
+  "parent": "apple",
+  "category": "produce-fruit",
+  "icon": "red-apple",
+  "aliases": [
+   "honeycrisp"
+  ],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "granny-smith-apple",
+  "name": "Granny Smith apple",
+  "plural": "Granny Smith apples",
+  "parent": "apple",
+  "category": "produce-fruit",
+  "icon": "green-apple",
+  "aliases": [
+   "granny smith",
+   "green apple"
+  ],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "mcintosh-apple",
+  "name": "McIntosh apple",
+  "plural": "McIntosh apples",
+  "parent": "apple",
+  "category": "produce-fruit",
+  "icon": "red-apple",
+  "aliases": [
+   "mcintosh"
+  ],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "fuji-apple",
+  "name": "Fuji apple",
+  "plural": "Fuji apples",
+  "parent": "apple",
+  "category": "produce-fruit",
+  "icon": "red-apple",
+  "aliases": [
+   "fuji"
+  ],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "pear",
+  "name": "Pear",
+  "plural": "Pears",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "pear",
+  "aliases": [
+   "golabi",
+   "pair"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "banana",
+  "name": "Banana",
+  "plural": "Bananas",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "banana",
+  "aliases": [
+   "bananna",
+   "bannana",
+   "moz"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "pantry": 5
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "plantain",
+  "name": "Plantain",
+  "plural": "Plantains",
+  "parent": "banana",
+  "category": "produce-fruit",
+  "icon": "banana",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "grape",
+  "name": "Grape",
+  "plural": "Grapes",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "grapes",
+  "aliases": [
+   "angoor",
+   "green grapes",
+   "red grapes"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "strawberry",
+  "name": "Strawberry",
+  "plural": "strawberries",
+  "parent": "berries",
+  "category": "produce-fruit",
+  "icon": "strawberry",
+  "aliases": [
+   "strawberrys",
+   "strawbery",
+   "toot farangi"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 300
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "blueberry",
+  "name": "Blueberry",
+  "plural": "blueberries",
+  "parent": "berries",
+  "category": "produce-fruit",
+  "icon": "blueberries",
+  "aliases": [
+   "bluberry",
+   "blue berries",
+   "blueberrys"
+  ],
+  "shelf_life": {
+   "fridge": 10,
+   "freezer": 300
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "raspberry",
+  "name": "Raspberry",
+  "plural": "raspberries",
+  "parent": "berries",
+  "category": "produce-fruit",
+  "icon": "cherries",
+  "aliases": [
+   "rasberry",
+   "raspberrys"
+  ],
+  "shelf_life": {
+   "fridge": 4,
+   "freezer": 300
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "blackberry",
+  "name": "Blackberry",
+  "plural": "blackberries",
+  "parent": "berries",
+  "category": "produce-fruit",
+  "icon": "cherries",
+  "aliases": [
+   "black berry",
+   "blackberrys"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 300
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cranberry",
+  "name": "Cranberry",
+  "plural": "cranberries",
+  "parent": "berries",
+  "category": "produce-fruit",
+  "icon": "cherries",
+  "aliases": [
+   "craneberry"
+  ],
+  "shelf_life": {
+   "fridge": 30,
+   "freezer": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "berries",
+  "name": "Berries",
+  "plural": "berries",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "blueberries",
+  "aliases": [
+   "berry",
+   "mixed berries"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 300
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cherry",
+  "name": "Cherry",
+  "plural": "cherries",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "cherries",
+  "aliases": [
+   "cherrys",
+   "gilas"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 300
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "peach",
+  "name": "Peach",
+  "plural": "peaches",
+  "parent": "stone-fruit",
+  "category": "produce-fruit",
+  "icon": "peach",
+  "aliases": [
+   "hulu"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "nectarine",
+  "name": "Nectarine",
+  "plural": "Nectarines",
+  "parent": "stone-fruit",
+  "category": "produce-fruit",
+  "icon": "peach",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "plum",
+  "name": "Plum",
+  "plural": "Plums",
+  "parent": "stone-fruit",
+  "category": "produce-fruit",
+  "icon": "peach",
+  "aliases": [
+   "aloo",
+   "prune plum"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "apricot",
+  "name": "Apricot",
+  "plural": "Apricots",
+  "parent": "stone-fruit",
+  "category": "produce-fruit",
+  "icon": "peach",
+  "aliases": [
+   "zardaloo"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "stone-fruit",
+  "name": "Stone fruit",
+  "plural": "stone fruit",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "peach",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "mango",
+  "name": "Mango",
+  "plural": "mangoes",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "mango",
+  "aliases": [
+   "anbeh",
+   "manga",
+   "mangos"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 180
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "pineapple",
+  "name": "Pineapple",
+  "plural": "Pineapples",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "pineapple",
+  "aliases": [
+   "ananas",
+   "pinapple",
+   "pine apple"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 300
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "watermelon",
+  "name": "Watermelon",
+  "plural": "Watermelons",
+  "parent": "melon",
+  "category": "produce-fruit",
+  "icon": "watermelon",
+  "aliases": [
+   "hendevaneh",
+   "water melon"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "cantaloupe",
+  "name": "Cantaloupe",
+  "plural": "Cantaloupes",
+  "parent": "melon",
+  "category": "produce-fruit",
+  "icon": "melon",
+  "aliases": [
+   "cantelope",
+   "canteloupe",
+   "talabi"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "honeydew",
+  "name": "Honeydew",
+  "plural": "Honeydews",
+  "parent": "melon",
+  "category": "produce-fruit",
+  "icon": "melon",
+  "aliases": [
+   "honey dew",
+   "honeydew melon"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "melon",
+  "name": "Melon",
+  "plural": "Melons",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "melon",
+  "aliases": [
+   "kharbozeh"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "kiwi",
+  "name": "Kiwi",
+  "plural": "kiwis",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "kiwi-fruit",
+  "aliases": [
+   "kivi",
+   "kiwi fruit",
+   "kiwifruit"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "pomegranate",
+  "name": "Pomegranate",
+  "plural": "Pomegranates",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "cherries",
+  "aliases": [
+   "anar",
+   "pomegranit",
+   "pomegranite",
+   "pomergranate"
+  ],
+  "shelf_life": {
+   "fridge": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "fig",
+  "name": "Fig",
+  "plural": "Figs",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "cherries",
+  "aliases": [
+   "anjir"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "dates",
+  "name": "Dates",
+  "plural": "dates",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "coconut",
+  "aliases": [
+   "date",
+   "khorma",
+   "medjool",
+   "medjool dates"
+  ],
+  "shelf_life": {
+   "fridge": 60,
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "papaya",
+  "name": "Papaya",
+  "plural": "Papayas",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "mango",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "dragon-fruit",
+  "name": "Dragon fruit",
+  "plural": "Dragon fruits",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "kiwi-fruit",
+  "aliases": [
+   "dragonfruit",
+   "pitaya"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "passion-fruit",
+  "name": "Passion fruit",
+  "plural": "Passion fruits",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "kiwi-fruit",
+  "aliases": [
+   "passionfruit"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "lychee",
+  "name": "Lychee",
+  "plural": "Lychees",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "cherries",
+  "aliases": [
+   "litchi"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "persimmon",
+  "name": "Persimmon",
+  "plural": "Persimmons",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "tangerine",
+  "aliases": [
+   "khormalu"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "coconut",
+  "name": "Coconut",
+  "plural": "Coconuts",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "coconut",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 60
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "avocado",
+  "name": "Avocado",
+  "plural": "Avocados",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "avocado",
+  "aliases": [
+   "avacado",
+   "avo",
+   "avocadoe",
+   "avokado"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "rhubarb",
+  "name": "Rhubarb",
+  "plural": "Rhubarbs",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "pea-pod",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "raisins",
+  "name": "Raisins",
+  "plural": "raisins",
+  "parent": "dried-fruit",
+  "category": "produce-fruit",
+  "icon": "grapes",
+  "aliases": [
+   "kishmish",
+   "raisin"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "dried-fruit",
+  "name": "Dried fruit",
+  "plural": "dried fruits",
+  "parent": "fruit",
+  "category": "produce-fruit",
+  "icon": "grapes",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "vegetable",
+  "name": "Vegetable",
+  "plural": "vegetables",
+  "parent": null,
+  "category": "produce-veg",
+  "icon": "carrot",
+  "aliases": [],
+  "shelf_life": {},
+  "default_unit": null
+ },
+ {
+  "slug": "tomato",
+  "name": "Tomato",
+  "plural": "tomatoes",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "tomato",
+  "aliases": [
+   "gojeh",
+   "gojeh farangi",
+   "tomatoe",
+   "tomatos"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "cherry-tomato",
+  "name": "Cherry tomato",
+  "plural": "cherry tomatoes",
+  "parent": "tomato",
+  "category": "produce-veg",
+  "icon": "tomato",
+  "aliases": [
+   "grape tomato",
+   "grape tomatoes"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "roma-tomato",
+  "name": "Roma tomato",
+  "plural": "roma tomatoes",
+  "parent": "tomato",
+  "category": "produce-veg",
+  "icon": "tomato",
+  "aliases": [
+   "plum tomato",
+   "roma"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "potato",
+  "name": "Potato",
+  "plural": "potatoes",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "potato",
+  "aliases": [
+   "potatoe",
+   "potatos",
+   "russet",
+   "sibzamini"
+  ],
+  "shelf_life": {
+   "fridge": 30,
+   "pantry": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "sweet-potato",
+  "name": "Sweet potato",
+  "plural": "sweet potatoes",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "roasted-sweet-potato",
+  "aliases": [
+   "sweet potatoe",
+   "yam",
+   "yams"
+  ],
+  "shelf_life": {
+   "fridge": 30,
+   "pantry": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "baby-potato",
+  "name": "Baby potato",
+  "plural": "baby potatoes",
+  "parent": "potato",
+  "category": "produce-veg",
+  "icon": "potato",
+  "aliases": [
+   "mini potatoes",
+   "new potatoes"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "onion",
+  "name": "Onion",
+  "plural": "Onions",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "onion",
+  "aliases": [
+   "onoin",
+   "piaz",
+   "yellow onion"
+  ],
+  "shelf_life": {
+   "fridge": 30,
+   "pantry": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "red-onion",
+  "name": "Red onion",
+  "plural": "Red onions",
+  "parent": "onion",
+  "category": "produce-veg",
+  "icon": "onion",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 30,
+   "pantry": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "green-onion",
+  "name": "Green onion",
+  "plural": "Green onions",
+  "parent": "onion",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "piaz sabz",
+   "scallion",
+   "scallions",
+   "spring onion"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "shallot",
+  "name": "Shallot",
+  "plural": "Shallots",
+  "parent": "onion",
+  "category": "produce-veg",
+  "icon": "onion",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 30,
+   "pantry": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "leek",
+  "name": "Leek",
+  "plural": "Leeks",
+  "parent": "onion",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "tareh"
+  ],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "garlic",
+  "name": "Garlic",
+  "plural": "Garlics",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "garlic",
+  "aliases": [
+   "garlick",
+   "sir"
+  ],
+  "shelf_life": {
+   "fridge": 30,
+   "pantry": 30
+  },
+  "default_unit": "head"
+ },
+ {
+  "slug": "ginger",
+  "name": "Ginger",
+  "plural": "Gingers",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "ginger-root",
+  "aliases": [
+   "ginger root",
+   "gingerroot",
+   "zanjabil"
+  ],
+  "shelf_life": {
+   "fridge": 21,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "carrot",
+  "name": "Carrot",
+  "plural": "Carrots",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "carrot",
+  "aliases": [
+   "carot",
+   "gazar"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "baby-carrot",
+  "name": "Baby carrot",
+  "plural": "baby carrots",
+  "parent": "carrot",
+  "category": "produce-veg",
+  "icon": "carrot",
+  "aliases": [
+   "mini carrots"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "celery",
+  "name": "Celery",
+  "plural": "Celeries",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "celary",
+   "karafs"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "cucumber",
+  "name": "Cucumber",
+  "plural": "Cucumbers",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "cucumber",
+  "aliases": [
+   "cucumbr",
+   "khiar"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "english-cucumber",
+  "name": "English cucumber",
+  "plural": "English cucumbers",
+  "parent": "cucumber",
+  "category": "produce-veg",
+  "icon": "cucumber",
+  "aliases": [
+   "long english cucumber",
+   "persian cucumber",
+   "persian cucumbers"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "zucchini",
+  "name": "Zucchini",
+  "plural": "zucchini",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "cucumber",
+  "aliases": [
+   "courgette",
+   "kadoo",
+   "zucchinis",
+   "zuchini"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "squash",
+  "name": "Squash",
+  "plural": "squash",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "tb-pumpkin",
+  "aliases": [
+   "kadoo halvaii"
+  ],
+  "shelf_life": {
+   "fridge": 30,
+   "pantry": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "butternut-squash",
+  "name": "Butternut squash",
+  "plural": "butternut squash",
+  "parent": "squash",
+  "category": "produce-veg",
+  "icon": "tb-pumpkin",
+  "aliases": [
+   "butternut"
+  ],
+  "shelf_life": {
+   "fridge": 30,
+   "pantry": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "spaghetti-squash",
+  "name": "Spaghetti squash",
+  "plural": "spaghetti squash",
+  "parent": "squash",
+  "category": "produce-veg",
+  "icon": "tb-pumpkin",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 30,
+   "pantry": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "pumpkin",
+  "name": "Pumpkin",
+  "plural": "Pumpkins",
+  "parent": "squash",
+  "category": "produce-veg",
+  "icon": "tb-pumpkin",
+  "aliases": [
+   "kadoo tanbal"
+  ],
+  "shelf_life": {
+   "fridge": 30,
+   "pantry": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "eggplant",
+  "name": "Eggplant",
+  "plural": "Eggplants",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "eggplant",
+  "aliases": [
+   "aubergine",
+   "badenjan",
+   "egg plant"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "bell-pepper",
+  "name": "Bell pepper",
+  "plural": "Bell peppers",
+  "parent": "pepper",
+  "category": "produce-veg",
+  "icon": "bell-pepper",
+  "aliases": [
+   "capsicum",
+   "felfel dolmeh",
+   "green pepper",
+   "red pepper",
+   "sweet pepper",
+   "yellow pepper"
+  ],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "pepper",
+  "name": "Pepper",
+  "plural": "Peppers",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "bell-pepper",
+  "aliases": [],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "jalapeno",
+  "name": "Jalapeno",
+  "plural": "jalapenos",
+  "parent": "chili-pepper",
+  "category": "produce-veg",
+  "icon": "hot-pepper",
+  "aliases": [
+   "halapeno",
+   "jalapeño",
+   "jalapeño pepper"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "chili-pepper",
+  "name": "Chili pepper",
+  "plural": "Chili peppers",
+  "parent": "pepper",
+  "category": "produce-veg",
+  "icon": "hot-pepper",
+  "aliases": [
+   "chile",
+   "chilli",
+   "felfel tond",
+   "hot pepper",
+   "hot peppers",
+   "red chili"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "broccoli",
+  "name": "Broccoli",
+  "plural": "Broccolis",
+  "parent": "cruciferous",
+  "category": "produce-veg",
+  "icon": "broccoli",
+  "aliases": [
+   "broccolli",
+   "brocoli",
+   "brocolli",
+   "brokoli"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 300
+  },
+  "default_unit": "head"
+ },
+ {
+  "slug": "broccolini",
+  "name": "Broccolini",
+  "plural": "Broccolinis",
+  "parent": "cruciferous",
+  "category": "produce-veg",
+  "icon": "broccoli",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "cauliflower",
+  "name": "Cauliflower",
+  "plural": "Cauliflowers",
+  "parent": "cruciferous",
+  "category": "produce-veg",
+  "icon": "broccoli",
+  "aliases": [
+   "califlower",
+   "caulifower",
+   "gol kalam",
+   "gole kalam"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 300
+  },
+  "default_unit": "head"
+ },
+ {
+  "slug": "cruciferous",
+  "name": "Cruciferous vegetable",
+  "plural": "cruciferous vegetables",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "broccoli",
+  "aliases": [],
+  "shelf_life": {},
+  "default_unit": null
+ },
+ {
+  "slug": "cabbage",
+  "name": "Cabbage",
+  "plural": "Cabbages",
+  "parent": "cruciferous",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "green cabbage",
+   "kalam",
+   "red cabbage"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "head"
+ },
+ {
+  "slug": "napa-cabbage",
+  "name": "Napa cabbage",
+  "plural": "Napa cabbages",
+  "parent": "cabbage",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "chinese cabbage"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "head"
+ },
+ {
+  "slug": "brussels-sprouts",
+  "name": "Brussels sprouts",
+  "plural": "brussels sprouts",
+  "parent": "cruciferous",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "brussel sprouts",
+   "brussels sprout"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "kale",
+  "name": "Kale",
+  "plural": "Kales",
+  "parent": "leafy-greens",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "curly kale",
+   "kail",
+   "lacinato kale"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "leafy-greens",
+  "name": "Leafy greens",
+  "plural": "leafy greens",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "greens"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "spinach",
+  "name": "Spinach",
+  "plural": "spinach",
+  "parent": "leafy-greens",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "baby spinach",
+   "esfenaj",
+   "spinage",
+   "spinash",
+   "spinich"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 300
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "lettuce",
+  "name": "Lettuce",
+  "plural": "Lettuces",
+  "parent": "leafy-greens",
+  "category": "produce-veg",
+  "icon": "green-salad",
+  "aliases": [
+   "lettuse",
+   "letuce",
+   "sabzi khordan"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "head"
+ },
+ {
+  "slug": "romaine",
+  "name": "Romaine lettuce",
+  "plural": "romaine lettuce",
+  "parent": "lettuce",
+  "category": "produce-veg",
+  "icon": "green-salad",
+  "aliases": [
+   "cos lettuce",
+   "romain",
+   "romaine",
+   "romaine hearts"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "head"
+ },
+ {
+  "slug": "iceberg-lettuce",
+  "name": "Iceberg lettuce",
+  "plural": "Iceberg lettuces",
+  "parent": "lettuce",
+  "category": "produce-veg",
+  "icon": "green-salad",
+  "aliases": [
+   "iceberg"
+  ],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "head"
+ },
+ {
+  "slug": "arugula",
+  "name": "Arugula",
+  "plural": "arugula",
+  "parent": "leafy-greens",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "arugala",
+   "rocket",
+   "rucola"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "mixed-greens",
+  "name": "Mixed greens",
+  "plural": "mixed greens",
+  "parent": "leafy-greens",
+  "category": "produce-veg",
+  "icon": "green-salad",
+  "aliases": [
+   "mesclun",
+   "power greens",
+   "salad greens",
+   "salad mix",
+   "spring mix"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "salad-kit",
+  "name": "Salad kit",
+  "plural": "Salad kits",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "green-salad",
+  "aliases": [
+   "caesar salad kit",
+   "salad bowl"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "swiss-chard",
+  "name": "Swiss chard",
+  "plural": "swiss chard",
+  "parent": "leafy-greens",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "chard"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "bok-choy",
+  "name": "Bok choy",
+  "plural": "bok choy",
+  "parent": "leafy-greens",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "baby bok choy",
+   "pak choi"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "asparagus",
+  "name": "Asparagus",
+  "plural": "asparagus",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "asparagas",
+   "asparagrass"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "green-beans",
+  "name": "Green beans",
+  "plural": "green beans",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "pea-pod",
+  "aliases": [
+   "green bean",
+   "snap beans",
+   "string beans"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 300
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "snap-peas",
+  "name": "Snap peas",
+  "plural": "snap peas",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "pea-pod",
+  "aliases": [
+   "snow peas",
+   "snowpeas",
+   "sugar snap peas"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 300
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "peas",
+  "name": "Peas",
+  "plural": "peas",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "pea-pod",
+  "aliases": [
+   "green peas",
+   "nokhod sabz",
+   "pea"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 300
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "corn",
+  "name": "Corn",
+  "plural": "corn",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "ear-of-corn",
+  "aliases": [
+   "corn on the cob",
+   "ear of corn",
+   "sweet corn",
+   "zorat"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 300
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "mushroom",
+  "name": "Mushroom",
+  "plural": "Mushrooms",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "mushroom",
+  "aliases": [
+   "champignon",
+   "mushrum",
+   "qarch"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "white-mushroom",
+  "name": "White mushroom",
+  "plural": "White mushrooms",
+  "parent": "mushroom",
+  "category": "produce-veg",
+  "icon": "mushroom",
+  "aliases": [
+   "button mushroom",
+   "button mushrooms"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cremini-mushroom",
+  "name": "Cremini mushroom",
+  "plural": "Cremini mushrooms",
+  "parent": "mushroom",
+  "category": "produce-veg",
+  "icon": "mushroom",
+  "aliases": [
+   "baby bella",
+   "baby bellas",
+   "cremini"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "portobello",
+  "name": "Portobello",
+  "plural": "portobellos",
+  "parent": "mushroom",
+  "category": "produce-veg",
+  "icon": "mushroom",
+  "aliases": [
+   "portabella",
+   "portabello",
+   "portobello mushroom"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "shiitake",
+  "name": "Shiitake",
+  "plural": "shiitake",
+  "parent": "mushroom",
+  "category": "produce-veg",
+  "icon": "mushroom",
+  "aliases": [
+   "shiitake mushroom",
+   "shitake"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "radish",
+  "name": "Radish",
+  "plural": "radishes",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "onion",
+  "aliases": [
+   "radishs",
+   "torobcheh"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "beet",
+  "name": "Beet",
+  "plural": "Beets",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "onion",
+  "aliases": [
+   "beat",
+   "beetroot",
+   "labu"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "turnip",
+  "name": "Turnip",
+  "plural": "Turnips",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "onion",
+  "aliases": [
+   "shalgham"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "parsnip",
+  "name": "Parsnip",
+  "plural": "Parsnips",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "carrot",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "rutabaga",
+  "name": "Rutabaga",
+  "plural": "Rutabagas",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "onion",
+  "aliases": [
+   "swede"
+  ],
+  "shelf_life": {
+   "fridge": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "fennel",
+  "name": "Fennel",
+  "plural": "Fennels",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "onion",
+  "aliases": [
+   "fennel bulb"
+  ],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "artichoke",
+  "name": "Artichoke",
+  "plural": "Artichokes",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "okra",
+  "name": "Okra",
+  "plural": "okra",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "pea-pod",
+  "aliases": [
+   "bamieh"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 300
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "avocado-oil",
+  "name": "Avocado oil",
+  "plural": "Avocado oils",
+  "parent": "olive-oil",
+  "category": "produce-veg",
+  "icon": "tb-oil",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "jicama",
+  "name": "Jicama",
+  "plural": "Jicamas",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "potato",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "daikon",
+  "name": "Daikon",
+  "plural": "Daikons",
+  "parent": "radish",
+  "category": "produce-veg",
+  "icon": "onion",
+  "aliases": [
+   "white radish"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "bean-sprouts",
+  "name": "Bean sprouts",
+  "plural": "bean sprouts",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "leafy-green",
+  "aliases": [
+   "beansprouts"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "edamame",
+  "name": "Edamame",
+  "plural": "edamame",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "pea-pod",
+  "aliases": [
+   "edamame beans"
+  ],
+  "shelf_life": {
+   "freezer": 365
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "olives",
+  "name": "Olives",
+  "plural": "olives",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "olive",
+  "aliases": [
+   "black olives",
+   "green olives",
+   "kalamata",
+   "kalamata olives",
+   "olive",
+   "zeytoon"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "pickles",
+  "name": "Pickles",
+  "plural": "pickles",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "jar",
+  "aliases": [
+   "dill pickle",
+   "dill pickles",
+   "gherkin",
+   "khiar shoor",
+   "pickle"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "sauerkraut",
+  "name": "Sauerkraut",
+  "plural": "sauerkraut",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "jar",
+  "aliases": [
+   "kraut"
+  ],
+  "shelf_life": {
+   "fridge": 90
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "kimchi",
+  "name": "Kimchi",
+  "plural": "kimchi",
+  "parent": "vegetable",
+  "category": "produce-veg",
+  "icon": "jar",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 90
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "herb",
+  "name": "Herb",
+  "plural": "Herbs",
+  "parent": null,
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "parsley",
+  "name": "Parsley",
+  "plural": "parsley",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "flat leaf parsley",
+   "italian parsley",
+   "jafari",
+   "parsely",
+   "parsly"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "cilantro",
+  "name": "Cilantro",
+  "plural": "cilantro",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "cilanto",
+   "coriander",
+   "fresh coriander",
+   "gishniz"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "basil",
+  "name": "Basil",
+  "plural": "basil",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "basel",
+   "fresh basil",
+   "rayhan"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "mint",
+  "name": "Mint",
+  "plural": "mint",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "fresh mint",
+   "naana",
+   "nana"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "dill",
+  "name": "Dill",
+  "plural": "dill",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "fresh dill",
+   "shevid"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "rosemary",
+  "name": "Rosemary",
+  "plural": "rosemary",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "fresh rosemary",
+   "rosmary"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "thyme",
+  "name": "Thyme",
+  "plural": "thyme",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "avishan",
+   "fresh thyme"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "sage",
+  "name": "Sage",
+  "plural": "sage",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "fresh sage"
+  ],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "chives",
+  "name": "Chives",
+  "plural": "chives",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "chive",
+   "tareh farangi"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "oregano",
+  "name": "Oregano",
+  "plural": "oregano",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "fresh oregano",
+   "marzeh"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "tarragon",
+  "name": "Tarragon",
+  "plural": "tarragon",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "tarkhoon"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "fenugreek-leaves",
+  "name": "Fenugreek leaves",
+  "plural": "fenugreek leaves",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "methi",
+   "shanbalileh"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "bunch"
+ },
+ {
+  "slug": "lemongrass",
+  "name": "Lemongrass",
+  "plural": "lemongrass",
+  "parent": "herb",
+  "category": "herbs",
+  "icon": "herb",
+  "aliases": [
+   "lemon grass"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "milk",
+  "name": "Milk",
+  "plural": "milk",
+  "parent": "dairy",
+  "category": "dairy-eggs",
+  "icon": "glass-of-milk",
+  "aliases": [
+   "1% milk",
+   "2% milk",
+   "3.25% milk",
+   "homo milk",
+   "shir",
+   "skim milk",
+   "whole milk"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "l"
+ },
+ {
+  "slug": "dairy",
+  "name": "Dairy",
+  "plural": "dairy",
+  "parent": null,
+  "category": "dairy-eggs",
+  "icon": "glass-of-milk",
+  "aliases": [],
+  "shelf_life": {},
+  "default_unit": null
+ },
+ {
+  "slug": "lactose-free-milk",
+  "name": "Lactose-free milk",
+  "plural": "lactose-free milk",
+  "parent": "milk",
+  "category": "dairy-eggs",
+  "icon": "glass-of-milk",
+  "aliases": [
+   "lactaid",
+   "lactose free milk"
+  ],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "l"
+ },
+ {
+  "slug": "buttermilk",
+  "name": "Buttermilk",
+  "plural": "buttermilk",
+  "parent": "milk",
+  "category": "dairy-eggs",
+  "icon": "glass-of-milk",
+  "aliases": [
+   "butter milk"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "l"
+ },
+ {
+  "slug": "oat-milk",
+  "name": "Oat milk",
+  "plural": "oat milk",
+  "parent": "plant-milk",
+  "category": "dairy-eggs",
+  "icon": "tb-plant-milk",
+  "aliases": [
+   "oat beverage",
+   "oat drink",
+   "oatly"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "pantry": 180
+  },
+  "default_unit": "l"
+ },
+ {
+  "slug": "almond-milk",
+  "name": "Almond milk",
+  "plural": "almond milk",
+  "parent": "plant-milk",
+  "category": "dairy-eggs",
+  "icon": "tb-plant-milk",
+  "aliases": [
+   "almond beverage",
+   "almond breeze"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "pantry": 180
+  },
+  "default_unit": "l"
+ },
+ {
+  "slug": "soy-milk",
+  "name": "Soy milk",
+  "plural": "soy milk",
+  "parent": "plant-milk",
+  "category": "dairy-eggs",
+  "icon": "tb-plant-milk",
+  "aliases": [
+   "soy beverage",
+   "soya milk"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "pantry": 180
+  },
+  "default_unit": "l"
+ },
+ {
+  "slug": "coconut-milk",
+  "name": "Coconut milk",
+  "plural": "coconut milk",
+  "parent": "plant-milk",
+  "category": "dairy-eggs",
+  "icon": "tb-plant-milk",
+  "aliases": [
+   "canned coconut milk"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "plant-milk",
+  "name": "Plant milk",
+  "plural": "plant milk",
+  "parent": "milk",
+  "category": "dairy-eggs",
+  "icon": "tb-plant-milk",
+  "aliases": [
+   "alt milk",
+   "dairy-free milk",
+   "non-dairy milk"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "pantry": 180
+  },
+  "default_unit": "l"
+ },
+ {
+  "slug": "cream",
+  "name": "Cream",
+  "plural": "cream",
+  "parent": "dairy",
+  "category": "dairy-eggs",
+  "icon": "tb-cream",
+  "aliases": [
+   "10% cream",
+   "18% cream",
+   "35% cream",
+   "half & half",
+   "half and half",
+   "heavy cream",
+   "table cream",
+   "whipping cream"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "ml"
+ },
+ {
+  "slug": "sour-cream",
+  "name": "Sour cream",
+  "plural": "sour cream",
+  "parent": "dairy",
+  "category": "dairy-eggs",
+  "icon": "tb-cream",
+  "aliases": [
+   "sourcream"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cream-cheese",
+  "name": "Cream cheese",
+  "plural": "cream cheese",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "cream chese",
+   "philadelphia",
+   "philly"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "butter",
+  "name": "Butter",
+  "plural": "butter",
+  "parent": "dairy",
+  "category": "dairy-eggs",
+  "icon": "butter",
+  "aliases": [
+   "buter",
+   "kareh",
+   "salted butter",
+   "unsalted butter"
+  ],
+  "shelf_life": {
+   "fridge": 60,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "margarine",
+  "name": "Margarine",
+  "plural": "margarine",
+  "parent": "dairy",
+  "category": "dairy-eggs",
+  "icon": "butter",
+  "aliases": [
+   "becel",
+   "marg"
+  ],
+  "shelf_life": {
+   "fridge": 60
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "yogurt",
+  "name": "Yogurt",
+  "plural": "yogurt",
+  "parent": "dairy",
+  "category": "dairy-eggs",
+  "icon": "tb-yogurt",
+  "aliases": [
+   "mast",
+   "yoghurt",
+   "yogourt",
+   "youghurt",
+   "yougurt"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "greek-yogurt",
+  "name": "Greek yogurt",
+  "plural": "greek yogurt",
+  "parent": "yogurt",
+  "category": "dairy-eggs",
+  "icon": "tb-yogurt",
+  "aliases": [
+   "greek yoghurt",
+   "greek yogourt",
+   "liberte",
+   "oikos",
+   "skyr"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "plain-yogurt",
+  "name": "Plain yogurt",
+  "plural": "plain yogurt",
+  "parent": "yogurt",
+  "category": "dairy-eggs",
+  "icon": "tb-yogurt",
+  "aliases": [
+   "natural yogurt",
+   "plain yogourt"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "kefir",
+  "name": "Kefir",
+  "plural": "kefir",
+  "parent": "yogurt",
+  "category": "dairy-eggs",
+  "icon": "glass-of-milk",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "ml"
+ },
+ {
+  "slug": "doogh",
+  "name": "Doogh",
+  "plural": "doogh",
+  "parent": "yogurt",
+  "category": "dairy-eggs",
+  "icon": "glass-of-milk",
+  "aliases": [
+   "ayran",
+   "dugh"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "ml"
+ },
+ {
+  "slug": "cheese",
+  "name": "Cheese",
+  "plural": "cheese",
+  "parent": "dairy",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "cheeze",
+   "chese",
+   "paneer sandwich"
+  ],
+  "shelf_life": {
+   "fridge": 30
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cheddar",
+  "name": "Cheddar",
+  "plural": "cheddar",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "cheddar cheese",
+   "chedder",
+   "marble cheese",
+   "old cheddar",
+   "sharp cheddar"
+  ],
+  "shelf_life": {
+   "fridge": 60,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "mozzarella",
+  "name": "Mozzarella",
+  "plural": "mozzarella",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "mozarella",
+   "mozzarela",
+   "mozzerella",
+   "pizza cheese"
+  ],
+  "shelf_life": {
+   "fridge": 21,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "parmesan",
+  "name": "Parmesan",
+  "plural": "parmesan",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "parmasan",
+   "parmesean",
+   "parmigiano",
+   "parmigiano reggiano"
+  ],
+  "shelf_life": {
+   "fridge": 90,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "feta",
+  "name": "Feta",
+  "plural": "feta",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "bulgarian feta",
+   "feta cheese",
+   "paneer",
+   "paneer feta",
+   "persian feta"
+  ],
+  "shelf_life": {
+   "fridge": 30
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "swiss-cheese",
+  "name": "Swiss cheese",
+  "plural": "swiss cheese",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "emmental",
+   "gruyere"
+  ],
+  "shelf_life": {
+   "fridge": 45
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "gouda",
+  "name": "Gouda",
+  "plural": "gouda",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "gouda cheese"
+  ],
+  "shelf_life": {
+   "fridge": 45
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "brie",
+  "name": "Brie",
+  "plural": "brie",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "camembert"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cottage-cheese",
+  "name": "Cottage cheese",
+  "plural": "cottage cheese",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "cottage chese"
+  ],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "ricotta",
+  "name": "Ricotta",
+  "plural": "ricotta",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "ricotta cheese"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "goat-cheese",
+  "name": "Goat cheese",
+  "plural": "goat cheese",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "chevre",
+   "goat chese"
+  ],
+  "shelf_life": {
+   "fridge": 21
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "halloumi",
+  "name": "Halloumi",
+  "plural": "halloumi",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "halloumi cheese",
+   "haloumi"
+  ],
+  "shelf_life": {
+   "fridge": 60
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cheese-slices",
+  "name": "Cheese slices",
+  "plural": "cheese slices",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "kraft singles",
+   "singles",
+   "sliced cheese"
+  ],
+  "shelf_life": {
+   "fridge": 30
+  },
+  "default_unit": "pack"
+ },
+ {
+  "slug": "shredded-cheese",
+  "name": "Shredded cheese",
+  "plural": "shredded cheese",
+  "parent": "cheese",
+  "category": "dairy-eggs",
+  "icon": "cheese-wedge",
+  "aliases": [
+   "grated cheese",
+   "shredded cheddar",
+   "shredded mozzarella",
+   "tex mex cheese"
+  ],
+  "shelf_life": {
+   "fridge": 21,
+   "freezer": 180
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "egg",
+  "name": "Egg",
+  "plural": "Eggs",
+  "parent": "dairy",
+  "category": "dairy-eggs",
+  "icon": "egg",
+  "aliases": [
+   "dozen eggs",
+   "eggz",
+   "egs",
+   "free range eggs",
+   "free run eggs",
+   "large eggs",
+   "tokhm morgh",
+   "tokhmemorgh"
+  ],
+  "shelf_life": {
+   "fridge": 30
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "egg-white",
+  "name": "Egg whites",
+  "plural": "egg whites",
+  "parent": "egg",
+  "category": "dairy-eggs",
+  "icon": "egg",
+  "aliases": [
+   "liquid egg whites"
+  ],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "ml"
+ },
+ {
+  "slug": "whipped-cream",
+  "name": "Whipped cream",
+  "plural": "whipped cream",
+  "parent": "cream",
+  "category": "dairy-eggs",
+  "icon": "tb-cream",
+  "aliases": [
+   "cool whip",
+   "whipping topping"
+  ],
+  "shelf_life": {
+   "fridge": 14
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "meat",
+  "name": "Meat",
+  "plural": "meat",
+  "parent": null,
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [],
+  "shelf_life": {},
+  "default_unit": null
+ },
+ {
+  "slug": "poultry",
+  "name": "Poultry",
+  "plural": "poultry",
+  "parent": "meat",
+  "category": "meat",
+  "icon": "poultry-leg",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "chicken",
+  "name": "Chicken",
+  "plural": "chicken",
+  "parent": "poultry",
+  "category": "meat",
+  "icon": "chicken",
+  "aliases": [
+   "chickn",
+   "chiken",
+   "morgh",
+   "whole chicken"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "chicken-breast",
+  "name": "Chicken breast",
+  "plural": "chicken breasts",
+  "parent": "chicken",
+  "category": "meat",
+  "icon": "poultry-leg",
+  "aliases": [
+   "boneless skinless chicken breast",
+   "chiken breast",
+   "sineh morgh"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "chicken-thigh",
+  "name": "Chicken thigh",
+  "plural": "chicken thighs",
+  "parent": "chicken",
+  "category": "meat",
+  "icon": "poultry-leg",
+  "aliases": [
+   "boneless chicken thigh",
+   "ran morgh"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "chicken-drumstick",
+  "name": "Chicken drumstick",
+  "plural": "chicken drumsticks",
+  "parent": "chicken",
+  "category": "meat",
+  "icon": "poultry-leg",
+  "aliases": [
+   "chicken leg",
+   "chicken legs",
+   "drumsticks"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "chicken-wings",
+  "name": "Chicken wings",
+  "plural": "chicken wings",
+  "parent": "chicken",
+  "category": "meat",
+  "icon": "poultry-leg",
+  "aliases": [
+   "bal morgh",
+   "chicken wing",
+   "wings"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "ground-chicken",
+  "name": "Ground chicken",
+  "plural": "ground chicken",
+  "parent": "chicken",
+  "category": "meat",
+  "icon": "tb-ground-meat",
+  "aliases": [
+   "minced chicken"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 120
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "turkey",
+  "name": "Turkey",
+  "plural": "turkey",
+  "parent": "poultry",
+  "category": "meat",
+  "icon": "turkey",
+  "aliases": [
+   "turky"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "ground-turkey",
+  "name": "Ground turkey",
+  "plural": "ground turkey",
+  "parent": "turkey",
+  "category": "meat",
+  "icon": "tb-ground-meat",
+  "aliases": [
+   "minced turkey"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 120
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "beef",
+  "name": "Beef",
+  "plural": "beef",
+  "parent": "meat",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [
+   "gusht"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "ground-beef",
+  "name": "Ground beef",
+  "plural": "ground beef",
+  "parent": "beef",
+  "category": "meat",
+  "icon": "tb-ground-meat",
+  "aliases": [
+   "gosht charkh karde",
+   "gusht charkh karde",
+   "hamburger meat",
+   "lean ground beef",
+   "medium ground beef",
+   "mince",
+   "minced beef"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 120
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "steak",
+  "name": "Steak",
+  "plural": "steaks",
+  "parent": "beef",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [
+   "filet mignon",
+   "new york strip",
+   "rib eye",
+   "ribeye",
+   "sirloin",
+   "strip loin",
+   "striploin",
+   "tenderloin"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "beef-roast",
+  "name": "Beef roast",
+  "plural": "beef roast",
+  "parent": "beef",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [
+   "blade roast",
+   "brisket",
+   "chuck roast",
+   "pot roast"
+  ],
+  "shelf_life": {
+   "fridge": 4,
+   "freezer": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "stewing-beef",
+  "name": "Stewing beef",
+  "plural": "stewing beef",
+  "parent": "beef",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [
+   "beef cubes",
+   "gusht khoresht",
+   "stew meat"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "ribs",
+  "name": "Ribs",
+  "plural": "ribs",
+  "parent": "meat",
+  "category": "meat",
+  "icon": "meat-on-bone",
+  "aliases": [
+   "back ribs",
+   "rib",
+   "short ribs",
+   "spare ribs"
+  ],
+  "shelf_life": {
+   "fridge": 4,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "pork",
+  "name": "Pork",
+  "plural": "pork",
+  "parent": "meat",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [
+   "gusht khuk"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "pork-chop",
+  "name": "Pork chop",
+  "plural": "pork chops",
+  "parent": "pork",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "pork-tenderloin",
+  "name": "Pork tenderloin",
+  "plural": "pork tenderloins",
+  "parent": "pork",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [
+   "pork loin"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "ground-pork",
+  "name": "Ground pork",
+  "plural": "ground pork",
+  "parent": "pork",
+  "category": "meat",
+  "icon": "tb-ground-meat",
+  "aliases": [
+   "minced pork"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 120
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "bacon",
+  "name": "Bacon",
+  "plural": "bacon",
+  "parent": "pork",
+  "category": "meat",
+  "icon": "bacon",
+  "aliases": [
+   "back bacon",
+   "bacn",
+   "baycon",
+   "peameal bacon"
+  ],
+  "shelf_life": {
+   "fridge": 14,
+   "freezer": 180
+  },
+  "default_unit": "pack"
+ },
+ {
+  "slug": "ham",
+  "name": "Ham",
+  "plural": "ham",
+  "parent": "pork",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [
+   "black forest ham",
+   "deli ham",
+   "sliced ham"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 60
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "sausage",
+  "name": "Sausage",
+  "plural": "sausages",
+  "parent": "meat",
+  "category": "meat",
+  "icon": "tb-sausage",
+  "aliases": [
+   "bratwurst",
+   "breakfast sausage",
+   "italian sausage",
+   "kielbasa",
+   "sosis"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 60
+  },
+  "default_unit": "pack"
+ },
+ {
+  "slug": "hot-dog",
+  "name": "Hot dog",
+  "plural": "hot dogs",
+  "parent": "sausage",
+  "category": "meat",
+  "icon": "hot-dog",
+  "aliases": [
+   "frankfurters",
+   "hotdog",
+   "hotdogs",
+   "weiners",
+   "wieners"
+  ],
+  "shelf_life": {
+   "fridge": 14,
+   "freezer": 60
+  },
+  "default_unit": "pack"
+ },
+ {
+  "slug": "lamb",
+  "name": "Lamb",
+  "plural": "lamb",
+  "parent": "meat",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [
+   "gusht gusfand"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "ground-lamb",
+  "name": "Ground lamb",
+  "plural": "ground lamb",
+  "parent": "lamb",
+  "category": "meat",
+  "icon": "tb-ground-meat",
+  "aliases": [
+   "minced lamb"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 120
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "lamb-shank",
+  "name": "Lamb shank",
+  "plural": "lamb shanks",
+  "parent": "lamb",
+  "category": "meat",
+  "icon": "meat-on-bone",
+  "aliases": [
+   "mahicheh",
+   "shank"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "veal",
+  "name": "Veal",
+  "plural": "veal",
+  "parent": "meat",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "duck",
+  "name": "Duck",
+  "plural": "duck",
+  "parent": "poultry",
+  "category": "meat",
+  "icon": "poultry-leg",
+  "aliases": [
+   "duck breast"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 270
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "liver",
+  "name": "Liver",
+  "plural": "liver",
+  "parent": "meat",
+  "category": "meat",
+  "icon": "cut-of-meat",
+  "aliases": [
+   "beef liver",
+   "chicken liver",
+   "jegar"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 120
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "seafood",
+  "name": "Seafood",
+  "plural": "seafood",
+  "parent": null,
+  "category": "seafood",
+  "icon": "fish",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "fish",
+  "name": "Fish",
+  "plural": "fish",
+  "parent": "seafood",
+  "category": "seafood",
+  "icon": "fish",
+  "aliases": [
+   "fillet",
+   "fish fillet",
+   "mahi"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "salmon",
+  "name": "Salmon",
+  "plural": "salmon",
+  "parent": "fish",
+  "category": "seafood",
+  "icon": "fish",
+  "aliases": [
+   "atlantic salmon",
+   "salman",
+   "salmon fillet",
+   "samon"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "tuna",
+  "name": "Tuna",
+  "plural": "tuna",
+  "parent": "fish",
+  "category": "seafood",
+  "icon": "fish",
+  "aliases": [
+   "ahi tuna",
+   "tuna steak"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cod",
+  "name": "Cod",
+  "plural": "cod",
+  "parent": "fish",
+  "category": "seafood",
+  "icon": "fish",
+  "aliases": [
+   "cod fillet"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "tilapia",
+  "name": "Tilapia",
+  "plural": "tilapia",
+  "parent": "fish",
+  "category": "seafood",
+  "icon": "fish",
+  "aliases": [
+   "tilapia fillet"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "trout",
+  "name": "Trout",
+  "plural": "trout",
+  "parent": "fish",
+  "category": "seafood",
+  "icon": "fish",
+  "aliases": [
+   "ghezelala",
+   "rainbow trout"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "halibut",
+  "name": "Halibut",
+  "plural": "halibut",
+  "parent": "fish",
+  "category": "seafood",
+  "icon": "fish",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "sea-bass",
+  "name": "Sea bass",
+  "plural": "sea bass",
+  "parent": "fish",
+  "category": "seafood",
+  "icon": "fish",
+  "aliases": [
+   "barramundi",
+   "branzino",
+   "sheerbaz"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "shrimp",
+  "name": "Shrimp",
+  "plural": "shrimp",
+  "parent": "seafood",
+  "category": "seafood",
+  "icon": "shrimp",
+  "aliases": [
+   "meygoo",
+   "prawn",
+   "prawns",
+   "shrimpp",
+   "shrimps"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "scallops",
+  "name": "Scallops",
+  "plural": "scallops",
+  "parent": "seafood",
+  "category": "seafood",
+  "icon": "oyster",
+  "aliases": [
+   "scallop"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "crab",
+  "name": "Crab",
+  "plural": "crab",
+  "parent": "seafood",
+  "category": "seafood",
+  "icon": "crab",
+  "aliases": [
+   "crab meat",
+   "crabmeat",
+   "imitation crab"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "lobster",
+  "name": "Lobster",
+  "plural": "lobster",
+  "parent": "seafood",
+  "category": "seafood",
+  "icon": "lobster",
+  "aliases": [
+   "lobster tail"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "mussels",
+  "name": "Mussels",
+  "plural": "mussels",
+  "parent": "seafood",
+  "category": "seafood",
+  "icon": "oyster",
+  "aliases": [
+   "mussel"
+  ],
+  "shelf_life": {
+   "fridge": 2
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "oysters",
+  "name": "Oysters",
+  "plural": "oysters",
+  "parent": "seafood",
+  "category": "seafood",
+  "icon": "oyster",
+  "aliases": [
+   "oyster"
+  ],
+  "shelf_life": {
+   "fridge": 2
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "squid",
+  "name": "Squid",
+  "plural": "squid",
+  "parent": "seafood",
+  "category": "seafood",
+  "icon": "squid",
+  "aliases": [
+   "calamari"
+  ],
+  "shelf_life": {
+   "fridge": 2,
+   "freezer": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "smoked-salmon",
+  "name": "Smoked salmon",
+  "plural": "smoked salmon",
+  "parent": "salmon",
+  "category": "seafood",
+  "icon": "fish",
+  "aliases": [
+   "lox"
+  ],
+  "shelf_life": {
+   "fridge": 14,
+   "freezer": 60
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "canned-tuna",
+  "name": "Canned tuna",
+  "plural": "canned tuna",
+  "parent": "tuna",
+  "category": "seafood",
+  "icon": "canned-food",
+  "aliases": [
+   "chunk light tuna",
+   "tin tuna",
+   "tuna can",
+   "tuna tin"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "sardines",
+  "name": "Sardines",
+  "plural": "sardines",
+  "parent": "fish",
+  "category": "seafood",
+  "icon": "canned-food",
+  "aliases": [
+   "canned sardines",
+   "sardine"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "deli-meat",
+  "name": "Deli meat",
+  "plural": "deli meats",
+  "parent": "deli",
+  "category": "deli",
+  "icon": "sandwich",
+  "aliases": [
+   "cold cuts",
+   "lunch meat",
+   "mortadella",
+   "pepperoni",
+   "prosciutto",
+   "salami",
+   "sliced turkey"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 60
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "deli",
+  "name": "Deli",
+  "plural": "deli",
+  "parent": null,
+  "category": "deli",
+  "icon": "sandwich",
+  "aliases": [],
+  "shelf_life": {},
+  "default_unit": null
+ },
+ {
+  "slug": "hummus",
+  "name": "Hummus",
+  "plural": "hummus",
+  "parent": "deli",
+  "category": "deli",
+  "icon": "tb-hummus",
+  "aliases": [
+   "hommus",
+   "houmous",
+   "humus"
+  ],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "tzatziki",
+  "name": "Tzatziki",
+  "plural": "tzatziki",
+  "parent": "deli",
+  "category": "deli",
+  "icon": "tb-yogurt",
+  "aliases": [
+   "taziki",
+   "tzaziki"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "guacamole",
+  "name": "Guacamole",
+  "plural": "guacamole",
+  "parent": "deli",
+  "category": "deli",
+  "icon": "avocado",
+  "aliases": [
+   "guac"
+  ],
+  "shelf_life": {
+   "fridge": 5
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "salsa",
+  "name": "Salsa",
+  "plural": "salsa",
+  "parent": "condiment",
+  "category": "deli",
+  "icon": "tb-sauce-jar",
+  "aliases": [
+   "pico de gallo",
+   "salsa dip"
+  ],
+  "shelf_life": {
+   "fridge": 14,
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "tofu",
+  "name": "Tofu",
+  "plural": "tofu",
+  "parent": "deli",
+  "category": "deli",
+  "icon": "tb-tofu",
+  "aliases": [
+   "bean curd",
+   "extra firm tofu",
+   "firm tofu",
+   "silken tofu",
+   "tofoo"
+  ],
+  "shelf_life": {
+   "fridge": 7
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "tempeh",
+  "name": "Tempeh",
+  "plural": "tempeh",
+  "parent": "deli",
+  "category": "deli",
+  "icon": "tb-tofu",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "rotisserie-chicken",
+  "name": "Rotisserie chicken",
+  "plural": "rotisserie chickens",
+  "parent": "chicken",
+  "category": "deli",
+  "icon": "chicken",
+  "aliases": [
+   "cooked chicken",
+   "roast chicken"
+  ],
+  "shelf_life": {
+   "fridge": 4
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "bread",
+  "name": "Bread",
+  "plural": "bread",
+  "parent": null,
+  "category": "bakery",
+  "icon": "bread",
+  "aliases": [
+   "loaf",
+   "naan",
+   "nan",
+   "noon",
+   "sandwich bread",
+   "sliced bread",
+   "sourdough",
+   "white bread",
+   "whole wheat bread"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 90
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "baguette",
+  "name": "Baguette",
+  "plural": "baguettes",
+  "parent": "bread",
+  "category": "bakery",
+  "icon": "baguette-bread",
+  "aliases": [
+   "french bread",
+   "french stick"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 60
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "bagel",
+  "name": "Bagel",
+  "plural": "bagels",
+  "parent": "bread",
+  "category": "bakery",
+  "icon": "bagel",
+  "aliases": [
+   "bagal",
+   "bagles"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 90
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "croissant",
+  "name": "Croissant",
+  "plural": "croissants",
+  "parent": null,
+  "category": "bakery",
+  "icon": "croissant",
+  "aliases": [
+   "croisant",
+   "crossant"
+  ],
+  "shelf_life": {
+   "fridge": 3,
+   "freezer": 60
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "tortilla",
+  "name": "Tortilla",
+  "plural": "tortillas",
+  "parent": "bread",
+  "category": "bakery",
+  "icon": "flatbread",
+  "aliases": [
+   "corn tortilla",
+   "flour tortilla",
+   "wrap",
+   "wraps"
+  ],
+  "shelf_life": {
+   "fridge": 14,
+   "freezer": 180
+  },
+  "default_unit": "pack"
+ },
+ {
+  "slug": "pita",
+  "name": "Pita",
+  "plural": "pitas",
+  "parent": "bread",
+  "category": "bakery",
+  "icon": "flatbread",
+  "aliases": [
+   "barbari",
+   "lavash",
+   "pita bread",
+   "pitta",
+   "sangak"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 90
+  },
+  "default_unit": "pack"
+ },
+ {
+  "slug": "hamburger-buns",
+  "name": "Hamburger buns",
+  "plural": "hamburger buns",
+  "parent": "bread",
+  "category": "bakery",
+  "icon": "hamburger",
+  "aliases": [
+   "buns",
+   "burger buns",
+   "hot dog buns",
+   "hotdog buns"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "freezer": 90
+  },
+  "default_unit": "pack"
+ },
+ {
+  "slug": "english-muffin",
+  "name": "English muffin",
+  "plural": "english muffins",
+  "parent": "bread",
+  "category": "bakery",
+  "icon": "bread",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 10
+  },
+  "default_unit": "pack"
+ },
+ {
+  "slug": "muffin",
+  "name": "Muffin",
+  "plural": "muffins",
+  "parent": null,
+  "category": "bakery",
+  "icon": "cupcake",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 90
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "donut",
+  "name": "Donut",
+  "plural": "donuts",
+  "parent": null,
+  "category": "bakery",
+  "icon": "doughnut",
+  "aliases": [
+   "doughnut",
+   "doughnuts"
+  ],
+  "shelf_life": {
+   "fridge": 2
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "cake",
+  "name": "Cake",
+  "plural": "cakes",
+  "parent": null,
+  "category": "bakery",
+  "icon": "birthday-cake",
+  "aliases": [
+   "cake slice",
+   "cupcake"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 90
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "pie",
+  "name": "Pie",
+  "plural": "pies",
+  "parent": null,
+  "category": "bakery",
+  "icon": "pie",
+  "aliases": [
+   "pie crust",
+   "pie shell"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 90
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "pancake-mix",
+  "name": "Pancake mix",
+  "plural": "pancake mix",
+  "parent": "baking-mix",
+  "category": "bakery",
+  "icon": "pancakes",
+  "aliases": [
+   "aunt jemima",
+   "pancake batter",
+   "waffle mix"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "waffles",
+  "name": "Waffles",
+  "plural": "waffles",
+  "parent": null,
+  "category": "bakery",
+  "icon": "waffle",
+  "aliases": [
+   "eggo",
+   "frozen waffles",
+   "waffle"
+  ],
+  "shelf_life": {
+   "freezer": 180
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "pizza-dough",
+  "name": "Pizza dough",
+  "plural": "pizza dough",
+  "parent": "dough",
+  "category": "bakery",
+  "icon": "pizza",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 90
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "dough",
+  "name": "Dough",
+  "plural": "dough",
+  "parent": null,
+  "category": "bakery",
+  "icon": "pizza",
+  "aliases": [
+   "filo",
+   "pastry dough",
+   "phyllo",
+   "pie dough",
+   "puff pastry"
+  ],
+  "shelf_life": {
+   "fridge": 5,
+   "freezer": 90
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "pasta",
+  "name": "Pasta",
+  "plural": "pasta",
+  "parent": "grains",
+  "category": "pantry",
+  "icon": "spaghetti",
+  "aliases": [
+   "farfalle",
+   "fettuccine",
+   "fusilli",
+   "linguine",
+   "makaroni",
+   "noodle",
+   "pastas",
+   "rigatoni",
+   "rotini"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "spaghetti",
+  "name": "Spaghetti",
+  "plural": "spaghetti",
+  "parent": "pasta",
+  "category": "pantry",
+  "icon": "spaghetti",
+  "aliases": [
+   "spagetti",
+   "spagetty",
+   "spagheti",
+   "spaghetti noodles"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "penne",
+  "name": "Penne",
+  "plural": "penne",
+  "parent": "pasta",
+  "category": "pantry",
+  "icon": "spaghetti",
+  "aliases": [
+   "pene"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "macaroni",
+  "name": "Macaroni",
+  "plural": "macaroni",
+  "parent": "pasta",
+  "category": "pantry",
+  "icon": "spaghetti",
+  "aliases": [
+   "elbow macaroni",
+   "kraft dinner",
+   "mac",
+   "mac and cheese"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "egg-noodles",
+  "name": "Egg noodles",
+  "plural": "egg noodles",
+  "parent": "pasta",
+  "category": "pantry",
+  "icon": "spaghetti",
+  "aliases": [
+   "instant noodles",
+   "noodles",
+   "ramen",
+   "ramen noodles",
+   "rice noodles",
+   "udon"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "pack"
+ },
+ {
+  "slug": "lasagna-sheets",
+  "name": "Lasagna sheets",
+  "plural": "lasagna sheets",
+  "parent": "pasta",
+  "category": "pantry",
+  "icon": "spaghetti",
+  "aliases": [
+   "lasagna noodles",
+   "lasagne",
+   "lasagne sheets"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "grains",
+  "name": "Grains",
+  "plural": "grains",
+  "parent": null,
+  "category": "pantry",
+  "icon": "sheaf-of-rice",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "rice",
+  "name": "Rice",
+  "plural": "rice",
+  "parent": "grains",
+  "category": "pantry",
+  "icon": "cooked-rice",
+  "aliases": [
+   "berenj",
+   "jasmine rice",
+   "long grain rice",
+   "rize",
+   "white rice"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "kg"
+ },
+ {
+  "slug": "basmati-rice",
+  "name": "Basmati rice",
+  "plural": "basmati rice",
+  "parent": "rice",
+  "category": "pantry",
+  "icon": "cooked-rice",
+  "aliases": [
+   "basmati",
+   "basmatti",
+   "berenj basmati",
+   "tolo"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "kg"
+ },
+ {
+  "slug": "brown-rice",
+  "name": "Brown rice",
+  "plural": "brown rice",
+  "parent": "rice",
+  "category": "pantry",
+  "icon": "cooked-rice",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "kg"
+ },
+ {
+  "slug": "sushi-rice",
+  "name": "Sushi rice",
+  "plural": "sushi rice",
+  "parent": "rice",
+  "category": "pantry",
+  "icon": "cooked-rice",
+  "aliases": [
+   "arborio",
+   "arborio rice",
+   "short grain rice"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "kg"
+ },
+ {
+  "slug": "quinoa",
+  "name": "Quinoa",
+  "plural": "quinoa",
+  "parent": "grains",
+  "category": "pantry",
+  "icon": "sheaf-of-rice",
+  "aliases": [
+   "keenwa",
+   "kinoa",
+   "quinua"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "couscous",
+  "name": "Couscous",
+  "plural": "couscous",
+  "parent": "grains",
+  "category": "pantry",
+  "icon": "sheaf-of-rice",
+  "aliases": [
+   "cous cous",
+   "cous-cous",
+   "pearl couscous"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "bulgur",
+  "name": "Bulgur",
+  "plural": "bulgur",
+  "parent": "grains",
+  "category": "pantry",
+  "icon": "sheaf-of-rice",
+  "aliases": [
+   "bulghur",
+   "burghul"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "oats",
+  "name": "Oats",
+  "plural": "oats",
+  "parent": "grains",
+  "category": "pantry",
+  "icon": "bowl-with-spoon",
+  "aliases": [
+   "oat",
+   "oatmeal",
+   "porridge",
+   "quick oats",
+   "rolled oats",
+   "steel cut oats"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cereal",
+  "name": "Cereal",
+  "plural": "cereal",
+  "parent": null,
+  "category": "pantry",
+  "icon": "tb-cereal",
+  "aliases": [
+   "breakfast cereal",
+   "cerial",
+   "cheerios",
+   "corn flakes",
+   "cornflakes",
+   "granola",
+   "muesli"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "granola-bars",
+  "name": "Granola bars",
+  "plural": "granola bars",
+  "parent": "snacks",
+  "category": "pantry",
+  "icon": "tb-granola-bar",
+  "aliases": [
+   "clif bars",
+   "cliff bar",
+   "granola bar",
+   "nature valley",
+   "protein bar",
+   "protein bars"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "lentils",
+  "name": "Lentils",
+  "plural": "lentils",
+  "parent": "legumes",
+  "category": "pantry",
+  "icon": "tb-lentils",
+  "aliases": [
+   "adas",
+   "brown lentils",
+   "green lentils",
+   "lentil",
+   "red lentils"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "legumes",
+  "name": "Legumes",
+  "plural": "legumes",
+  "parent": null,
+  "category": "pantry",
+  "icon": "beans",
+  "aliases": [
+   "pulses"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "chickpeas",
+  "name": "Chickpeas",
+  "plural": "chickpeas",
+  "parent": "legumes",
+  "category": "pantry",
+  "icon": "beans",
+  "aliases": [
+   "canned chickpeas",
+   "chick peas",
+   "garbanzo",
+   "garbanzo beans",
+   "nokhod"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "black-beans",
+  "name": "Black beans",
+  "plural": "black beans",
+  "parent": "legumes",
+  "category": "pantry",
+  "icon": "beans",
+  "aliases": [
+   "black bean",
+   "canned black beans"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "kidney-beans",
+  "name": "Kidney beans",
+  "plural": "kidney beans",
+  "parent": "legumes",
+  "category": "pantry",
+  "icon": "beans",
+  "aliases": [
+   "kidney bean",
+   "lobia ghermez",
+   "red kidney beans"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "white-beans",
+  "name": "White beans",
+  "plural": "white beans",
+  "parent": "legumes",
+  "category": "pantry",
+  "icon": "beans",
+  "aliases": [
+   "cannellini",
+   "cannellini beans",
+   "great northern beans",
+   "lobia sefid",
+   "navy beans"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "split-peas",
+  "name": "Split peas",
+  "plural": "split peas",
+  "parent": "legumes",
+  "category": "pantry",
+  "icon": "beans",
+  "aliases": [
+   "lapeh",
+   "yellow split peas"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "baked-beans",
+  "name": "Baked beans",
+  "plural": "baked beans",
+  "parent": "legumes",
+  "category": "pantry",
+  "icon": "canned-food",
+  "aliases": [
+   "beans in tomato sauce",
+   "heinz beans"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "canned-tomatoes",
+  "name": "Canned tomatoes",
+  "plural": "canned tomatoes",
+  "parent": "tomato",
+  "category": "pantry",
+  "icon": "canned-food",
+  "aliases": [
+   "crushed tomatoes",
+   "diced tomatoes",
+   "stewed tomatoes",
+   "tomato can",
+   "whole tomatoes"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "tomato-paste",
+  "name": "Tomato paste",
+  "plural": "tomato paste",
+  "parent": "tomato",
+  "category": "pantry",
+  "icon": "tb-sauce-jar",
+  "aliases": [
+   "rob",
+   "rob gojeh",
+   "tomato concentrate",
+   "tomato puree"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "passata",
+  "name": "Passata",
+  "plural": "passata",
+  "parent": "tomato",
+  "category": "pantry",
+  "icon": "tb-sauce-jar",
+  "aliases": [
+   "tomato passata"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "pasta-sauce",
+  "name": "Pasta sauce",
+  "plural": "pasta sauce",
+  "parent": "sauce",
+  "category": "pantry",
+  "icon": "tb-sauce-jar",
+  "aliases": [
+   "marinara",
+   "prego",
+   "ragu",
+   "spaghetti sauce",
+   "tomato sauce"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "canned-corn",
+  "name": "Canned corn",
+  "plural": "canned corn",
+  "parent": "corn",
+  "category": "pantry",
+  "icon": "canned-food",
+  "aliases": [
+   "corn kernels",
+   "niblets"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "canned-soup",
+  "name": "Canned soup",
+  "plural": "canned soup",
+  "parent": null,
+  "category": "pantry",
+  "icon": "tb-canned-soup",
+  "aliases": [
+   "campbells",
+   "chicken noodle soup",
+   "soup",
+   "tomato soup"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "broth",
+  "name": "Broth",
+  "plural": "broth",
+  "parent": null,
+  "category": "pantry",
+  "icon": "tb-canned-soup",
+  "aliases": [
+   "beef broth",
+   "bouillon",
+   "chicken broth",
+   "chicken stock",
+   "stock",
+   "stock cubes",
+   "vegetable broth"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "l"
+ },
+ {
+  "slug": "peanut-butter",
+  "name": "Peanut butter",
+  "plural": "peanut butter",
+  "parent": "spreads",
+  "category": "pantry",
+  "icon": "jar",
+  "aliases": [
+   "kraft peanut butter",
+   "pb",
+   "peanutbutter",
+   "pnut butter",
+   "skippy"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "spreads",
+  "name": "Spreads",
+  "plural": "spreads",
+  "parent": null,
+  "category": "pantry",
+  "icon": "jar",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "almond-butter",
+  "name": "Almond butter",
+  "plural": "almond butter",
+  "parent": "spreads",
+  "category": "pantry",
+  "icon": "jar",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "nutella",
+  "name": "Nutella",
+  "plural": "nutella",
+  "parent": "spreads",
+  "category": "pantry",
+  "icon": "jar",
+  "aliases": [
+   "chocolate spread",
+   "hazelnut spread"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "jam",
+  "name": "Jam",
+  "plural": "jam",
+  "parent": "spreads",
+  "category": "pantry",
+  "icon": "jar",
+  "aliases": [
+   "jelly",
+   "marmalade",
+   "mourabba",
+   "preserves",
+   "strawberry jam"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "honey",
+  "name": "Honey",
+  "plural": "honey",
+  "parent": "spreads",
+  "category": "pantry",
+  "icon": "honey-pot",
+  "aliases": [
+   "asal",
+   "honney",
+   "hunny"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "maple-syrup",
+  "name": "Maple syrup",
+  "plural": "maple syrup",
+  "parent": "spreads",
+  "category": "pantry",
+  "icon": "tb-sauce-jar",
+  "aliases": [
+   "pancake syrup",
+   "sharbat chob",
+   "syrup"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "tahini",
+  "name": "Tahini",
+  "plural": "tahini",
+  "parent": "spreads",
+  "category": "pantry",
+  "icon": "jar",
+  "aliases": [
+   "ardeh",
+   "tahina"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "nuts",
+  "name": "Nuts",
+  "plural": "nuts",
+  "parent": null,
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [
+   "mixed nuts",
+   "nut",
+   "tree nuts"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "almonds",
+  "name": "Almonds",
+  "plural": "almonds",
+  "parent": "nuts",
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [
+   "almond",
+   "badam",
+   "sliced almonds",
+   "slivered almonds"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "walnuts",
+  "name": "Walnuts",
+  "plural": "walnuts",
+  "parent": "nuts",
+  "category": "pantry",
+  "icon": "chestnut",
+  "aliases": [
+   "gerdoo",
+   "gerdu",
+   "walnut"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cashews",
+  "name": "Cashews",
+  "plural": "cashews",
+  "parent": "nuts",
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [
+   "cashew",
+   "cashew nuts"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "peanuts",
+  "name": "Peanuts",
+  "plural": "peanuts",
+  "parent": "nuts",
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [
+   "badam zamini",
+   "peanut",
+   "pnuts"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "pistachios",
+  "name": "Pistachios",
+  "plural": "pistachios",
+  "parent": "nuts",
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [
+   "pesteh",
+   "pista",
+   "pistachio"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "pecans",
+  "name": "Pecans",
+  "plural": "pecans",
+  "parent": "nuts",
+  "category": "pantry",
+  "icon": "chestnut",
+  "aliases": [
+   "pecan"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "hazelnuts",
+  "name": "Hazelnuts",
+  "plural": "hazelnuts",
+  "parent": "nuts",
+  "category": "pantry",
+  "icon": "chestnut",
+  "aliases": [
+   "fandogh",
+   "hazelnut"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "pine-nuts",
+  "name": "Pine nuts",
+  "plural": "pine nuts",
+  "parent": "nuts",
+  "category": "pantry",
+  "icon": "chestnut",
+  "aliases": [
+   "pignoli",
+   "pine nut"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "sunflower-seeds",
+  "name": "Sunflower seeds",
+  "plural": "sunflower seeds",
+  "parent": "seeds",
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [
+   "sunflower seed",
+   "tokhmeh"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "seeds",
+  "name": "Seeds",
+  "plural": "seeds",
+  "parent": null,
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "chia-seeds",
+  "name": "Chia seeds",
+  "plural": "chia seeds",
+  "parent": "seeds",
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [
+   "chia"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "flax-seeds",
+  "name": "Flax seeds",
+  "plural": "flax seeds",
+  "parent": "seeds",
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [
+   "flaxseed",
+   "ground flax",
+   "linseed"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "sesame-seeds",
+  "name": "Sesame seeds",
+  "plural": "sesame seeds",
+  "parent": "seeds",
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [
+   "kunjed",
+   "sesame"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "pumpkin-seeds",
+  "name": "Pumpkin seeds",
+  "plural": "pumpkin seeds",
+  "parent": "seeds",
+  "category": "pantry",
+  "icon": "peanuts",
+  "aliases": [
+   "pepitas",
+   "tokhme kadoo"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "flour",
+  "name": "Flour",
+  "plural": "flour",
+  "parent": null,
+  "category": "baking",
+  "icon": "tb-flour",
+  "aliases": [
+   "all purpose flour",
+   "all-purpose flour",
+   "ap flour",
+   "ard",
+   "whole wheat flour"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "kg"
+ },
+ {
+  "slug": "bread-flour",
+  "name": "Bread flour",
+  "plural": "bread flour",
+  "parent": "flour",
+  "category": "baking",
+  "icon": "tb-flour",
+  "aliases": [
+   "strong flour"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "kg"
+ },
+ {
+  "slug": "sugar",
+  "name": "Sugar",
+  "plural": "sugar",
+  "parent": null,
+  "category": "baking",
+  "icon": "tb-sugar",
+  "aliases": [
+   "granulated sugar",
+   "shekar",
+   "sugr",
+   "white sugar"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "kg"
+ },
+ {
+  "slug": "brown-sugar",
+  "name": "Brown sugar",
+  "plural": "brown sugar",
+  "parent": "sugar",
+  "category": "baking",
+  "icon": "tb-sugar",
+  "aliases": [
+   "demerara"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "kg"
+ },
+ {
+  "slug": "icing-sugar",
+  "name": "Icing sugar",
+  "plural": "icing sugar",
+  "parent": "sugar",
+  "category": "baking",
+  "icon": "tb-sugar",
+  "aliases": [
+   "confectioners sugar",
+   "powdered sugar"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "kg"
+ },
+ {
+  "slug": "baking-powder",
+  "name": "Baking powder",
+  "plural": "baking powder",
+  "parent": null,
+  "category": "baking",
+  "icon": "tb-baking",
+  "aliases": [
+   "bakin powder",
+   "baking pwdr"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "baking-soda",
+  "name": "Baking soda",
+  "plural": "baking soda",
+  "parent": null,
+  "category": "baking",
+  "icon": "tb-baking",
+  "aliases": [
+   "bakin soda",
+   "bicarb",
+   "bicarbonate",
+   "sodium bicarbonate"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "yeast",
+  "name": "Yeast",
+  "plural": "yeast",
+  "parent": null,
+  "category": "baking",
+  "icon": "tb-yeast",
+  "aliases": [
+   "active dry yeast",
+   "dry yeast",
+   "instant yeast",
+   "maya"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cornstarch",
+  "name": "Cornstarch",
+  "plural": "cornstarch",
+  "parent": null,
+  "category": "baking",
+  "icon": "tb-baking",
+  "aliases": [
+   "corn flour",
+   "corn starch",
+   "nesheste"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "vanilla",
+  "name": "Vanilla",
+  "plural": "vanilla",
+  "parent": null,
+  "category": "baking",
+  "icon": "tb-baking",
+  "aliases": [
+   "vanilin",
+   "vanilla essence",
+   "vanilla extract"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "ml"
+ },
+ {
+  "slug": "cocoa",
+  "name": "Cocoa",
+  "plural": "cocoa",
+  "parent": null,
+  "category": "baking",
+  "icon": "tb-baking",
+  "aliases": [
+   "cacao",
+   "cocoa powder",
+   "kakao"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "chocolate-chips",
+  "name": "Chocolate chips",
+  "plural": "chocolate chips",
+  "parent": "chocolate",
+  "category": "baking",
+  "icon": "chocolate-bar",
+  "aliases": [
+   "choc chips",
+   "chocolate chip",
+   "semi sweet chocolate"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "baking-mix",
+  "name": "Baking mix",
+  "plural": "baking mix",
+  "parent": null,
+  "category": "baking",
+  "icon": "tb-baking",
+  "aliases": [
+   "brownie mix",
+   "cake mix"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "breadcrumbs",
+  "name": "Breadcrumbs",
+  "plural": "breadcrumbs",
+  "parent": null,
+  "category": "baking",
+  "icon": "tb-baking",
+  "aliases": [
+   "bread crumbs",
+   "panko",
+   "panko breadcrumbs"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "shredded-coconut",
+  "name": "Shredded coconut",
+  "plural": "shredded coconut",
+  "parent": "coconut",
+  "category": "baking",
+  "icon": "coconut",
+  "aliases": [
+   "coconut flakes",
+   "desiccated coconut"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "spice",
+  "name": "Spice",
+  "plural": "spices",
+  "parent": null,
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "seasoning"
+  ],
+  "shelf_life": {},
+  "default_unit": "g"
+ },
+ {
+  "slug": "salt",
+  "name": "Salt",
+  "plural": "salt",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "salt",
+  "aliases": [
+   "kosher salt",
+   "namak",
+   "sea salt",
+   "table salt"
+  ],
+  "shelf_life": {
+   "pantry": 1825
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "black-pepper",
+  "name": "Black pepper",
+  "plural": "black pepper",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-pepper",
+  "aliases": [
+   "felfel siah",
+   "filfil siah",
+   "ground pepper",
+   "pepper corns",
+   "peppercorns"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cumin",
+  "name": "Cumin",
+  "plural": "cumin",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "cummin",
+   "ground cumin",
+   "zireh"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "paprika",
+  "name": "Paprika",
+  "plural": "paprika",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "papricka",
+   "smoked paprika"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "turmeric",
+  "name": "Turmeric",
+  "plural": "turmeric",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "tumeric",
+   "turmerik",
+   "zardchoobeh"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cinnamon",
+  "name": "Cinnamon",
+  "plural": "cinnamon",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "cinamon",
+   "cinnamon stick",
+   "cinnamon sticks",
+   "darchin"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "chili-powder",
+  "name": "Chili powder",
+  "plural": "chili powder",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "cayenne",
+   "cayenne pepper",
+   "chili flakes",
+   "chilli powder",
+   "red pepper flakes"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "garlic-powder",
+  "name": "Garlic powder",
+  "plural": "garlic powder",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "granulated garlic",
+   "sir khoshk"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "onion-powder",
+  "name": "Onion powder",
+  "plural": "onion powder",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "oregano-dried",
+  "name": "Dried oregano",
+  "plural": "dried oregano",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "oregano flakes"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "italian-seasoning",
+  "name": "Italian seasoning",
+  "plural": "italian seasoning",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "herbs de provence",
+   "mixed herbs"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "curry-powder",
+  "name": "Curry powder",
+  "plural": "curry powder",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "adviyeh",
+   "curry",
+   "garam masala",
+   "masala",
+   "tandoori masala"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "saffron",
+  "name": "Saffron",
+  "plural": "saffron",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "safran",
+   "zafaran"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "sumac",
+  "name": "Sumac",
+  "plural": "sumac",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "somagh",
+   "sumak"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "cardamom",
+  "name": "Cardamom",
+  "plural": "cardamom",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "cardamon",
+   "hal",
+   "hel"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "nutmeg",
+  "name": "Nutmeg",
+  "plural": "nutmeg",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "ground nutmeg",
+   "jouz hendi"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "ginger-powder",
+  "name": "Ginger powder",
+  "plural": "ginger powder",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "ground ginger"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "bay-leaves",
+  "name": "Bay leaves",
+  "plural": "bay leaves",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "barg bu",
+   "bay leaf",
+   "laurel"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "dried-thyme",
+  "name": "Dried thyme",
+  "plural": "dried thyme",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "dried-mint",
+  "name": "Dried mint",
+  "plural": "dried mint",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "nana khoshk"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "dried-lime",
+  "name": "Dried lime",
+  "plural": "dried limes",
+  "parent": "spice",
+  "category": "spices-condiments",
+  "icon": "tb-spices",
+  "aliases": [
+   "limoo amani",
+   "limoo omani"
+  ],
+  "shelf_life": {
+   "pantry": 1095
+  },
+  "default_unit": "g"
+ },
+ {
+  "slug": "condiment",
+  "name": "Condiment",
+  "plural": "condiments",
+  "parent": null,
+  "category": "spices-condiments",
+  "icon": "tb-condiment",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "ketchup",
+  "name": "Ketchup",
+  "plural": "ketchup",
+  "parent": "condiment",
+  "category": "spices-condiments",
+  "icon": "tb-condiment",
+  "aliases": [
+   "catsup",
+   "heinz ketchup",
+   "kechup",
+   "ketchap"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "mustard",
+  "name": "Mustard",
+  "plural": "mustard",
+  "parent": "condiment",
+  "category": "spices-condiments",
+  "icon": "tb-condiment",
+  "aliases": [
+   "dijon",
+   "dijon mustard",
+   "grainy mustard",
+   "mostard",
+   "yellow mustard"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "mayonnaise",
+  "name": "Mayonnaise",
+  "plural": "mayonnaise",
+  "parent": "condiment",
+  "category": "spices-condiments",
+  "icon": "tb-condiment",
+  "aliases": [
+   "mayo",
+   "mayonaise",
+   "miracle whip"
+  ],
+  "shelf_life": {
+   "fridge": 60,
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "relish",
+  "name": "Relish",
+  "plural": "relish",
+  "parent": "condiment",
+  "category": "spices-condiments",
+  "icon": "tb-condiment",
+  "aliases": [
+   "pickle relish"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "hot-sauce",
+  "name": "Hot sauce",
+  "plural": "hot sauce",
+  "parent": "sauce",
+  "category": "spices-condiments",
+  "icon": "tb-sauce",
+  "aliases": [
+   "frank's",
+   "franks red hot",
+   "harissa",
+   "sambal",
+   "sriracha",
+   "tabasco"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "bbq-sauce",
+  "name": "BBQ sauce",
+  "plural": "bbq sauce",
+  "parent": "sauce",
+  "category": "spices-condiments",
+  "icon": "tb-sauce",
+  "aliases": [
+   "baby ray's",
+   "barbecue sauce",
+   "barbeque sauce",
+   "bbq"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "soy-sauce",
+  "name": "Soy sauce",
+  "plural": "soy sauce",
+  "parent": "sauce",
+  "category": "spices-condiments",
+  "icon": "tb-sauce",
+  "aliases": [
+   "kikkoman",
+   "shoyu",
+   "soya sauce",
+   "tamari"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "fish-sauce",
+  "name": "Fish sauce",
+  "plural": "fish sauce",
+  "parent": "sauce",
+  "category": "spices-condiments",
+  "icon": "tb-sauce",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "worcestershire",
+  "name": "Worcestershire sauce",
+  "plural": "worcestershire sauce",
+  "parent": "sauce",
+  "category": "spices-condiments",
+  "icon": "tb-sauce",
+  "aliases": [
+   "worcester sauce",
+   "worcestire"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "oyster-sauce",
+  "name": "Oyster sauce",
+  "plural": "oyster sauce",
+  "parent": "sauce",
+  "category": "spices-condiments",
+  "icon": "tb-sauce",
+  "aliases": [
+   "hoisin",
+   "hoisin sauce"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "salad-dressing",
+  "name": "Salad dressing",
+  "plural": "salad dressings",
+  "parent": "sauce",
+  "category": "spices-condiments",
+  "icon": "tb-sauce",
+  "aliases": [
+   "caesar dressing",
+   "dressing",
+   "italian dressing",
+   "ranch",
+   "vinaigrette"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "sauce",
+  "name": "Sauce",
+  "plural": "sauces",
+  "parent": null,
+  "category": "oils-sauces",
+  "icon": "tb-sauce",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "oil",
+  "name": "Oil",
+  "plural": "oil",
+  "parent": null,
+  "category": "oils-sauces",
+  "icon": "tb-oil",
+  "aliases": [
+   "cooking oil"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "olive-oil",
+  "name": "Olive oil",
+  "plural": "olive oil",
+  "parent": "oil",
+  "category": "oils-sauces",
+  "icon": "tb-oil",
+  "aliases": [
+   "evoo",
+   "extra virgin olive oil",
+   "oliveoil",
+   "roghan zeytoon"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "vegetable-oil",
+  "name": "Vegetable oil",
+  "plural": "vegetable oil",
+  "parent": "oil",
+  "category": "oils-sauces",
+  "icon": "tb-oil",
+  "aliases": [
+   "canola oil",
+   "corn oil",
+   "frying oil",
+   "sunflower oil"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "sesame-oil",
+  "name": "Sesame oil",
+  "plural": "sesame oil",
+  "parent": "oil",
+  "category": "oils-sauces",
+  "icon": "tb-oil",
+  "aliases": [
+   "toasted sesame oil"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "coconut-oil",
+  "name": "Coconut oil",
+  "plural": "coconut oil",
+  "parent": "oil",
+  "category": "oils-sauces",
+  "icon": "tb-oil",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "jar"
+ },
+ {
+  "slug": "cooking-spray",
+  "name": "Cooking spray",
+  "plural": "cooking spray",
+  "parent": "oil",
+  "category": "oils-sauces",
+  "icon": "tb-spray",
+  "aliases": [
+   "oil spray",
+   "pam"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "vinegar",
+  "name": "Vinegar",
+  "plural": "vinegar",
+  "parent": null,
+  "category": "oils-sauces",
+  "icon": "tb-vinegar",
+  "aliases": [
+   "acv",
+   "apple cider vinegar",
+   "balsamic",
+   "balsamic vinegar",
+   "red wine vinegar",
+   "rice vinegar",
+   "sirke",
+   "white vinegar"
+  ],
+  "shelf_life": {
+   "pantry": 1825
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "frozen-vegetables",
+  "name": "Frozen vegetables",
+  "plural": "frozen vegetables",
+  "parent": null,
+  "category": "frozen",
+  "icon": "tb-frozen-veg",
+  "aliases": [
+   "frozen broccoli",
+   "frozen corn",
+   "frozen peas",
+   "frozen spinach",
+   "frozen veg",
+   "frozen veggies",
+   "stir fry vegetables"
+  ],
+  "shelf_life": {
+   "freezer": 365
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "frozen-fruit",
+  "name": "Frozen fruit",
+  "plural": "frozen fruit",
+  "parent": null,
+  "category": "frozen",
+  "icon": "tb-berries",
+  "aliases": [
+   "frozen berries",
+   "frozen mango",
+   "frozen strawberries",
+   "smoothie fruit"
+  ],
+  "shelf_life": {
+   "freezer": 365
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "frozen-pizza",
+  "name": "Frozen pizza",
+  "plural": "frozen pizza",
+  "parent": null,
+  "category": "frozen",
+  "icon": "pizza",
+  "aliases": [
+   "delissio",
+   "dr oetker",
+   "pizza"
+  ],
+  "shelf_life": {
+   "freezer": 180
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "frozen-fries",
+  "name": "Frozen fries",
+  "plural": "frozen fries",
+  "parent": null,
+  "category": "frozen",
+  "icon": "french-fries",
+  "aliases": [
+   "french fries",
+   "fries",
+   "frozen potatoes",
+   "hash browns",
+   "tater tots"
+  ],
+  "shelf_life": {
+   "freezer": 300
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "frozen-meals",
+  "name": "Frozen meals",
+  "plural": "frozen meals",
+  "parent": null,
+  "category": "frozen",
+  "icon": "takeout-box",
+  "aliases": [
+   "frozen dinner",
+   "frozen dumplings",
+   "frozen entree",
+   "perogies",
+   "pierogi",
+   "tv dinner"
+  ],
+  "shelf_life": {
+   "freezer": 180
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "ice-cream",
+  "name": "Ice cream",
+  "plural": "ice cream",
+  "parent": null,
+  "category": "frozen",
+  "icon": "ice-cream",
+  "aliases": [
+   "bastani",
+   "frozen yogurt",
+   "gelato",
+   "ice crem",
+   "icecream",
+   "sorbet"
+  ],
+  "shelf_life": {
+   "freezer": 180
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "popsicles",
+  "name": "Popsicles",
+  "plural": "popsicles",
+  "parent": null,
+  "category": "frozen",
+  "icon": "soft-ice-cream",
+  "aliases": [
+   "freezies",
+   "ice pops",
+   "popsicle"
+  ],
+  "shelf_life": {
+   "freezer": 365
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "ice-cubes",
+  "name": "Ice",
+  "plural": "ice",
+  "parent": null,
+  "category": "frozen",
+  "icon": "ice",
+  "aliases": [
+   "bag of ice",
+   "ice cubes"
+  ],
+  "shelf_life": {},
+  "default_unit": "bag"
+ },
+ {
+  "slug": "frozen-chicken-nuggets",
+  "name": "Chicken nuggets",
+  "plural": "chicken nuggets",
+  "parent": "chicken",
+  "category": "frozen",
+  "icon": "chicken",
+  "aliases": [
+   "breaded chicken",
+   "chicken fingers",
+   "chicken strips",
+   "nuggets"
+  ],
+  "shelf_life": {
+   "freezer": 180
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "fish-sticks",
+  "name": "Fish sticks",
+  "plural": "fish sticks",
+  "parent": "fish",
+  "category": "frozen",
+  "icon": "fish",
+  "aliases": [
+   "breaded fish",
+   "fish cakes",
+   "fish fingers"
+  ],
+  "shelf_life": {
+   "freezer": 180
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "snacks",
+  "name": "Snacks",
+  "plural": "snacks",
+  "parent": null,
+  "category": "snacks-sweets",
+  "icon": "tb-chips",
+  "aliases": [],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "chips",
+  "name": "Chips",
+  "plural": "chips",
+  "parent": "snacks",
+  "category": "snacks-sweets",
+  "icon": "tb-chips",
+  "aliases": [
+   "crisps",
+   "doritos",
+   "lays",
+   "nachos",
+   "potato chips",
+   "ruffles",
+   "tortilla chips"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "crackers",
+  "name": "Crackers",
+  "plural": "crackers",
+  "parent": "snacks",
+  "category": "snacks-sweets",
+  "icon": "cookie",
+  "aliases": [
+   "cracker",
+   "rice cakes",
+   "ritz",
+   "saltines",
+   "triscuit"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "cookies",
+  "name": "Cookies",
+  "plural": "cookies",
+  "parent": "snacks",
+  "category": "snacks-sweets",
+  "icon": "cookie",
+  "aliases": [
+   "biscuits",
+   "cookie",
+   "digestive",
+   "oreo",
+   "oreos",
+   "shortbread"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "chocolate",
+  "name": "Chocolate",
+  "plural": "chocolate",
+  "parent": "snacks",
+  "category": "snacks-sweets",
+  "icon": "chocolate-bar",
+  "aliases": [
+   "chocolat",
+   "chocolate bar",
+   "dark chocolate",
+   "kit kat",
+   "kitkat",
+   "milk chocolate",
+   "shokolat"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "ea"
+ },
+ {
+  "slug": "candy",
+  "name": "Candy",
+  "plural": "candy",
+  "parent": "snacks",
+  "category": "snacks-sweets",
+  "icon": "candy",
+  "aliases": [
+   "candies",
+   "gum",
+   "gummies",
+   "gummy bears",
+   "lollipops",
+   "shirini",
+   "sweets"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "popcorn",
+  "name": "Popcorn",
+  "plural": "popcorn",
+  "parent": "snacks",
+  "category": "snacks-sweets",
+  "icon": "popcorn",
+  "aliases": [
+   "microwave popcorn",
+   "pop corn",
+   "popcorn kernels"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "pretzels",
+  "name": "Pretzels",
+  "plural": "pretzels",
+  "parent": "snacks",
+  "category": "snacks-sweets",
+  "icon": "pretzel",
+  "aliases": [
+   "pretzel",
+   "pretzel sticks"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "jelly-dessert",
+  "name": "Jelly dessert",
+  "plural": "jelly desserts",
+  "parent": "snacks",
+  "category": "snacks-sweets",
+  "icon": "bowl-with-spoon",
+  "aliases": [
+   "custard",
+   "jell-o",
+   "jello",
+   "pudding",
+   "pudding cups"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "fruit-snacks",
+  "name": "Fruit snacks",
+  "plural": "fruit snacks",
+  "parent": "snacks",
+  "category": "snacks-sweets",
+  "icon": "candy",
+  "aliases": [
+   "apple sauce",
+   "applesauce",
+   "fruit cups",
+   "fruit leather"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "trail-mix",
+  "name": "Trail mix",
+  "plural": "trail mix",
+  "parent": "snacks",
+  "category": "snacks-sweets",
+  "icon": "peanuts",
+  "aliases": [
+   "gorp",
+   "mixed nuts and fruit"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "water",
+  "name": "Water",
+  "plural": "water",
+  "parent": null,
+  "category": "drinks",
+  "icon": "potable-water",
+  "aliases": [
+   "ab",
+   "bottled water",
+   "carbonated water",
+   "mineral water",
+   "perrier",
+   "san pellegrino",
+   "soda water",
+   "sparkling water",
+   "spring water"
+  ],
+  "shelf_life": {},
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "juice",
+  "name": "Juice",
+  "plural": "juice",
+  "parent": null,
+  "category": "drinks",
+  "icon": "tb-juice",
+  "aliases": [
+   "abmive",
+   "abmiveh",
+   "apple juice",
+   "cranberry juice",
+   "grape juice",
+   "grapefruit juice",
+   "oj",
+   "orange juice"
+  ],
+  "shelf_life": {
+   "fridge": 7,
+   "pantry": 365
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "soda",
+  "name": "Soda",
+  "plural": "soda",
+  "parent": null,
+  "category": "drinks",
+  "icon": "cup-with-straw",
+  "aliases": [
+   "7up",
+   "coke",
+   "cola",
+   "dr pepper",
+   "fanta",
+   "ginger ale",
+   "pepsi",
+   "pop",
+   "root beer",
+   "soft drink",
+   "sprite"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "energy-drink",
+  "name": "Energy drink",
+  "plural": "energy drinks",
+  "parent": null,
+  "category": "drinks",
+  "icon": "cup-with-straw",
+  "aliases": [
+   "gatorade",
+   "monster",
+   "red bull",
+   "sports drink"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "coffee",
+  "name": "Coffee",
+  "plural": "coffee",
+  "parent": null,
+  "category": "drinks",
+  "icon": "hot-beverage",
+  "aliases": [
+   "cofee",
+   "coffee beans",
+   "coffee pods",
+   "cofffee",
+   "ghahveh",
+   "ground coffee",
+   "instant coffee",
+   "k cups",
+   "nescafe",
+   "whole bean coffee"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "tea",
+  "name": "Tea",
+  "plural": "tea",
+  "parent": null,
+  "category": "drinks",
+  "icon": "teapot",
+  "aliases": [
+   "black tea",
+   "chai",
+   "chai khoshk",
+   "chay",
+   "earl gray",
+   "earl grey",
+   "green tea",
+   "herbal tea",
+   "mint tea",
+   "tea bags"
+  ],
+  "shelf_life": {
+   "pantry": 730
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "beer",
+  "name": "Beer",
+  "plural": "beer",
+  "parent": null,
+  "category": "drinks",
+  "icon": "beer-mug",
+  "aliases": [
+   "ale",
+   "beers",
+   "cider",
+   "ipa",
+   "lager",
+   "stout"
+  ],
+  "shelf_life": {
+   "pantry": 180
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "wine",
+  "name": "Wine",
+  "plural": "wine",
+  "parent": null,
+  "category": "drinks",
+  "icon": "wine-glass",
+  "aliases": [
+   "champagne",
+   "prosecco",
+   "red wine",
+   "rose",
+   "sparkling wine",
+   "white wine"
+  ],
+  "shelf_life": {},
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "spirits",
+  "name": "Spirits",
+  "plural": "spirits",
+  "parent": null,
+  "category": "drinks",
+  "icon": "tumbler-glass",
+  "aliases": [
+   "bourbon",
+   "gin",
+   "liquor",
+   "rum",
+   "tequila",
+   "vodka",
+   "whiskey",
+   "whisky"
+  ],
+  "shelf_life": {},
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "kombucha",
+  "name": "Kombucha",
+  "plural": "kombucha",
+  "parent": null,
+  "category": "drinks",
+  "icon": "bubble-tea",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 90
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "lemonade",
+  "name": "Lemonade",
+  "plural": "lemonade",
+  "parent": null,
+  "category": "drinks",
+  "icon": "tb-juice",
+  "aliases": [
+   "fruit punch",
+   "iced tea",
+   "kool aid",
+   "limonade"
+  ],
+  "shelf_life": {
+   "fridge": 14,
+   "pantry": 180
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "coconut-water",
+  "name": "Coconut water",
+  "plural": "coconut water",
+  "parent": null,
+  "category": "drinks",
+  "icon": "coconut",
+  "aliases": [],
+  "shelf_life": {
+   "fridge": 14,
+   "pantry": 365
+  },
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "hot-chocolate",
+  "name": "Hot chocolate",
+  "plural": "hot chocolate",
+  "parent": null,
+  "category": "drinks",
+  "icon": "hot-beverage",
+  "aliases": [
+   "cocoa mix",
+   "ovaltine",
+   "swiss miss"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "box"
+ },
+ {
+  "slug": "paper-towels",
+  "name": "Paper towels",
+  "plural": "paper towels",
+  "parent": null,
+  "category": "household",
+  "icon": "roll-of-paper",
+  "aliases": [
+   "bounty",
+   "kitchen roll",
+   "paper towel"
+  ],
+  "shelf_life": {},
+  "default_unit": "pack"
+ },
+ {
+  "slug": "toilet-paper",
+  "name": "Toilet paper",
+  "plural": "toilet paper",
+  "parent": null,
+  "category": "household",
+  "icon": "tb-toilet-paper",
+  "aliases": [
+   "bathroom tissue",
+   "charmin",
+   "toilet tissue",
+   "tp"
+  ],
+  "shelf_life": {},
+  "default_unit": "pack"
+ },
+ {
+  "slug": "tissues",
+  "name": "Tissues",
+  "plural": "tissues",
+  "parent": null,
+  "category": "household",
+  "icon": "roll-of-paper",
+  "aliases": [
+   "facial tissue",
+   "kleenex",
+   "napkin",
+   "napkins"
+  ],
+  "shelf_life": {},
+  "default_unit": "box"
+ },
+ {
+  "slug": "dish-soap",
+  "name": "Dish soap",
+  "plural": "dish soap",
+  "parent": null,
+  "category": "household",
+  "icon": "soap",
+  "aliases": [
+   "dawn",
+   "dishwasher pods",
+   "dishwasher tablets",
+   "dishwashing liquid",
+   "finish",
+   "sunlight",
+   "washing up liquid"
+  ],
+  "shelf_life": {},
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "laundry-detergent",
+  "name": "Laundry detergent",
+  "plural": "laundry detergent",
+  "parent": null,
+  "category": "household",
+  "icon": "tb-laundry",
+  "aliases": [
+   "bleach",
+   "dryer sheets",
+   "fabric softener",
+   "laundry pods",
+   "laundry soap",
+   "tide"
+  ],
+  "shelf_life": {},
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "cleaning-spray",
+  "name": "Cleaning spray",
+  "plural": "cleaning sprays",
+  "parent": null,
+  "category": "household",
+  "icon": "tb-spray",
+  "aliases": [
+   "all purpose cleaner",
+   "cleaning wipes",
+   "clorox",
+   "disinfectant",
+   "lysol",
+   "windex"
+  ],
+  "shelf_life": {},
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "sponges",
+  "name": "Sponges",
+  "plural": "sponges",
+  "parent": null,
+  "category": "household",
+  "icon": "sponge",
+  "aliases": [
+   "dish cloth",
+   "scouring pad",
+   "scrub",
+   "sponge"
+  ],
+  "shelf_life": {},
+  "default_unit": "pack"
+ },
+ {
+  "slug": "garbage-bags",
+  "name": "Garbage bags",
+  "plural": "garbage bags",
+  "parent": null,
+  "category": "household",
+  "icon": "wastebasket",
+  "aliases": [
+   "bin bags",
+   "compost bags",
+   "garbage bag",
+   "glad",
+   "trash bags"
+  ],
+  "shelf_life": {},
+  "default_unit": "box"
+ },
+ {
+  "slug": "aluminum-foil",
+  "name": "Aluminum foil",
+  "plural": "aluminum foil",
+  "parent": null,
+  "category": "household",
+  "icon": "tb-foil",
+  "aliases": [
+   "aluminium foil",
+   "baking paper",
+   "foil",
+   "parchment paper",
+   "tin foil",
+   "wax paper"
+  ],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "plastic-wrap",
+  "name": "Plastic wrap",
+  "plural": "plastic wrap",
+  "parent": null,
+  "category": "household",
+  "icon": "tb-foil",
+  "aliases": [
+   "cling film",
+   "cling wrap",
+   "food storage bags",
+   "freezer bags",
+   "sandwich bags",
+   "saran wrap",
+   "ziploc",
+   "ziploc bags"
+  ],
+  "shelf_life": {},
+  "default_unit": "box"
+ },
+ {
+  "slug": "batteries",
+  "name": "Batteries",
+  "plural": "batteries",
+  "parent": null,
+  "category": "household",
+  "icon": "battery",
+  "aliases": [
+   "aa batteries",
+   "aaa batteries",
+   "battery"
+  ],
+  "shelf_life": {},
+  "default_unit": "pack"
+ },
+ {
+  "slug": "light-bulbs",
+  "name": "Light bulbs",
+  "plural": "light bulbs",
+  "parent": null,
+  "category": "household",
+  "icon": "light-bulb",
+  "aliases": [
+   "bulb",
+   "led bulb",
+   "light bulb"
+  ],
+  "shelf_life": {},
+  "default_unit": "pack"
+ },
+ {
+  "slug": "candles",
+  "name": "Candles",
+  "plural": "candles",
+  "parent": null,
+  "category": "household",
+  "icon": "candle",
+  "aliases": [
+   "candle"
+  ],
+  "shelf_life": {},
+  "default_unit": "pack"
+ },
+ {
+  "slug": "pet-food",
+  "name": "Pet food",
+  "plural": "pet food",
+  "parent": null,
+  "category": "household",
+  "icon": "tb-dog-food",
+  "aliases": [
+   "cat food",
+   "cat litter",
+   "dog food",
+   "kibble",
+   "treats"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "bag"
+ },
+ {
+  "slug": "toothpaste",
+  "name": "Toothpaste",
+  "plural": "toothpaste",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "tooth",
+  "aliases": [
+   "colgate",
+   "crest",
+   "khamir dandan",
+   "tooth paste"
+  ],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "toothbrush",
+  "name": "Toothbrush",
+  "plural": "toothbrushes",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "toothbrush",
+  "aliases": [
+   "dental floss",
+   "floss",
+   "mouthwash",
+   "tooth brush"
+  ],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "shampoo",
+  "name": "Shampoo",
+  "plural": "shampoo",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "lotion-bottle",
+  "aliases": [
+   "body wash",
+   "conditioner",
+   "hair conditioner",
+   "shampoo and conditioner",
+   "shower gel"
+  ],
+  "shelf_life": {},
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "soap",
+  "name": "Soap",
+  "plural": "soap",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "soap",
+  "aliases": [
+   "bar soap",
+   "hand sanitizer",
+   "hand soap",
+   "hand wash",
+   "sabun",
+   "sanitizer"
+  ],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "deodorant",
+  "name": "Deodorant",
+  "plural": "deodorants",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "lotion-bottle",
+  "aliases": [
+   "antiperspirant",
+   "deo"
+  ],
+  "shelf_life": {},
+  "default_unit": "ea"
+ },
+ {
+  "slug": "lotion",
+  "name": "Lotion",
+  "plural": "lotion",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "lotion-bottle",
+  "aliases": [
+   "body lotion",
+   "hand cream",
+   "lip balm",
+   "moisturizer",
+   "sunscreen"
+  ],
+  "shelf_life": {},
+  "default_unit": "bottle"
+ },
+ {
+  "slug": "razors",
+  "name": "Razors",
+  "plural": "razors",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "razor",
+  "aliases": [
+   "razor",
+   "razor blades",
+   "shaving cream",
+   "shaving gel"
+  ],
+  "shelf_life": {},
+  "default_unit": "pack"
+ },
+ {
+  "slug": "feminine-care",
+  "name": "Feminine care",
+  "plural": "feminine care",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "tb-first-aid",
+  "aliases": [
+   "pads",
+   "panty liners",
+   "tampons"
+  ],
+  "shelf_life": {},
+  "default_unit": "box"
+ },
+ {
+  "slug": "diapers",
+  "name": "Diapers",
+  "plural": "diapers",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "tb-diaper",
+  "aliases": [
+   "baby wipes",
+   "nappies",
+   "pull ups"
+  ],
+  "shelf_life": {},
+  "default_unit": "pack"
+ },
+ {
+  "slug": "baby-formula",
+  "name": "Baby formula",
+  "plural": "baby formula",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "baby-bottle",
+  "aliases": [
+   "baby food",
+   "formula",
+   "infant formula"
+  ],
+  "shelf_life": {
+   "pantry": 365
+  },
+  "default_unit": "can"
+ },
+ {
+  "slug": "medicine",
+  "name": "Medicine",
+  "plural": "medicines",
+  "parent": null,
+  "category": "personal-care",
+  "icon": "pill",
+  "aliases": [
+   "acetaminophen",
+   "advil",
+   "band aids",
+   "bandaids",
+   "cold medicine",
+   "ibuprofen",
+   "pain killer",
+   "tylenol",
+   "vitamins"
+  ],
+  "shelf_life": {},
+  "default_unit": "box"
+ },
+ {
+  "slug": "leftovers",
+  "name": "Leftovers",
+  "plural": "leftovers",
+  "parent": null,
+  "category": "other",
+  "icon": "tb-leftovers",
+  "aliases": [
+   "cooked food",
+   "leftover",
+   "meal prep",
+   "takeout",
+   "takeout leftovers"
+  ],
+  "shelf_life": {
+   "fridge": 4,
+   "freezer": 90
+  },
+  "default_unit": "ea"
+ }
+]

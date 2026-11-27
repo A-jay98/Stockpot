@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"sync"
 	"time"
@@ -27,6 +28,9 @@ type Deps struct {
 	// LLM is the LLM gateway (/api/v1/admin/llm/*); nil answers its
 	// endpoints with 503 llm_unavailable.
 	LLM LLMGateway
+	// Commands and Sync serve /api/v1/commands and /api/v1/sync*.
+	Commands CommandApplier
+	Sync     Syncer
 	// Backups serves /api/v1/admin/backups; nil answers 503.
 	Backups BackupAdmin
 }
@@ -38,6 +42,8 @@ type Server struct {
 	admin    *admin.Service
 	identity *identity.Service
 	llm      LLMGateway
+	commands CommandApplier
+	sync     Syncer
 	backups  BackupAdmin
 	now      func() time.Time
 }
@@ -46,7 +52,10 @@ var _ StrictServerInterface = (*Server)(nil)
 
 // NewServer returns the API implementation.
 func NewServer(d Deps) *Server {
-	return &Server{checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM, backups: d.Backups, now: time.Now}
+	return &Server{
+		checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM,
+		commands: d.Commands, sync: d.Sync, backups: d.Backups, now: time.Now,
+	}
 }
 
 // healthTimeout bounds each dependency probe; the deploy step polls often.
@@ -104,3 +113,6 @@ var contractVersion = sync.OnceValues(func() (string, error) {
 	}
 	return spec.Info.Version, nil
 })
+
+// errNotWired answers endpoints whose service was not configured (tests).
+var errNotWired = errors.New("service not configured")
