@@ -308,8 +308,6 @@ func locationKind(ctx context.Context, tx pgx.Tx, hh, id uuid.UUID) (LocationKin
 	return LocationKind(k), err
 }
 
-func (it *item) remaining() (qty *string, portions *int) { return it.Quantity, it.Portions }
-
 // delta renders the event delta of an amount: quantity text, or portions count.
 func delta(neg bool, qty *string, portions *int) *string {
 	var s string
@@ -393,7 +391,7 @@ func (h *handlers) add(ctx context.Context, tx pgx.Tx, p StockAdd) error {
 	if !addSources[p.Source] {
 		return commands.Invalid("source must be manual, shopping, capture or cook")
 	}
-	if err := p.Amount.validate(false); err != nil {
+	if err := p.validate(false); err != nil {
 		return err
 	}
 	on, err := day(p.On)
@@ -422,7 +420,7 @@ func (h *handlers) add(ctx context.Context, tx pgx.Tx, p StockAdd) error {
 		return err
 	}
 
-	product := uuid.Nil
+	var product uuid.UUID
 	if p.NewProduct != nil {
 		np := p.NewProduct
 		create := catalog.ProductCreate{ID: np.ID}
@@ -504,8 +502,8 @@ func (h *handlers) add(ctx context.Context, tx pgx.Tx, p StockAdd) error {
 
 func ptr[T any](v T) *T { return &v }
 
-func checkLen(s *string, max int, field string) error {
-	if s != nil && len(*s) > max {
+func checkLen(s *string, limit int, field string) error {
+	if s != nil && len(*s) > limit {
 		return commands.Invalid("%s is too long", field)
 	}
 	return nil
@@ -878,9 +876,7 @@ func (h *handlers) update(ctx context.Context, tx pgx.Tx, p StockUpdate) error {
 	if p.ExpiresOn.Set || p.ExpiryKind.Set {
 		expires, kind := it.ExpiresOn, it.ExpiryKind
 		if p.ExpiresOn.Set {
-			var s *string
-			s = p.ExpiresOn.Value
-			if expires, err = optDay(s); err != nil {
+			if expires, err = optDay(p.ExpiresOn.Value); err != nil {
 				return err
 			}
 			if expires == nil {
