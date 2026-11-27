@@ -2193,6 +2193,16 @@ components:
         - $ref: "#/components/schemas/CmdCatalogLocationUpdate"
         - $ref: "#/components/schemas/CmdCatalogLocationDelete"
         - $ref: "#/components/schemas/CmdCatalogIngredientCreate"
+        - $ref: "#/components/schemas/CmdShoppingListCreate"
+        - $ref: "#/components/schemas/CmdShoppingListRename"
+        - $ref: "#/components/schemas/CmdShoppingListDelete"
+        - $ref: "#/components/schemas/CmdShoppingItemAdd"
+        - $ref: "#/components/schemas/CmdShoppingItemUpdate"
+        - $ref: "#/components/schemas/CmdShoppingItemDelete"
+        - $ref: "#/components/schemas/CmdShoppingItemReorder"
+        - $ref: "#/components/schemas/CmdShoppingItemCheck"
+        - $ref: "#/components/schemas/CmdShoppingItemUncheck"
+        - $ref: "#/components/schemas/CmdShoppingItemClearChecked"
       discriminator:
         propertyName: type
         mapping:
@@ -2207,6 +2217,16 @@ components:
           catalog.location.update: "#/components/schemas/CmdCatalogLocationUpdate"
           catalog.location.delete: "#/components/schemas/CmdCatalogLocationDelete"
           catalog.ingredient.create: "#/components/schemas/CmdCatalogIngredientCreate"
+          shopping.list.create: "#/components/schemas/CmdShoppingListCreate"
+          shopping.list.rename: "#/components/schemas/CmdShoppingListRename"
+          shopping.list.delete: "#/components/schemas/CmdShoppingListDelete"
+          shopping.item.add: "#/components/schemas/CmdShoppingItemAdd"
+          shopping.item.update: "#/components/schemas/CmdShoppingItemUpdate"
+          shopping.item.delete: "#/components/schemas/CmdShoppingItemDelete"
+          shopping.item.reorder: "#/components/schemas/CmdShoppingItemReorder"
+          shopping.item.check: "#/components/schemas/CmdShoppingItemCheck"
+          shopping.item.uncheck: "#/components/schemas/CmdShoppingItemUncheck"
+          shopping.item.clear_checked: "#/components/schemas/CmdShoppingItemClearChecked"
     CmdCatalogProductCreate:
       type: object
       required: [id, type, payload, clientTime]
@@ -2635,6 +2655,341 @@ components:
                 items:
                   type: string
                 maxItems: 30
+    CmdShoppingListCreate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.list.create]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, name]
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+              minLength: 1
+              maxLength: 100
+            sort:
+              type: integer
+              nullable: true
+    CmdShoppingListRename:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.list.rename]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, name]
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+              minLength: 1
+              maxLength: 100
+    CmdShoppingListDelete:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.list.delete]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdShoppingItemAdd:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.add]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, listId]
+          properties:
+            id:
+              type: string
+              format: uuid
+            listId:
+              type: string
+              format: uuid
+            sort:
+              type: integer
+              nullable: true
+            productId:
+              type: string
+              format: uuid
+              nullable: true
+            text:
+              type: string
+              maxLength: 200
+              nullable: true
+            qty:
+              type: string
+              nullable: true
+              pattern: '^[0-9]+(\.[0-9]+)?$'
+              description: "Decimal string."
+            unit:
+              type: string
+              maxLength: 16
+              nullable: true
+            categoryId:
+              type: string
+              format: uuid
+              nullable: true
+            storeIds:
+              type: array
+              nullable: true
+              items:
+                type: string
+                format: uuid
+            note:
+              type: string
+              maxLength: 1000
+              nullable: true
+    CmdShoppingItemUpdate:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.update]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+            productId:
+              type: string
+              format: uuid
+              nullable: true
+            text:
+              type: string
+              maxLength: 200
+              nullable: true
+            qty:
+              type: string
+              nullable: true
+              pattern: '^[0-9]+(\.[0-9]+)?$'
+              description: "Decimal string."
+            unit:
+              type: string
+              maxLength: 16
+              nullable: true
+            categoryId:
+              type: string
+              format: uuid
+              nullable: true
+            storeIds:
+              type: array
+              nullable: true
+              items:
+                type: string
+                format: uuid
+            note:
+              type: string
+              maxLength: 1000
+              nullable: true
+    CmdShoppingItemDelete:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.delete]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdShoppingItemReorder:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.reorder]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [listId, ids]
+          properties:
+            listId:
+              type: string
+              format: uuid
+            ids:
+              type: array
+              maxItems: 500
+              items:
+                type: string
+                format: uuid
+    CmdShoppingItemCheck:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.check]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+            storeId:
+              type: string
+              format: uuid
+              nullable: true
+            inventory:
+              type: object
+              nullable: true
+              additionalProperties: false
+              required: [stockItemId]
+              properties:
+                stockItemId:
+                  type: string
+                  format: uuid
+                locationId:
+                  type: string
+                  format: uuid
+                  nullable: true
+                expiresOn:
+                  type: string
+                  format: date
+                  nullable: true
+                quantity:
+                  type: string
+                  nullable: true
+                  pattern: '^[0-9]+(\.[0-9]+)?$'
+                  description: "Decimal string."
+                unit:
+                  type: string
+                  maxLength: 16
+                  nullable: true
+    CmdShoppingItemUncheck:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.uncheck]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdShoppingItemClearChecked:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [shopping.item.clear_checked]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [listId]
+          properties:
+            listId:
+              type: string
+              format: uuid
     CommandBatch:
       type: object
       required: [householdId, commands]
