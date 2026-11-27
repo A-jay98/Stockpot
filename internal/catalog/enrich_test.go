@@ -83,7 +83,7 @@ func newEnrichEnv(t *testing.T, answers map[string]map[string]any, reqCap int) *
 	}
 	raw, _ := json.Marshal([]llm.ProviderConfig{{
 		ID: "fake", Kind: llm.KindOpenAICompat, BaseURL: f.srv.URL, Model: "m", Enabled: true,
-		ResetTZ: "UTC", JSONSchema: true, DailyRequestCap: cap,
+		ResetTZ: "UTC", JSONSchema: true, DailyRequestCap: reqCap,
 	}})
 	if err := store.Set(t.Context(), llm.SettingProviders.Key(), raw, nil); err != nil {
 		t.Fatal(err)
