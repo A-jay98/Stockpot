@@ -27,6 +27,8 @@ type Deps struct {
 	// LLM is the LLM gateway (/api/v1/admin/llm/*); nil answers its
 	// endpoints with 503 llm_unavailable.
 	LLM LLMGateway
+	// Backups serves /api/v1/admin/backups; nil answers 503.
+	Backups BackupAdmin
 }
 
 // Server implements StrictServerInterface. Handlers live in one file per
@@ -36,6 +38,7 @@ type Server struct {
 	admin    *admin.Service
 	identity *identity.Service
 	llm      LLMGateway
+	backups  BackupAdmin
 	now      func() time.Time
 }
 
@@ -43,7 +46,7 @@ var _ StrictServerInterface = (*Server)(nil)
 
 // NewServer returns the API implementation.
 func NewServer(d Deps) *Server {
-	return &Server{checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM, now: time.Now}
+	return &Server{checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM, backups: d.Backups, now: time.Now}
 }
 
 // healthTimeout bounds each dependency probe; the deploy step polls often.

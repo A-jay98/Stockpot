@@ -51,6 +51,15 @@ type LLMToday struct {
 	Available bool
 }
 
+// BackupsToday is backup health for the overview.
+type BackupsToday struct {
+	Enabled    bool
+	LastOK     *time.Time
+	LastStatus string
+	LastError  string
+	Stale      bool
+}
+
 // Deps are the parts of the app the admin panel reads and controls.
 type Deps struct {
 	Pool     *pgxpool.Pool
@@ -61,6 +70,8 @@ type Deps struct {
 	Audit    AuditFunc
 	// LLMToday reports LLM usage; nil until the LLM gateway is wired.
 	LLMToday func(ctx context.Context) (LLMToday, error)
+	// Backups reports backup health; nil hides the tile.
+	Backups func(ctx context.Context) (BackupsToday, error)
 	// StartedAt is when this process started serving.
 	StartedAt time.Time
 }

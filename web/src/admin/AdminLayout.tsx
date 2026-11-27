@@ -2,6 +2,7 @@ import {
   ArrowLeft,
   Cable,
   Cpu,
+  DatabaseBackup,
   Flag,
   Gauge,
   ListChecks,
@@ -25,6 +26,7 @@ export const adminSections: Section[] = [
   { to: '/admin/jobs', label: 'Jobs', icon: ListChecks },
   { to: '/admin/settings', label: 'Settings & flags', icon: Flag },
   { to: '/admin/llm', label: 'LLM', icon: Cpu },
+  { to: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
 ]
 
 const link =

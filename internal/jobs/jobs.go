@@ -27,6 +27,9 @@ type Deps struct {
 	// packages contribute theirs (access log, audit, sessions, …).
 	Sweepers []Sweeper
 	Logger   *slog.Logger
+	// Workers registers feature workers (backups, alerts, …) before the
+	// client is built.
+	Workers []func(*river.Workers) error
 }
 
 // New builds a client with every worker and periodic job registered. Call
@@ -36,11 +39,19 @@ func New(d Deps) (*Client, error) {
 	if err := river.AddWorkerSafely(workers, &RetentionWorker{settings: d.Settings, sweepers: d.Sweepers}); err != nil {
 		return nil, err
 	}
+	for _, add := range d.Workers {
+		if err := add(workers); err != nil {
+			return nil, fmt.Errorf("register worker: %w", err)
+		}
+	}
 	client, err := river.NewClient(riverpgxv5.New(d.Pool), &river.Config{
 		Queues: map[string]river.QueueConfig{
 			river.QueueDefault: {MaxWorkers: 4},
 		},
 		Workers: workers,
+		// Longer than the longest job (a backup may take up to 3 h), or River
+		// would start a second copy of it while the first is still running.
+		RescueStuckJobsAfter: 4 * time.Hour,
 		PeriodicJobs: []*river.PeriodicJob{
 			river.NewPeriodicJob(
 				river.PeriodicInterval(24*time.Hour),

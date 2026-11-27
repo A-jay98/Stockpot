@@ -73,6 +73,24 @@ type AuthCeremony struct {
 	ExpiresAt time.Time
 }
 
+type BackupRun struct {
+	ID            uuid.UUID
+	Trigger       string
+	Status        string
+	JobID         *int64
+	StartedAt     time.Time
+	FinishedAt    *time.Time
+	SizeBytes     int64
+	Parts         int32
+	AppVersion    string
+	SchemaVersion *int64
+	Error         *string
+	Manifest      []byte
+	MessageIds    []int64
+	PrunedAt      *time.Time
+	DeleteNote    *string
+}
+
 type Household struct {
 	ID        uuid.UUID
 	Name      string
