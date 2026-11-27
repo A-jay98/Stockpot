@@ -327,7 +327,7 @@ func TestAdminIngredientOps(t *testing.T) {
 		t.Fatalf("promoted: %v %s", hh, src)
 	}
 	// It is no longer an enricher ingredient: merge now refuses.
-	if err := e.en.Merge(ctx, kum, orange); err != catalog.ErrNotReviewable {
+	if err := e.en.Merge(ctx, kum, "orange"); err != catalog.ErrNotReviewable {
 		t.Fatalf("merge promoted: %v", err)
 	}
 
@@ -339,7 +339,7 @@ func TestAdminIngredientOps(t *testing.T) {
 	}
 	var pom uuid.UUID
 	_ = e.pool.QueryRow(ctx, `SELECT id FROM ingredient WHERE slug = 'jabuticaba'`).Scan(&pom)
-	if err := e.en.Merge(ctx, pom, kum); err != nil {
+	if err := e.en.Merge(ctx, pom, "kumquat"); err != nil {
 		t.Fatal(err)
 	}
 	if r := e.row(t, e2); r.slug != "kumquat" {

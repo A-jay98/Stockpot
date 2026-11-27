@@ -3,6 +3,7 @@ package catalog
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -297,10 +298,7 @@ func (e *Enricher) Promote(ctx context.Context, id uuid.UUID) error {
 // Merge points everything that used an enricher-created ingredient at target
 // and removes it. The merged name becomes an alias of the target (unless it
 // is a seeded global, which the seed owns), so the same text resolves there next time.
-func (e *Enricher) Merge(ctx context.Context, id, target uuid.UUID) error {
-	if id == target {
-		return ErrBadMergeTarget
-	}
+func (e *Enricher) Merge(ctx context.Context, id uuid.UUID, targetSlug string) error {
 	owner, err := e.ownerOf(ctx, id)
 	if err != nil {
 		return err
@@ -310,13 +308,15 @@ func (e *Enricher) Merge(ctx context.Context, id, target uuid.UUID) error {
 		if err != nil {
 			return err
 		}
-		var tSource string
-		var tHH *uuid.UUID
-		err = tx.QueryRow(ctx, `SELECT source, household_id FROM ingredient WHERE id = $1 AND deleted_at IS NULL FOR UPDATE`, target).Scan(&tSource, &tHH)
-		if errors.Is(err, pgx.ErrNoRows) || (err == nil && tHH != nil && *tHH != owner) {
+		target, _, err := ingredientIDBySlug(ctx, tx, owner, strings.TrimSpace(targetSlug))
+		if errors.Is(err, errInvalid) || (err == nil && target == id) {
 			return ErrBadMergeTarget
 		}
 		if err != nil {
+			return err
+		}
+		var tSource string
+		if err := tx.QueryRow(ctx, `SELECT source FROM ingredient WHERE id = $1 FOR UPDATE`, target).Scan(&tSource); err != nil {
 			return err
 		}
 		if under, err := exists(ctx, tx, `WITH RECURSIVE up AS (SELECT id, parent_id FROM ingredient WHERE id = $1

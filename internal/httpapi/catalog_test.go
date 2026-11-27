@@ -16,7 +16,8 @@ import (
 type fakeEnrich struct {
 	err  error
 	ran  int
-	last [2]uuid.UUID
+	last uuid.UUID
+	slug string
 }
 
 func (f *fakeEnrich) Status(context.Context) (catalog.EnrichStatus, error) {
@@ -28,9 +29,9 @@ func (f *fakeEnrich) Status(context.Context) (catalog.EnrichStatus, error) {
 }
 func (f *fakeEnrich) RunNow(context.Context) error                  { f.ran++; return f.err }
 func (f *fakeEnrich) RetryFailed(context.Context) (int, error)      { return 3, f.err }
-func (f *fakeEnrich) Promote(_ context.Context, id uuid.UUID) error { f.last[0] = id; return f.err }
-func (f *fakeEnrich) Merge(_ context.Context, id, t uuid.UUID) error {
-	f.last = [2]uuid.UUID{id, t}
+func (f *fakeEnrich) Promote(_ context.Context, id uuid.UUID) error { f.last = id; return f.err }
+func (f *fakeEnrich) Merge(_ context.Context, id uuid.UUID, slug string) error {
+	f.last, f.slug = id, slug
 	return f.err
 }
 func (f *fakeEnrich) DeleteIngredient(context.Context, uuid.UUID) error { return f.err }
@@ -53,8 +54,8 @@ func TestCatalogAdmin(t *testing.T) {
 	if rec := do(h, llmRequest(t, http.MethodPost, "/api/v1/admin/catalog/enrich/retry-failed", "")); rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), `"retried":3`) {
 		t.Fatalf("retry: %d %s", rec.Code, rec.Body)
 	}
-	id, target := uuid.New(), uuid.New()
-	if rec := do(h, llmRequest(t, http.MethodPost, "/api/v1/admin/catalog/ingredients/"+id.String()+"/merge", `{"targetId":"`+target.String()+`"}`)); rec.Code != http.StatusNoContent || f.last != [2]uuid.UUID{id, target} {
+	id := uuid.New()
+	if rec := do(h, llmRequest(t, http.MethodPost, "/api/v1/admin/catalog/ingredients/"+id.String()+"/merge", `{"targetSlug":"orange"}`)); rec.Code != http.StatusNoContent || f.last != id || f.slug != "orange" {
 		t.Fatalf("merge: %d %s", rec.Code, rec.Body)
 	}
 	for _, tc := range []struct {

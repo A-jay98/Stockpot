@@ -343,11 +343,11 @@ paths:
           application/json:
             schema:
               type: object
-              required: [targetId]
+              required: [targetSlug]
               properties:
-                targetId:
+                targetSlug:
                   type: string
-                  format: uuid
+                  description: Slug of the ingredient to merge into (global, or the same household's).
       responses:
         "204":
           description: Merged

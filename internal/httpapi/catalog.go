@@ -21,7 +21,7 @@ type CatalogEnricher interface {
 	RunNow(ctx context.Context) error
 	RetryFailed(ctx context.Context) (int, error)
 	Promote(ctx context.Context, id uuid.UUID) error
-	Merge(ctx context.Context, id, target uuid.UUID) error
+	Merge(ctx context.Context, id uuid.UUID, targetSlug string) error
 	DeleteIngredient(ctx context.Context, id uuid.UUID) error
 }
 
@@ -131,7 +131,7 @@ func (s *Server) MergeAdminIngredient(ctx context.Context, req MergeAdminIngredi
 		p := noCatalog(ctx)
 		return MergeAdminIngredientdefaultApplicationProblemPlusJSONResponse{Body: p, StatusCode: p.Status}, nil
 	}
-	if err := s.enrich.Merge(ctx, req.Id, req.Body.TargetId); err != nil {
+	if err := s.enrich.Merge(ctx, req.Id, req.Body.TargetSlug); err != nil {
 		if p, ok := ingredientProblem(ctx, err); ok {
 			return MergeAdminIngredientdefaultApplicationProblemPlusJSONResponse{Body: p, StatusCode: p.Status}, nil
 		}

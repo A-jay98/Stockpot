@@ -204,6 +204,143 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/catalog": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Catalog enrichment state, runs and items to review
+         * @description Counts of products by enrichment state, whether background LLM work could run now, the latest runs, ingredients the enricher created and products whose match is unsure.
+         */
+        get: operations["getAdminCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/catalog/enrich/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run enrichment now
+         * @description Queues an enrichment run (it still defers when there is no quota above the reserve).
+         */
+        post: operations["runAdminCatalogEnrich"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/catalog/enrich/retry-failed": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Put failed products back in the enrichment queue */
+        post: operations["retryAdminCatalogFailed"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/catalog/ingredients/{id}/promote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make an enricher-created ingredient global
+         * @description Answers 409 `ingredient_conflict` when a global ingredient has the slug, or its parent is household-only.
+         */
+        post: operations["promoteAdminIngredient"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/catalog/ingredients/{id}/merge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Merge an enricher-created ingredient into another
+         * @description Products, kinds and the name move to the target; the ingredient is removed. Answers 409 `ingredient_conflict` for a bad target.
+         */
+        post: operations["mergeAdminIngredient"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/catalog/ingredients/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Delete an enricher-created ingredient
+         * @description Its products go back to the enrichment queue.
+         */
+        delete: operations["deleteAdminIngredient"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/catalog/match": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What a text matches
+         * @description Resolves free text ("good mandarins") to an ingredient and lists the household's in-stock products that satisfy it (the ingredient or any kind of it).
+         */
+        get: operations["matchCatalog"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/settings": {
         parameters: {
             query?: never;
@@ -1052,6 +1189,91 @@ export interface components {
             riverVersion?: number;
             riverTarget?: number;
         };
+        CatalogMatch: {
+            ingredient?: components["schemas"]["CatalogMatchIngredient"];
+            products: components["schemas"]["CatalogMatchProduct"][];
+        };
+        /** @description What the text resolved to (absent in the match when nothing matched). */
+        CatalogMatchIngredient: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+            /** Format: float */
+            confidence: number;
+            categorySlug?: string;
+            /** @enum {string} */
+            locationHint?: "fridge" | "freezer" | "pantry";
+        };
+        CatalogMatchProduct: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            brand?: string;
+        };
+        AdminCatalog: {
+            /** @description flag.catalog_enrich */
+            enabled: boolean;
+            intervalMinutes: number;
+            /** @description Live products by enrich_state. */
+            counts: {
+                [key: string]: number;
+            };
+            /** @description Background LLM work could run now. */
+            headroom: boolean;
+            /**
+             * Format: date-time
+             * @description When quota returns, when there is no headroom.
+             */
+            retryAt?: string;
+            /** @description Newest first. */
+            runs: components["schemas"]["AdminEnrichRun"][];
+            llmIngredients: components["schemas"]["AdminLLMIngredient"][];
+            review: components["schemas"]["AdminReviewProduct"][];
+        };
+        AdminEnrichRun: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            trigger: "scheduled" | "manual";
+            /** @enum {string} */
+            outcome: "running" | "ok" | "partial" | "deferred" | "error";
+            /** Format: date-time */
+            startedAt: string;
+            /** Format: date-time */
+            finishedAt?: string;
+            items: number;
+            applied: number;
+            failed: number;
+            cached: number;
+            calls: number;
+            provider?: string;
+            reason?: string;
+        };
+        AdminLLMIngredient: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+            parent?: string;
+            household: string;
+            products: number;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        AdminReviewProduct: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            brand?: string;
+            household: string;
+            ingredient?: string;
+            matchSource: string;
+            /** Format: float */
+            confidence?: number;
+            state: string;
+            attempts: number;
+        };
         AdminBackups: {
             /** @description The nightly schedule is on (flag.backups). */
             enabled: boolean;
@@ -1793,6 +2015,7 @@ export interface components {
         /** @description Opaque cursor from the previous page's `nextCursor`. */
         AdminCursor: string;
         AdminLimit: number;
+        IngredientID: string;
         AdminJobID: number;
     };
     requestBodies: never;
@@ -2039,6 +2262,162 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getAdminCatalog: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Catalog enrichment */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCatalog"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    runAdminCatalogEnrich: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    retryAdminCatalogFailed: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description How many products were requeued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        retried: number;
+                    };
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    promoteAdminIngredient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IngredientID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Promoted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    mergeAdminIngredient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IngredientID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @description Slug of the ingredient to merge into (global, or the same household's). */
+                    targetSlug: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Merged */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    deleteAdminIngredient: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IngredientID"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    matchCatalog: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The match */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CatalogMatch"];
+                };
             };
             default: components["responses"]["Problem"];
         };

@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   Cable,
+  Carrot,
   Cpu,
   DatabaseBackup,
   Flag,
@@ -27,6 +28,7 @@ export const adminSections: Section[] = [
   { to: '/admin/settings', label: 'Settings & flags', icon: Flag },
   { to: '/admin/llm', label: 'LLM', icon: Cpu },
   { to: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
+  { to: '/admin/catalog', label: 'Catalog', icon: Carrot },
 ]
 
 const link =
