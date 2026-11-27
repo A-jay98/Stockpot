@@ -36,6 +36,8 @@ tags:
     description: User approval and management (admin).
   - name: llm
     description: LLM gateway administration (providers, keys, quota, usage).
+  - name: catalog
+    description: Ingredients, matching and the household catalog.
   - name: sync
     description: Offline sync engine - commands, pulls and change events.
   - name: notifications
@@ -265,6 +267,130 @@ paths:
       responses:
         "204":
           description: Sent
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/catalog:
+    get:
+      operationId: getAdminCatalog
+      summary: Catalog enrichment state, runs and items to review
+      description: Counts of products by enrichment state, whether background LLM work could run now, the latest runs, ingredients the enricher created and products whose match is unsure.
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: Catalog enrichment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCatalog"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/catalog/enrich/run:
+    post:
+      operationId: runAdminCatalogEnrich
+      summary: Run enrichment now
+      description: Queues an enrichment run (it still defers when there is no quota above the reserve).
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "202":
+          description: Queued
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/catalog/enrich/retry-failed:
+    post:
+      operationId: retryAdminCatalogFailed
+      summary: Put failed products back in the enrichment queue
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: How many products were requeued
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [retried]
+                properties:
+                  retried:
+                    type: integer
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/catalog/ingredients/{id}/promote:
+    post:
+      operationId: promoteAdminIngredient
+      summary: Make an enricher-created ingredient global
+      description: Answers 409 `ingredient_conflict` when a global ingredient has the slug, or its parent is household-only.
+      tags: [admin]
+      x-roles: [admin]
+      parameters:
+        - $ref: "#/components/parameters/IngredientID"
+      responses:
+        "204":
+          description: Promoted
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/catalog/ingredients/{id}/merge:
+    post:
+      operationId: mergeAdminIngredient
+      summary: Merge an enricher-created ingredient into another
+      description: Products, kinds and the name move to the target; the ingredient is removed. Answers 409 `ingredient_conflict` for a bad target.
+      tags: [admin]
+      x-roles: [admin]
+      parameters:
+        - $ref: "#/components/parameters/IngredientID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [targetSlug]
+              properties:
+                targetSlug:
+                  type: string
+                  description: Slug of the ingredient to merge into (global, or the same household's).
+      responses:
+        "204":
+          description: Merged
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/catalog/ingredients/{id}:
+    delete:
+      operationId: deleteAdminIngredient
+      summary: Delete an enricher-created ingredient
+      description: Its products go back to the enrichment queue.
+      tags: [admin]
+      x-roles: [admin]
+      parameters:
+        - $ref: "#/components/parameters/IngredientID"
+      responses:
+        "204":
+          description: Deleted
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/catalog/match:
+    get:
+      operationId: matchCatalog
+      summary: What a text matches
+      description: Resolves free text ("good mandarins") to an ingredient and lists the household's in-stock products that satisfy it (the ingredient or any kind of it).
+      tags: [catalog]
+      x-roles: [user]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 200
+      responses:
+        "200":
+          description: The match
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogMatch"
         default:
           $ref: "#/components/responses/Problem"
   /v1/admin/settings:
@@ -1343,6 +1469,13 @@ components:
         minimum: 1
         maximum: 500
         default: 100
+    IngredientID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     AdminJobID:
       name: id
       in: path
@@ -1732,6 +1865,158 @@ components:
           format: date-time
         lastError:
           type: string
+    CatalogMatch:
+      type: object
+      required: [products]
+      properties:
+        ingredient:
+          $ref: "#/components/schemas/CatalogMatchIngredient"
+        products:
+          type: array
+          items:
+            $ref: "#/components/schemas/CatalogMatchProduct"
+    CatalogMatchIngredient:
+      type: object
+      description: What the text resolved to (absent in the match when nothing matched).
+      required: [id, slug, name, confidence]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        name:
+          type: string
+        confidence:
+          type: number
+          format: float
+        categorySlug:
+          type: string
+        locationHint:
+          type: string
+          enum: [fridge, freezer, pantry]
+    CatalogMatchProduct:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        brand:
+          type: string
+    AdminCatalog:
+      type: object
+      required: [enabled, intervalMinutes, counts, headroom, runs, llmIngredients, review]
+      properties:
+        enabled:
+          type: boolean
+          description: flag.catalog_enrich
+        intervalMinutes:
+          type: integer
+        counts:
+          type: object
+          description: Live products by enrich_state.
+          additionalProperties:
+            type: integer
+        headroom:
+          type: boolean
+          description: Background LLM work could run now.
+        retryAt:
+          type: string
+          format: date-time
+          description: When quota returns, when there is no headroom.
+        runs:
+          type: array
+          description: Newest first.
+          items:
+            $ref: "#/components/schemas/AdminEnrichRun"
+        llmIngredients:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminLLMIngredient"
+        review:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminReviewProduct"
+    AdminEnrichRun:
+      type: object
+      required: [id, trigger, outcome, startedAt, items, applied, failed, cached, calls]
+      properties:
+        id:
+          type: string
+          format: uuid
+        trigger:
+          type: string
+          enum: [scheduled, manual]
+        outcome:
+          type: string
+          enum: [running, ok, partial, deferred, error]
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        items:
+          type: integer
+        applied:
+          type: integer
+        failed:
+          type: integer
+        cached:
+          type: integer
+        calls:
+          type: integer
+        provider:
+          type: string
+        reason:
+          type: string
+    AdminLLMIngredient:
+      type: object
+      required: [id, slug, name, household, products, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        name:
+          type: string
+        parent:
+          type: string
+        household:
+          type: string
+        products:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+    AdminReviewProduct:
+      type: object
+      required: [id, name, household, matchSource, state, attempts]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        brand:
+          type: string
+        household:
+          type: string
+        ingredient:
+          type: string
+        matchSource:
+          type: string
+        confidence:
+          type: number
+          format: float
+        state:
+          type: string
+        attempts:
+          type: integer
     AdminBackups:
       type: object
       required: [enabled, configured, time, timezone, keep, hasToken, hasRecipient, channel, runs]

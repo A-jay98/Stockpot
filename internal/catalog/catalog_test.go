@@ -13,6 +13,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/a-jay98/stockpot/internal/catalog"
+	"github.com/a-jay98/stockpot/internal/catalog/resolve"
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/identity"
 	"github.com/a-jay98/stockpot/internal/syncdb"
@@ -36,7 +37,7 @@ func newEnv(t *testing.T) *env {
 		t.Fatal(err)
 	}
 	reg := commands.NewRegistry()
-	catalog.Register(reg, catalog.ExactResolver{})
+	catalog.Register(reg, resolve.Resolver{})
 	st, err := syncdb.New(t.Context(), pool)
 	if err != nil {
 		t.Fatal(err)
@@ -196,7 +197,7 @@ func TestResolverAndUserPick(t *testing.T) {
 	}
 	e.one(t, cmd("catalog.product.create", map[string]any{"id": uuid.New(), "name": "Zorbo fruit"}))
 	var pending int
-	_ = e.pool.QueryRow(t.Context(), `SELECT count(*) FROM product WHERE name = 'Zorbo fruit' AND match_source = 'none' AND enrich_state = 'pending'`).Scan(&pending)
+	_ = e.pool.QueryRow(t.Context(), `SELECT count(*) FROM product WHERE name = 'Zorbo fruit' AND enrich_state = 'pending'`).Scan(&pending)
 	if pending != 1 {
 		t.Fatal("unmatched product should stay pending")
 	}

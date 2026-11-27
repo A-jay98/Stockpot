@@ -145,6 +145,9 @@ func (r *Router) Complete(ctx context.Context, req Request) (Response, error) {
 		if u.Requests >= int64(capReq) {
 			return Response{}, fmt.Errorf("%w: global daily cap of %d requests reached", ErrUnavailable, capReq)
 		}
+		if req.Priority == Background && !aboveReserve(int64(capReq)-u.Requests, int64(capReq), reservePct(r.settings)) {
+			return Response{}, fmt.Errorf("%w: global daily cap has %d of %d requests left", ErrDeferred, int64(capReq)-u.Requests, capReq)
+		}
 	}
 
 	var (
@@ -152,6 +155,7 @@ func (r *Router) Complete(ctx context.Context, req Request) (Response, error) {
 		attempted bool
 		allBad    = true
 		loaded    bool
+		deferred  bool
 	)
 	for _, pc := range SettingProviders.Get(r.settings) {
 		if req.Provider != "" && pc.ID != req.Provider {
@@ -163,6 +167,7 @@ func (r *Router) Complete(ctx context.Context, req Request) (Response, error) {
 		}
 		if p == nil {
 			reasons = append(reasons, pc.ID+": "+why)
+			deferred = deferred || strings.HasPrefix(why, reserveWhy)
 			continue
 		}
 		if !loaded && req.NeedsVision() {
@@ -203,6 +208,9 @@ func (r *Router) Complete(ctx context.Context, req Request) (Response, error) {
 	if attempted && allBad {
 		return Response{}, fmt.Errorf("%w: %s", ErrBadOutput, strings.Join(reasons, "; "))
 	}
+	if !attempted && deferred {
+		return Response{}, fmt.Errorf("%w: %s", ErrDeferred, strings.Join(reasons, "; "))
+	}
 	return Response{}, fmt.Errorf("%w: %s", ErrUnavailable, strings.Join(reasons, "; "))
 }
 
@@ -218,6 +226,11 @@ func (r *Router) candidate(ctx context.Context, pc ProviderConfig, req Request, 
 	}
 	if req.NeedsVision() && !pc.Vision {
 		return nil, "", "no image support", nil
+	}
+	if req.Priority == Background {
+		if why := reserveShortfall(pc, st.usage, reservePct(r.settings), 1); why != "" {
+			return nil, "", reserveWhy + why, nil
+		}
 	}
 	p, err := r.factories[pc.Kind](pc, st.key)
 	if err != nil {
@@ -465,4 +478,82 @@ func laterOf(a, b time.Time) time.Time {
 		return b
 	}
 	return a
+}
+
+// reserveWhy starts the reason of a provider skipped to keep the reserve.
+const reserveWhy = "reserve: "
+
+func reservePct(s *settings.Store) int { return SettingBackgroundReservePct.Get(s) }
+
+// aboveReserve reports whether more than pct percent of limit is left.
+func aboveReserve(remaining, limit int64, pct int) bool {
+	if limit <= 0 {
+		return true // no cap of our own
+	}
+	return remaining*100 > limit*int64(pct)
+}
+
+// reserveShortfall says why pc cannot take a background call that needs
+// requests more requests, or "" when it can: the quota left after the call
+// would be within the reserve.
+func reserveShortfall(pc ProviderConfig, u dbq.LLMProviderUsageSinceRow, pct int, requests int64) string {
+	if c := int64(pc.DailyRequestCap); c > 0 && !aboveReserve(c-u.Requests-requests+1, c, pct) {
+		return fmt.Sprintf("%d of %d daily requests left", max(c-u.Requests, 0), c)
+	}
+	if c := int64(pc.DailyTokenCap); c > 0 && !aboveReserve(c-u.Tokens, c, pct) {
+		return fmt.Sprintf("%d of %d daily tokens left", max(c-u.Tokens, 0), c)
+	}
+	return ""
+}
+
+// Needs is what a background job wants to do, for Headroom.
+type Needs struct {
+	// Requests is how many calls (default 1).
+	Requests int
+	// Vision: the calls carry images.
+	Vision bool
+}
+
+// Headroom reports whether a Background request of the given needs would be
+// served now, without calling anyone, so jobs can skip cheaply. When not, retryAt
+// is when quota resets or a provider recovers (zero when unknown, e.g. LLM
+// features are off or nothing is configured).
+func (r *Router) Headroom(ctx context.Context, needs Needs) (ok bool, retryAt time.Time) {
+	n := int64(max(needs.Requests, 1))
+	if !FlagEnabled.Get(r.settings) {
+		return false, time.Time{}
+	}
+	now := r.now()
+	pct := reservePct(r.settings)
+	if capReq := int64(SettingGlobalDailyRequestCap.Get(r.settings)); capReq > 0 {
+		u, err := r.q.LLMUsageSince(ctx, startOfDay(now, usageLocation(r.settings)))
+		if err != nil {
+			return false, time.Time{}
+		}
+		if !aboveReserve(capReq-u.Requests-n+1, capReq, pct) || u.Requests+n > capReq {
+			return false, nextReset(now, usageLocation(r.settings))
+		}
+	}
+	var soonest time.Time
+	note := func(t time.Time) {
+		if !t.IsZero() && (soonest.IsZero() || t.Before(soonest)) {
+			soonest = t
+		}
+	}
+	for _, pc := range SettingProviders.Get(r.settings) {
+		st, err := r.providerState(ctx, pc, now)
+		if err != nil {
+			return false, time.Time{}
+		}
+		switch {
+		case st.state != stateReady:
+			note(st.until)
+		case needs.Vision && !pc.Vision:
+		case reserveShortfall(pc, st.usage, pct, n) != "":
+			note(nextReset(now, pc.Location()))
+		default:
+			return true, time.Time{}
+		}
+	}
+	return false, soonest
 }
