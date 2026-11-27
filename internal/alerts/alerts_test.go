@@ -175,7 +175,7 @@ func TestLeadDaysPreferenceOverridesDefault(t *testing.T) {
 	u := e.user(t, "Kim")
 	hh := e.household(t, "Home", u)
 	e.item(t, hh, "Far cheese", "2026-12-04", false) // +7 days
-	if err := e.svc.SetPrefs(t.Context(), u, Prefs{DigestTime: "08:00", LeadDays: 7, QuietStart: "22:00", QuietEnd: "07:00"}); err != nil {
+	if err := e.svc.SetPrefs(t.Context(), u, PrefsUpdate{LeadDays: ptr(7)}); err != nil {
 		t.Fatal(err)
 	}
 	if err := e.svc.Run(t.Context()); err != nil {
@@ -320,29 +320,41 @@ func TestInboxReadAndPagination(t *testing.T) {
 	}
 }
 
-func TestPreferencesValidate(t *testing.T) {
+func ptr[T any](v T) *T { return &v }
+
+func TestPreferencesValidateAndMerge(t *testing.T) {
 	e := newEnv(t)
 	u := e.user(t, "Kim")
 	def, err := e.svc.GetPrefs(t.Context(), u)
 	if err != nil || def.DigestTime != "08:00" || def.LeadDays != 2 || def.QuietStart != "22:00" || def.QuietEnd != "07:00" {
 		t.Fatalf("defaults %+v %v", def, err)
 	}
-	for _, bad := range []Prefs{
-		{DigestTime: "8:00", LeadDays: 2, QuietStart: "22:00", QuietEnd: "07:00"},
-		{DigestTime: "08:00", LeadDays: 31, QuietStart: "22:00", QuietEnd: "07:00"},
-		{DigestTime: "08:00", LeadDays: -1, QuietStart: "22:00", QuietEnd: "07:00"},
-		{DigestTime: "08:00", LeadDays: 2, QuietStart: "25:00", QuietEnd: "07:00"},
+	for _, bad := range []PrefsUpdate{
+		{DigestTime: ptr("8:00")},
+		{LeadDays: ptr(31)},
+		{LeadDays: ptr(-1)},
+		{QuietStart: ptr("25:00")},
 	} {
 		if err := e.svc.SetPrefs(t.Context(), u, bad); err == nil {
 			t.Errorf("accepted %+v", bad)
 		}
 	}
-	want := Prefs{DigestTime: "06:45", LeadDays: 4, QuietStart: "23:00", QuietEnd: "06:00"}
-	if err := e.svc.SetPrefs(t.Context(), u, want); err != nil {
+	if err := e.svc.SetPrefs(t.Context(), u, PrefsUpdate{DigestTime: ptr("06:45")}); err != nil {
 		t.Fatal(err)
 	}
-	if got, _ := e.svc.GetPrefs(t.Context(), u); got != want {
+	if err := e.svc.SetPrefs(t.Context(), u, PrefsUpdate{LeadDays: ptr(4)}); err != nil { // keeps the digest time
+		t.Fatal(err)
+	}
+	got, _ := e.svc.GetPrefs(t.Context(), u)
+	if got.DigestTime != "06:45" || got.LeadDays != 4 || got.QuietStart != "22:00" {
 		t.Fatalf("got %+v", got)
+	}
+	// Fields never set keep following the system default.
+	if err := settings.SetValue(t.Context(), e.store, SettingQuietStart, "21:00", nil); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := e.svc.GetPrefs(t.Context(), u); got.QuietStart != "21:00" || got.DigestTime != "06:45" {
+		t.Fatalf("default change not followed: %+v", got)
 	}
 }
 
@@ -377,7 +389,7 @@ func TestQuietHoursHoldTelegramNotInbox(t *testing.T) {
 	hh := e.household(t, "Home", u)
 	e.item(t, hh, "Milk", "2026-11-27", false)
 	e.link(t, u, 555)
-	if err := e.svc.SetPrefs(t.Context(), u, Prefs{DigestTime: "08:00", LeadDays: 2, QuietStart: "07:00", QuietEnd: "09:00"}); err != nil {
+	if err := e.svc.SetPrefs(t.Context(), u, PrefsUpdate{QuietStart: ptr("07:00"), QuietEnd: ptr("09:00")}); err != nil {
 		t.Fatal(err)
 	}
 	if err := e.svc.Run(t.Context()); err != nil { // 08:00: quiet
@@ -514,5 +526,97 @@ func TestNotificationsBeforeLinkingAreNotSent(t *testing.T) {
 	}
 	if len(e.tg.Messages()) != 0 {
 		t.Fatal("sent a digest created before the chat was linked")
+	}
+}
+
+func TestDisabledUserGetsNothing(t *testing.T) {
+	e := newEnv(t)
+	u := e.user(t, "Kim")
+	hh := e.household(t, "Home", u)
+	e.item(t, hh, "Milk", "2026-11-27", false)
+	e.link(t, u, 555)
+	if err := e.svc.Run(t.Context()); err != nil { // digest created, sending held below
+		t.Fatal(err)
+	}
+	if len(e.tg.Messages()) != 1 {
+		t.Fatalf("setup: %d", len(e.tg.Messages()))
+	}
+	// A second, unsent notification, then the admin disables the user.
+	e.exec(t, `INSERT INTO notification (user_id, household_id, kind, title, body, dedupe_key) VALUES ($1, $2, 'expiry_digest', 't', 'b', 'x')`, u, hh)
+	e.exec(t, `UPDATE app_user SET status = 'disabled' WHERE id = $1`, u)
+	if err := e.svc.deliver(t.Context(), e.now); err != nil {
+		t.Fatal(err)
+	}
+	if len(e.tg.Messages()) != 1 {
+		t.Fatal("delivered to a disabled user")
+	}
+	reply, err := e.svc.cmdExpiring(t.Context(), 555)
+	if err != nil || !strings.Contains(reply, "isn't connected") || strings.Contains(reply, "Milk") {
+		t.Fatalf("/expiring for a disabled user: %q %v", reply, err)
+	}
+	// A code issued before the user was disabled cannot be redeemed.
+	e.exec(t, `UPDATE app_user SET status = 'active' WHERE id = $1`, u)
+	l, _ := e.svc.StartLink(t.Context(), u)
+	e.exec(t, `UPDATE app_user SET status = 'disabled' WHERE id = $1`, u)
+	if _, err := e.svc.completeLink(t.Context(), strings.TrimPrefix(l.URL, "https://t.me/stockpot_test_bot?start="), 999, ""); err != ErrLinkNotFound {
+		t.Fatalf("redeemed for a disabled user: %v", err)
+	}
+	// A disabled user gets no new digest either.
+	e.setNow("2026-11-28T13:00:00Z")
+	if err := e.svc.Run(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	if n := len(e.notifications(t, u)); n != 2 {
+		t.Fatalf("notifications = %d", n)
+	}
+}
+
+func TestOnlyChatErrorsDisableTheChannel(t *testing.T) {
+	e := newEnv(t)
+	u := e.user(t, "Kim")
+	hh := e.household(t, "Home", u)
+	e.item(t, hh, "Milk", "2026-11-27", false)
+	e.link(t, u, 555)
+	// A message-level 400 leaves the channel on.
+	e.tg.Fail = func(method string, _ int) (int, int) { return map[bool]int{true: 400}[method == "sendMessage"], 0 }
+	if err := e.svc.Run(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	st, _ := e.svc.Telegram(t.Context(), u)
+	if !st.Enabled || st.LastError != "" {
+		t.Fatalf("a 400 about the message disabled the chat: %+v", st)
+	}
+}
+
+func TestLongMessagesAreTruncated(t *testing.T) {
+	long := strings.Repeat("é", 5000)
+	if got := truncate(long, maxMessageRunes); len([]rune(got)) != maxMessageRunes || !strings.HasSuffix(got, "…") {
+		t.Fatalf("len %d", len([]rune(got)))
+	}
+	if truncate("short", maxMessageRunes) != "short" {
+		t.Fatal("changed a short message")
+	}
+}
+
+func TestHeldMessagesDoNotStarveOthers(t *testing.T) {
+	e := newEnv(t)
+	quiet, other := e.user(t, "Quiet"), e.user(t, "Other")
+	hh := e.household(t, "Home", quiet, other)
+	e.link(t, quiet, 1)
+	e.link(t, other, 2)
+	e.exec(t, `INSERT INTO notification (user_id, household_id, kind, title, body, dedupe_key, created_at)
+		SELECT $1, $2, 'expiry_digest', 't', 'b', 'k' || g, now() - interval '1 hour' FROM generate_series(1, 250) g`, quiet, hh)
+	e.exec(t, `INSERT INTO notification (user_id, household_id, kind, title, body, dedupe_key) VALUES ($1, $2, 'expiry_digest', 't', 'b', 'mine')`, other, hh)
+	e.exec(t, `UPDATE notification_channel SET linked_at = '2026-01-01'`)
+	e.setNow(time.Now().UTC().Format(time.RFC3339))
+	e.exec(t, `UPDATE notification SET created_at = now() - interval '1 hour' WHERE user_id = $1`, other)
+	// The quiet user is always quiet; the other never is.
+	_ = e.svc.SetPrefs(t.Context(), quiet, PrefsUpdate{QuietStart: ptr("00:00"), QuietEnd: ptr("23:59")})
+	_ = e.svc.SetPrefs(t.Context(), other, PrefsUpdate{QuietStart: ptr("00:00"), QuietEnd: ptr("00:00")})
+	if err := e.svc.deliver(t.Context(), e.now); err != nil {
+		t.Fatal(err)
+	}
+	if e.tg.Calls("sendMessage") != 1 {
+		t.Fatalf("sendMessage calls = %d, want only the other user's", e.tg.Calls("sendMessage"))
 	}
 }

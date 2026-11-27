@@ -212,7 +212,8 @@ func (s *Service) cmdStop(ctx context.Context, chat int64) (string, error) {
 
 func (s *Service) cmdExpiring(ctx context.Context, chat int64) (string, error) {
 	var user uuid.UUID
-	err := s.d.Pool.QueryRow(ctx, `SELECT user_id FROM notification_channel WHERE kind = 'telegram' AND chat_id = $1`, chat).Scan(&user)
+	err := s.d.Pool.QueryRow(ctx, `SELECT c.user_id FROM notification_channel c JOIN app_user u ON u.id = c.user_id AND u.status = 'active'
+		WHERE c.kind = 'telegram' AND c.chat_id = $1`, chat).Scan(&user)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "This chat isn't connected to Stockpot. Open Stockpot → Settings → Notifications and tap Connect Telegram.", nil
 	}

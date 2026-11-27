@@ -41,9 +41,14 @@ func (f *fakeAlerts) MarkRead(_ context.Context, _ uuid.UUID, ids []uuid.UUID) e
 
 func (f *fakeAlerts) GetPrefs(context.Context, uuid.UUID) (alerts.Prefs, error) { return f.prefs, nil }
 
-func (f *fakeAlerts) SetPrefs(_ context.Context, _ uuid.UUID, p alerts.Prefs) error {
+func (f *fakeAlerts) SetPrefs(_ context.Context, _ uuid.UUID, p alerts.PrefsUpdate) error {
 	if f.setErr == nil {
-		f.prefs = p
+		if p.DigestTime != nil {
+			f.prefs.DigestTime = *p.DigestTime
+		}
+		if p.LeadDays != nil {
+			f.prefs.LeadDays = *p.LeadDays
+		}
 	}
 	return f.setErr
 }

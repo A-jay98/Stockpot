@@ -110,7 +110,8 @@ test('a connected user can disconnect, and preferences save', async () => {
   const calls = mockApi({
     'GET /v1/notifications': () => jsonResponse({ items: [], unread: 0 }),
     'GET /v1/notifications/preferences': () => jsonResponse(prefs),
-    'PUT /v1/notifications/preferences': (r) => r.json().then((b) => jsonResponse(b)),
+    'PUT /v1/notifications/preferences': (r) =>
+      r.json().then((b) => jsonResponse({ ...prefs, ...b })),
     'GET /v1/notifications/telegram': () =>
       jsonResponse({ ...unlinked, linked: true, enabled: true, username: 'kim' }),
     'DELETE /v1/notifications/telegram': () => new Response(null, { status: 204 }),
@@ -126,7 +127,6 @@ test('a connected user can disconnect, and preferences save', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Save' }))
   await waitFor(() =>
     expect(calls.find((c) => c.key === 'PUT /v1/notifications/preferences')?.body).toEqual({
-      ...prefs,
       leadDays: 5,
     }),
   )

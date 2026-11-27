@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -214,9 +215,10 @@ func (s *Service) deliver(ctx context.Context, now time.Time) error {
 		SELECT n.id, n.user_id, n.title, n.body, c.chat_id, p.quiet_start, p.quiet_end
 		FROM notification n
 		JOIN notification_channel c ON c.user_id = n.user_id AND c.kind = 'telegram' AND c.enabled
+		JOIN app_user u ON u.id = n.user_id AND u.status = 'active'
 		LEFT JOIN notification_pref p ON p.user_id = n.user_id
 		WHERE n.sent_telegram_at IS NULL AND n.created_at >= c.linked_at AND n.created_at > $1
-		ORDER BY n.created_at LIMIT 200`, now.Add(-deliveryWindow))
+		ORDER BY n.created_at`, now.Add(-deliveryWindow))
 	if err != nil {
 		return err
 	}
@@ -238,14 +240,16 @@ func (s *Service) deliver(ctx context.Context, now time.Time) error {
 	if err != nil {
 		return err
 	}
+	disabled := map[uuid.UUID]bool{}
 	for _, p := range list {
-		if InQuietHours(now, p.quietS, p.quietE) {
+		if disabled[p.user] || InQuietHours(now, p.quietS, p.quietE) {
 			continue
 		}
 		text := p.title + "\n\n" + p.body
 		if l := s.appLink("/inventory"); l != "" {
 			text += "\n\n" + l
 		}
+		text = truncate(text, maxMessageRunes)
 		err := s.sendWithRetry(ctx, chatID(p.chat), text)
 		switch {
 		case err == nil:
@@ -258,9 +262,14 @@ func (s *Service) deliver(ctx context.Context, now time.Time) error {
 			// The user blocked the bot or deleted the chat: stop trying until
 			// they connect again.
 			slog.WarnContext(ctx, "alerts: telegram chat unusable; disabling", "user", p.user, "err", err)
+			disabled[p.user] = true
 			if _, err := s.d.Pool.Exec(ctx, `UPDATE notification_channel SET enabled = false, last_error = $2 WHERE user_id = $1 AND kind = 'telegram'`, p.user, err.Error()); err != nil {
 				return err
 			}
+		case isMessageRejected(err):
+			// Telegram refused this message but the chat is fine: leave the
+			// channel on and go on with the next one.
+			slog.ErrorContext(ctx, "alerts: telegram rejected a message", "user", p.user, "notification", p.id, "err", err)
 		default:
 			// Rate limit or outage: leave it for the next run, and stop this
 			// pass so the rest are not hammered.
@@ -271,11 +280,32 @@ func (s *Service) deliver(ctx context.Context, now time.Time) error {
 	return nil
 }
 
-// rejected reports whether Telegram refused the chat for good (blocked bot,
-// chat gone), as opposed to a rate limit, outage or bad token.
+// maxMessageRunes is Telegram's limit for a text message.
+const maxMessageRunes = 4096
+
+func truncate(s string, n int) string {
+	r := []rune(s)
+	if len(r) <= n {
+		return s
+	}
+	return string(r[:n-1]) + "…"
+}
+
+// rejected reports whether Telegram refused the chat for good (the user
+// blocked the bot or deactivated, or the chat is gone), as opposed to a rate
+// limit, outage, bad token or a problem with one message.
 func rejected(err error) bool {
 	var te *telegram.Error
-	return errors.As(err, &te) && (te.Code == 403 || te.Code == 400)
+	if !errors.As(err, &te) {
+		return false
+	}
+	return te.Code == 403 || (te.Code == 400 && strings.Contains(strings.ToLower(te.Description), "chat not found"))
+}
+
+// isMessageRejected reports a 400 that is about the message, not the chat.
+func isMessageRejected(err error) bool {
+	var te *telegram.Error
+	return errors.As(err, &te) && te.Code == 400
 }
 
 // maxRetryWait caps how long a send waits out a rate limit.

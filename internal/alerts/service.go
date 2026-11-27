@@ -189,20 +189,32 @@ func (s *Service) GetPrefs(ctx context.Context, user uuid.UUID) (Prefs, error) {
 	return s.resolve(digest, qs, qe, lead), nil
 }
 
-// SetPrefs stores the user's preferences after validating them.
-func (s *Service) SetPrefs(ctx context.Context, user uuid.UUID, p Prefs) error {
-	for _, v := range []string{p.DigestTime, p.QuietStart, p.QuietEnd} {
-		if !timePattern.MatchString(v) {
+// PrefsUpdate changes only the fields that are set; the others keep their
+// stored value (or keep following the system default).
+type PrefsUpdate struct {
+	DigestTime, QuietStart, QuietEnd *string
+	LeadDays                         *int
+}
+
+// SetPrefs stores the given preferences after validating them.
+func (s *Service) SetPrefs(ctx context.Context, user uuid.UUID, p PrefsUpdate) error {
+	for _, v := range []*string{p.DigestTime, p.QuietStart, p.QuietEnd} {
+		if v != nil && !timePattern.MatchString(*v) {
 			return fmt.Errorf("%w: times are HH:MM (24 h)", ErrInvalid)
 		}
 	}
-	if p.LeadDays < 0 || p.LeadDays > 30 {
+	if p.LeadDays != nil && (*p.LeadDays < 0 || *p.LeadDays > 30) {
 		return fmt.Errorf("%w: lead days are 0 to 30", ErrInvalid)
 	}
 	_, err := s.d.Pool.Exec(ctx, `
 		INSERT INTO notification_pref (user_id, digest_time, lead_days, quiet_start, quiet_end)
 		VALUES ($1, $2, $3, $4, $5)
-		ON CONFLICT (user_id) DO UPDATE SET digest_time = $2, lead_days = $3, quiet_start = $4, quiet_end = $5, updated_at = now()`,
+		ON CONFLICT (user_id) DO UPDATE SET
+			digest_time = coalesce($2, notification_pref.digest_time),
+			lead_days = coalesce($3, notification_pref.lead_days),
+			quiet_start = coalesce($4, notification_pref.quiet_start),
+			quiet_end = coalesce($5, notification_pref.quiet_end),
+			updated_at = now()`,
 		user, p.DigestTime, p.LeadDays, p.QuietStart, p.QuietEnd)
 	return err
 }
@@ -349,7 +361,8 @@ func (s *Service) completeLink(ctx context.Context, code string, chat int64, use
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 	var user uuid.UUID
-	err = tx.QueryRow(ctx, `DELETE FROM telegram_link WHERE code_hash = $1 AND expires_at > now() RETURNING user_id`, hashCode(code)).Scan(&user)
+	err = tx.QueryRow(ctx, `DELETE FROM telegram_link l USING app_user u
+		WHERE l.code_hash = $1 AND l.expires_at > now() AND u.id = l.user_id AND u.status = 'active' RETURNING l.user_id`, hashCode(code)).Scan(&user)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", ErrLinkNotFound
 	}

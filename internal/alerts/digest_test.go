@@ -40,6 +40,9 @@ func TestDigestDay(t *testing.T) {
 		{"dst day due", "2026-03-08T12:00:00Z", "08:00", "2026-03-08", true},
 		// A time inside the skipped hour still fires once that morning.
 		{"skipped hour", "2026-03-08T07:30:00Z", "02:30", "2026-03-08", true}, // 03:30 EDT
+		// A late digest's catch-up window runs past midnight: 22:00 + 6 h.
+		{"past midnight", "2026-01-16T05:30:00Z", "22:00", "2026-01-15", true}, // 00:30 on the 16th
+		{"past midnight, window over", "2026-01-16T09:00:00Z", "22:00", "2026-01-16", false},
 		// Fall back 2026-11-01: 08:00 EST is 13:00 UTC.
 		{"fall back before", "2026-11-01T12:59:00Z", "08:00", "2026-11-01", false},
 		{"fall back at", "2026-11-01T13:00:00Z", "08:00", "2026-11-01", true},
@@ -81,7 +84,8 @@ func date(s string) *time.Time {
 
 func TestClassifyBoundaries(t *testing.T) {
 	cands := []Candidate{
-		{ID: uuid.New(), Name: "old", ExpiresOn: date("2026-11-20")},
+		{ID: uuid.New(), Name: "old", ExpiresOn: date("2026-11-19")},  // 8 days ago: only counted
+		{ID: uuid.New(), Name: "week", ExpiresOn: date("2026-11-20")}, // 7 days ago: listed
 		{ID: uuid.New(), Name: "yesterday", ExpiresOn: date("2026-11-26")},
 		{ID: uuid.New(), Name: "today", ExpiresOn: date("2026-11-27")},
 		{ID: uuid.New(), Name: "edge", ExpiresOn: date("2026-11-29")},   // today + lead
@@ -101,7 +105,7 @@ func TestClassifyBoundaries(t *testing.T) {
 		}
 		return strings.Join(s, ",")
 	}
-	if got := names(d.Expired); got != "old,yesterday" {
+	if got := names(d.Expired); got != "week,yesterday" {
 		t.Errorf("expired = %s", got)
 	}
 	if got := names(d.Expiring); got != "today,edge,low and soon" {
@@ -112,6 +116,16 @@ func TestClassifyBoundaries(t *testing.T) {
 	}
 	if *d.Expired[1].Days != -1 || *d.Expiring[0].Days != 0 || *d.Expiring[1].Days != 2 {
 		t.Errorf("days: %d %d %d", *d.Expired[1].Days, *d.Expiring[0].Days, *d.Expiring[1].Days)
+	}
+	// Expired more than a week ago is only counted, and never makes a digest alone.
+	if d.Older != 1 {
+		t.Errorf("older = %d", d.Older)
+	}
+	if !strings.HasSuffix(d.Body(), "+ 1 older expired") {
+		t.Errorf("body %q", d.Body())
+	}
+	if !(Digest{Older: 3}).Empty() || (Digest{Older: 3}).Body() != "" {
+		t.Error("older-only digest must be empty")
 	}
 	// Lead 0: only today.
 	d, _ = Classify(cands, "2026-11-27", 0)

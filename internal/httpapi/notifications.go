@@ -24,7 +24,7 @@ type Alerts interface {
 	List(ctx context.Context, user uuid.UUID, p alerts.ListParams) ([]alerts.Notification, int, error)
 	MarkRead(ctx context.Context, user uuid.UUID, ids []uuid.UUID) error
 	GetPrefs(ctx context.Context, user uuid.UUID) (alerts.Prefs, error)
-	SetPrefs(ctx context.Context, user uuid.UUID, p alerts.Prefs) error
+	SetPrefs(ctx context.Context, user uuid.UUID, p alerts.PrefsUpdate) error
 	Telegram(ctx context.Context, user uuid.UUID) (alerts.TelegramState, error)
 	StartLink(ctx context.Context, user uuid.UUID) (alerts.Link, error)
 	Unlink(ctx context.Context, user uuid.UUID) error
@@ -137,14 +137,18 @@ func (s *Server) SetNotificationPreferences(ctx context.Context, req SetNotifica
 		return SetNotificationPreferencesdefaultApplicationProblemPlusJSONResponse{Body: *p, StatusCode: p.Status}, nil
 	}
 	b := req.Body
-	in := alerts.Prefs{DigestTime: b.DigestTime, LeadDays: b.LeadDays, QuietStart: b.QuietStart, QuietEnd: b.QuietEnd}
+	in := alerts.PrefsUpdate{DigestTime: b.DigestTime, LeadDays: b.LeadDays, QuietStart: b.QuietStart, QuietEnd: b.QuietEnd}
 	if err := s.alerts.SetPrefs(ctx, user, in); err != nil {
 		if pr, ok := alertsProblem(ctx, err); ok {
 			return SetNotificationPreferencesdefaultApplicationProblemPlusJSONResponse{Body: pr, StatusCode: pr.Status}, nil
 		}
 		return nil, err
 	}
-	return SetNotificationPreferences200JSONResponse(prefsOut(in)), nil
+	prefs, err := s.alerts.GetPrefs(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+	return SetNotificationPreferences200JSONResponse(prefsOut(prefs)), nil
 }
 
 // GetTelegramConnection serves getTelegramConnection.

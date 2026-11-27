@@ -34,15 +34,23 @@ func hm(s string) (h, m int) {
 	return h, m
 }
 
-// DigestDay reports the local calendar day (YYYY-MM-DD) now falls in and
-// whether the digest of that day is due: now is at or after digestTime and
-// within catchUp of it.
+// DigestDay reports which local day's digest (YYYY-MM-DD) is due at now: the
+// day whose digestTime is at or before now and within catchUp of it, which
+// may be yesterday when the window runs past midnight. When none is due it
+// returns today and false.
 func DigestDay(now time.Time, digestTime string) (day string, due bool) {
 	loc := location()
 	l := now.In(loc)
 	h, m := hm(digestTime)
-	at := time.Date(l.Year(), l.Month(), l.Day(), h, m, 0, 0, loc)
-	return l.Format(time.DateOnly), !l.Before(at) && l.Before(at.Add(catchUp))
+	// Today's digest, and yesterday's when its catch-up window runs past midnight.
+	for back := 0; back <= 1; back++ {
+		d := l.AddDate(0, 0, -back)
+		at := time.Date(d.Year(), d.Month(), d.Day(), h, m, 0, 0, loc)
+		if !l.Before(at) && l.Before(at.Add(catchUp)) {
+			return d.Format(time.DateOnly), true
+		}
+	}
+	return l.Format(time.DateOnly), false
 }
 
 // InQuietHours reports whether Telegram messages are held at now. The window
@@ -76,6 +84,9 @@ type Digest struct {
 	Expired  []Item `json:"expired"`
 	Expiring []Item `json:"expiring"`
 	Low      []Item `json:"low"`
+	// Older counts items expired more than expiredWindowDays ago; they are
+	// summarised, not listed, and never make a digest on their own.
+	Older int `json:"older,omitempty"`
 }
 
 // Empty reports whether there is nothing to say.
@@ -89,6 +100,10 @@ type Candidate struct {
 	ExpiresOn *time.Time // a date (UTC midnight)
 	Low       bool
 }
+
+// expiredWindowDays: items expired longer ago than this are only counted ("N
+// older expired"), so a forgotten item doesn't fill every digest.
+const expiredWindowDays = 7
 
 // Classify sorts candidates into groups for the local day today (YYYY-MM-DD):
 // expired (before today), expiring (today up to leadDays ahead, inclusive) and
@@ -106,6 +121,8 @@ func Classify(cands []Candidate, today string, leadDays int) (Digest, error) {
 			days := int(ex.Sub(t0).Hours() / 24)
 			it.ExpiresOn, it.Days = ex.Format(time.DateOnly), &days
 			switch {
+			case days < -expiredWindowDays:
+				d.Older++ // only counted
 			case days < 0:
 				d.Expired = append(d.Expired, it)
 				continue
@@ -184,5 +201,8 @@ func (d Digest) Body() string {
 	group(&b, "Expired", d.Expired)
 	group(&b, "Expiring soon", d.Expiring)
 	group(&b, "Running low", d.Low)
+	if d.Older > 0 && b.Len() > 0 {
+		fmt.Fprintf(&b, "\n\n+ %d older expired", d.Older)
+	}
 	return b.String()
 }

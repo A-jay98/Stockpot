@@ -132,7 +132,11 @@ function PreferencesForm({ initial }: { initial: Preferences }) {
       className="flex flex-col gap-3.5 rounded-lg bg-surface p-4 shadow-card"
       onSubmit={(e) => {
         e.preventDefault()
-        save.mutate(form, {
+        // Send only what changed, so untouched fields keep following the defaults.
+        const changed = Object.fromEntries(
+          Object.entries(form).filter(([k, v]) => initial[k as keyof Preferences] !== v),
+        )
+        save.mutate(changed, {
           onSuccess: () => toast({ title: 'Saved', tone: 'success' }),
           onError: (err) =>
             toast({ title: 'Could not save', description: errorText(err), tone: 'error' }),

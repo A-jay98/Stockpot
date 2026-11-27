@@ -909,7 +909,10 @@ export interface paths {
         };
         /** The user's alert preferences (their own, else the system defaults) */
         get: operations["getNotificationPreferences"];
-        /** Change the user's alert preferences */
+        /**
+         * Change the user's alert preferences
+         * @description Only the fields sent change; the rest keep following the system defaults.
+         */
         put: operations["setNotificationPreferences"];
         post?: never;
         delete?: never;
@@ -1219,6 +1222,12 @@ export interface components {
             /** @description Telegram messages are held between quietStart and quietEnd. Equal values turn quiet hours off. */
             quietStart: string;
             quietEnd: string;
+        };
+        NotificationPreferencesUpdate: {
+            digestTime?: string;
+            leadDays?: number;
+            quietStart?: string;
+            quietEnd?: string;
         };
         TelegramConnection: {
             /** @description A working bot token is set, so Connect Telegram can be offered. */
@@ -3242,7 +3251,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["NotificationPreferences"];
+                "application/json": components["schemas"]["NotificationPreferencesUpdate"];
             };
         };
         responses: {

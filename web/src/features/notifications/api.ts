@@ -4,6 +4,7 @@ import type { components } from '../../api/schema'
 
 export type Notification = components['schemas']['Notification']
 export type Preferences = components['schemas']['NotificationPreferences']
+export type PreferencesUpdate = components['schemas']['NotificationPreferencesUpdate']
 export type TelegramConnection = components['schemas']['TelegramConnection']
 
 export const notificationKeys = {
@@ -41,7 +42,8 @@ export function usePreferences() {
 export function useSavePreferences() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (body: Preferences) => unwrap(api.PUT('/v1/notifications/preferences', { body })),
+    mutationFn: (body: PreferencesUpdate) =>
+      unwrap(api.PUT('/v1/notifications/preferences', { body })),
     onSuccess: (data) => qc.setQueryData(notificationKeys.prefs, data),
   })
 }

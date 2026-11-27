@@ -1165,6 +1165,7 @@ paths:
     put:
       operationId: setNotificationPreferences
       summary: Change the user's alert preferences
+      description: Only the fields sent change; the rest keep following the system defaults.
       tags: [notifications]
       x-roles: [user]
       requestBody:
@@ -1172,7 +1173,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/NotificationPreferences"
+              $ref: "#/components/schemas/NotificationPreferencesUpdate"
       responses:
         "200":
           description: Preferences
@@ -1659,6 +1660,22 @@ components:
           type: string
           pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
           description: Telegram messages are held between quietStart and quietEnd. Equal values turn quiet hours off.
+        quietEnd:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+    NotificationPreferencesUpdate:
+      type: object
+      properties:
+        digestTime:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+        leadDays:
+          type: integer
+          minimum: 0
+          maximum: 30
+        quietStart:
+          type: string
+          pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
         quietEnd:
           type: string
           pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"
