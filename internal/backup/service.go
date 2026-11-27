@@ -328,7 +328,7 @@ func (s *Service) tarBlobs(ctx context.Context, w io.Writer) error {
 }
 
 func addFile(tw *tar.Writer, path, name string) error {
-	f, err := os.Open(path)
+	f, err := os.Open(path) //nolint:gosec // walked from our own blob directory
 	if errors.Is(err, fs.ErrNotExist) {
 		return nil
 	}
