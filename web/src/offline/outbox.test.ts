@@ -16,12 +16,13 @@ afterEach(async () => {
   await db.open()
 })
 
-test('schema v2 has meta, outbox and one table per synced server table', () => {
-  expect(db.verno).toBe(2)
+test('schema v3 has meta, outbox, pending_blob and one table per synced server table', () => {
+  expect(db.verno).toBe(3)
   expect(db.tables.map((t) => t.name).sort()).toEqual(
     [
       'meta',
       'outbox',
+      'pending_blob',
       'category',
       'ingredient',
       'store',
@@ -33,6 +34,12 @@ test('schema v2 has meta, outbox and one table per synced server table', () => {
       'stock_event',
       'shopping_list',
       'shopping_item',
+      'recipe',
+      'recipe_version',
+      'recipe_photo',
+      'cook_session',
+      'recipe_import',
+      'substitution',
     ].sort(),
   )
 })

@@ -8,6 +8,7 @@ import { today as todayOf } from '../inventory/dates'
 import { useStock } from '../inventory/hooks'
 import { StockListItem } from '../inventory/StockListItem'
 import { freshness, isLow } from '../inventory/status'
+import { CookTonightCard } from '../recipes/slots/CookTonightCard'
 
 const toneClass = {
   soon: 'bg-soon-bg text-soon',
@@ -58,6 +59,7 @@ export function HomePage() {
         </>
       }
     >
+      <CookTonightCard />
       <div className="grid grid-cols-3 gap-2">
         {stats.map((s) => (
           <Link

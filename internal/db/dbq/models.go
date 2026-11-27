@@ -116,6 +116,26 @@ type Category struct {
 	Sort        int32
 }
 
+type CookSession struct {
+	ID                uuid.UUID
+	HouseholdID       uuid.UUID
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Rev               int64
+	DeletedAt         *time.Time
+	RecipeID          uuid.UUID
+	VersionID         *uuid.UUID
+	CookedOn          pgtype.Date
+	CookedBy          *uuid.UUID
+	PortionsMade      int32
+	Stored            []byte
+	Uses              []byte
+	Subs              []byte
+	LeftoverProductID *uuid.UUID
+	Note              *string
+	UndoneAt          *time.Time
+}
+
 type DigestRun struct {
 	UserID         uuid.UUID
 	HouseholdID    uuid.UUID
@@ -190,6 +210,7 @@ type Ingredient struct {
 	ShelfLife   []byte
 	DefaultUnit *string
 	Source      string
+	Conversions []byte
 }
 
 type Invite struct {
@@ -310,6 +331,8 @@ type Product struct {
 	EnrichAttempts      int32
 	OffCode             *string
 	Note                *string
+	Conversions         []byte
+	RecipeID            *uuid.UUID
 }
 
 type ProductBarcode struct {
@@ -349,6 +372,86 @@ type Purchase struct {
 	Qty            pgtype.Numeric
 	Unit           *string
 	BoughtAt       time.Time
+}
+
+type Recipe struct {
+	ID               uuid.UUID
+	HouseholdID      uuid.UUID
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
+	Rev              int64
+	DeletedAt        *time.Time
+	Title            string
+	Subtitle         *string
+	SourceKind       string
+	SourceUrl        *string
+	SourceLang       *string
+	CurrentVersionID *uuid.UUID
+	Servings         *int32
+	TotalMinutes     *int32
+	CoverBlob        *string
+	Tags             []string
+	Saved            bool
+	IdeaExpiresAt    *time.Time
+	CookedCount      int32
+	LastCookedAt     *time.Time
+	ImportID         *uuid.UUID
+}
+
+type RecipeImport struct {
+	ID           uuid.UUID
+	HouseholdID  uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Rev          int64
+	DeletedAt    *time.Time
+	BatchID      *uuid.UUID
+	Kind         string
+	Input        *string
+	BlobRefs     []string
+	Status       string
+	Error        []byte
+	RecipeID     *uuid.UUID
+	Attempts     int32
+	DetectedLang *string
+}
+
+type RecipePhoto struct {
+	ID            uuid.UUID
+	HouseholdID   uuid.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Rev           int64
+	DeletedAt     *time.Time
+	RecipeID      uuid.UUID
+	CookSessionID *uuid.UUID
+	BlobRef       string
+	TakenOn       pgtype.Date
+	Caption       *string
+	CreatedBy     *uuid.UUID
+}
+
+type RecipeVersion struct {
+	ID                uuid.UUID
+	HouseholdID       uuid.UUID
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
+	Rev               int64
+	DeletedAt         *time.Time
+	RecipeID          uuid.UUID
+	N                 int32
+	ParentVersionID   *uuid.UUID
+	Origin            string
+	ChangeSummary     *string
+	Title             string
+	Servings          *int32
+	TotalMinutes      *int32
+	Ingredients       []byte
+	Steps             []byte
+	Notes             *string
+	Original          []byte
+	OriginalVersionID *uuid.UUID
+	CreatedBy         *uuid.UUID
 }
 
 type Session struct {
@@ -394,6 +497,7 @@ type ShoppingItem struct {
 	CheckedAt   *time.Time
 	CheckedBy   *uuid.UUID
 	StockItemID *uuid.UUID
+	RecipeID    *uuid.UUID
 }
 
 type ShoppingList struct {
@@ -423,31 +527,33 @@ type StockEvent struct {
 	Reason         *string
 	ActorID        *uuid.UUID
 	CommandID      *uuid.UUID
+	CookSessionID  *uuid.UUID
 }
 
 type StockItem struct {
-	ID           uuid.UUID
-	HouseholdID  uuid.UUID
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
-	Rev          int64
-	DeletedAt    *time.Time
-	ProductID    uuid.UUID
-	LocationID   *uuid.UUID
-	AmountKind   string
-	Quantity     pgtype.Numeric
-	Unit         *string
-	Portions     *int32
-	Level        *string
-	Low          bool
-	ExpiresOn    pgtype.Date
-	ExpiryKind   *string
-	OpenedOn     pgtype.Date
-	ThawedOn     pgtype.Date
-	FrozenOn     pgtype.Date
-	Source       string
-	ParentItemID *uuid.UUID
-	Note         *string
+	ID            uuid.UUID
+	HouseholdID   uuid.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	Rev           int64
+	DeletedAt     *time.Time
+	ProductID     uuid.UUID
+	LocationID    *uuid.UUID
+	AmountKind    string
+	Quantity      pgtype.Numeric
+	Unit          *string
+	Portions      *int32
+	Level         *string
+	Low           bool
+	ExpiresOn     pgtype.Date
+	ExpiryKind    *string
+	OpenedOn      pgtype.Date
+	ThawedOn      pgtype.Date
+	FrozenOn      pgtype.Date
+	Source        string
+	ParentItemID  *uuid.UUID
+	Note          *string
+	CookSessionID *uuid.UUID
 }
 
 type Store struct {
@@ -460,6 +566,20 @@ type Store struct {
 	Name        string
 	Sort        int32
 	Color       *string
+}
+
+type Substitution struct {
+	ID           uuid.UUID
+	HouseholdID  *uuid.UUID
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Rev          int64
+	DeletedAt    *time.Time
+	IngredientID uuid.UUID
+	Uses         []byte
+	Note         *string
+	RecipeID     *uuid.UUID
+	Source       string
 }
 
 type TelegramLink struct {
