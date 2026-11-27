@@ -180,10 +180,10 @@ func (s *Service) generateOne(ctx context.Context, rc recipient, day string) err
 	if !d.Empty() {
 		var id uuid.UUID
 		err := tx.QueryRow(ctx, `
-			INSERT INTO notification (user_id, household_id, kind, title, body, payload, dedupe_key)
-			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			INSERT INTO notification (user_id, household_id, kind, title, body, payload, dedupe_key, created_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 			ON CONFLICT (user_id, dedupe_key) DO NOTHING RETURNING id`,
-			rc.user, rc.household, KindExpiryDigest, d.Title(), d.Body(), d, "digest:"+day+":"+rc.household.String()).Scan(&id)
+			rc.user, rc.household, KindExpiryDigest, d.Title(), d.Body(), d, "digest:"+day+":"+rc.household.String(), s.d.Now()).Scan(&id)
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return err
 		}
