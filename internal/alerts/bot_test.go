@@ -120,7 +120,7 @@ func TestLinkCodeExpires(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	e.exec(t, `UPDATE telegram_link SET expires_at = now() - interval '1 minute'`)
+	e.setNow(e.now.Add(linkTTL + time.Minute).Format(time.RFC3339)) // the service's clock, not the database's
 	code := strings.TrimPrefix(link.URL, "https://t.me/stockpot_test_bot?start=")
 	if _, err := e.svc.completeLink(t.Context(), code, 1, ""); !errors.Is(err, ErrLinkNotFound) {
 		t.Fatalf("err = %v", err)

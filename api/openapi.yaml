@@ -3601,6 +3601,11 @@ components:
               type: string
               format: uuid
               nullable: true
+            productId:
+              type: string
+              format: uuid
+              nullable: true
+              description: "For an item without a product: the household product the client matched it to, or the id for a new one (created under it unless a product of exactly that name exists). Lets an offline client show the product before it syncs. Ignored when the item already has a product."
             inventory:
               type: object
               nullable: true
@@ -4089,6 +4094,9 @@ components:
               maxItems: 50
               items:
                 $ref: "#/components/schemas/StockSplitPart"
+            all:
+              type: boolean
+              description: "Share whatever the item holds when the command applies evenly across the parts (which then carry no amounts), so the split survives consumes synced before it. Exact amounts round down to 3 decimals and the last part takes the rest."
             locationId:
               type: string
               format: uuid

@@ -330,6 +330,40 @@ test('split cuts parts off and finishes the parent when nothing is left', async 
   expect(await db.stock_item.count()).toBe(3)
 })
 
+test('split all shares what the item holds when it applies', async () => {
+  await seed()
+  await db.stock_item.put(exact({ quantity: '0.9', unit: 'kg' }))
+  const parts = [1, 2, 3].map((n) => ({ ...ids(n), id: `0190a1b2-0000-7000-8000-00000000050${n}` }))
+  await dispatch(
+    'inventory.stock.split',
+    { id: ids(9).id, eventId: ids(8).eventId, all: true, parts },
+    db,
+  )
+  expect(await db.stock_item.get(ids(9).id)).toBeUndefined()
+  for (const p of parts) expect((await db.stock_item.get(p.id))?.quantity).toBe('0.3')
+  const parent = await db.stock_event.get(ids(8).eventId)
+  expect(parent?.delta).toBe('-0.9')
+
+  // Portions go round as evenly as they can.
+  const soup = exact({
+    id: ids(7).id,
+    amountKind: 'portions',
+    quantity: null,
+    unit: null,
+    portions: 7,
+  })
+  await db.stock_item.put(soup)
+  const kids = [4, 5, 6].map((n) => ({ ...ids(n), id: `0190a1b2-0000-7000-8000-00000000060${n}` }))
+  await dispatch(
+    'inventory.stock.split',
+    { id: soup.id, eventId: ids(7).eventId, all: true, parts: kids },
+    db,
+  )
+  expect(
+    await Promise.all(kids.map(async (k) => (await db.stock_item.get(k.id))?.portions)),
+  ).toEqual([3, 2, 2])
+})
+
 const stockRow = (item: StockItem, rev: number) => ({
   id: item.id,
   household_id: HH,
