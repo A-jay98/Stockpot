@@ -235,6 +235,11 @@ func (h *handlers) checkRefs(ctx context.Context, tx pgx.Tx, hh uuid.UUID, f *Pr
 	return clean("note", f.Note, 1000, false)
 }
 
+// CheckIngredient fails with Invalid unless id is a live global or household ingredient.
+func CheckIngredient(ctx context.Context, tx pgx.Tx, hh, id uuid.UUID) error {
+	return checkIngredient(ctx, tx, hh, id)
+}
+
 func checkIngredient(ctx context.Context, tx pgx.Tx, hh, id uuid.UUID) error {
 	ok, err := exists(ctx, tx, `SELECT 1 FROM ingredient WHERE id = $1 AND deleted_at IS NULL AND (household_id = $2 OR household_id IS NULL)`, id, hh)
 	if err != nil {
