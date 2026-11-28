@@ -19,6 +19,8 @@ const purchaseUnits = [
   'box',
   'bunch',
   'head',
+  'tub',
+  'carton',
   'g',
   'kg',
   'lb',

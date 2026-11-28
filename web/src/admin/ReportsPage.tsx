@@ -24,6 +24,8 @@ export const unitCodes = [
   'box',
   'bunch',
   'head',
+  'tub',
+  'carton',
   'clove',
   'slice',
   'portion',

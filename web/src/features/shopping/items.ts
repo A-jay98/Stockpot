@@ -1,4 +1,4 @@
-import type { Category, Location, Product, ShoppingItem } from '../../offline/replica'
+import type { Category, Ingredient, Location, Product, ShoppingItem } from '../../offline/replica'
 import { normalize } from '../catalog/suggest/text'
 
 /** An item as the list shows it: display name from the product when linked, else what was typed. */
@@ -69,3 +69,21 @@ export function productNamed(products: Product[], text: string): Product | undef
 /** The productId a tick sends for an item without one: the product it names, else a new id. */
 export const productPick = (row: ShoppingItem, products: Product[], newId: () => string) =>
   row.productId ? {} : { productId: productNamed(products, row.text)?.id ?? newId() }
+
+/**
+ * How an ingredient is usually bought: its own unit, else the nearest ancestor's ("salt" is a
+ * bag, "olive oil" a bottle). The server fills the same unit when an item arrives without one.
+ */
+export function buyUnit(
+  ingredientId: string | null | undefined,
+  ingredients: Map<string, Ingredient>,
+): string | undefined {
+  let id = ingredientId
+  for (let depth = 0; id && depth < 8; depth++) {
+    const i = ingredients.get(id)
+    if (!i) return undefined
+    if (i.defaultUnit) return i.defaultUnit
+    id = i.parentId
+  }
+  return undefined
+}
