@@ -8,6 +8,8 @@ import {
   Gauge,
   ListChecks,
   type LucideIcon,
+  MessageSquareWarning,
+  Ruler,
   ScrollText,
   ShieldCheck,
   Timer,
@@ -31,6 +33,8 @@ export const adminSections: Section[] = [
   { to: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
   { to: '/admin/food-rules', label: 'Food rules', icon: Timer },
   { to: '/admin/catalog', label: 'Catalog', icon: Carrot },
+  { to: '/admin/reports', label: 'Reports', icon: MessageSquareWarning },
+  { to: '/admin/defaults', label: 'Defaults', icon: Ruler },
 ]
 
 const link =

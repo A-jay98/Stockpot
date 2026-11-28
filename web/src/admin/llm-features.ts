@@ -23,4 +23,9 @@ export const llmFeatures: { name: string; what: string; withoutAI: string }[] = 
     what: '"More ideas": up to 3 new recipes from what is in stock and expiring.',
     withoutAI: 'Saved recipes are still ranked by what you have; import or add one.',
   },
+  {
+    name: 'report_review',
+    what: 'Reviews problem reports; applies default-unit fixes it is sure about (background).',
+    withoutAI: 'Reports wait on Admin → Reports for you to apply, reject or dismiss.',
+  },
 ]

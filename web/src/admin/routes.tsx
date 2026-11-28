@@ -5,11 +5,13 @@ import { AdminLayout } from './AdminLayout'
 import { AuditPage } from './AuditPage'
 import { BackupsPage } from './BackupsPage'
 import { CatalogPage } from './CatalogPage'
+import { DefaultsPage } from './DefaultsPage'
 import { FoodRulesPage } from './FoodRulesPage'
 import { JobsPage } from './JobsPage'
 import { LLMPage } from './LLMPage'
 import { LogsPage } from './LogsPage'
 import { OverviewPage } from './OverviewPage'
+import { ReportsPage } from './ReportsPage'
 import { SettingsPage } from './SettingsPage'
 import { UsersPage } from './UsersPage'
 
@@ -33,5 +35,7 @@ export const adminRoutes: RouteObject = {
     { path: 'backups', Component: BackupsPage },
     { path: 'food-rules', Component: FoodRulesPage },
     { path: 'catalog', Component: CatalogPage },
+    { path: 'reports', Component: ReportsPage },
+    { path: 'defaults', Component: DefaultsPage },
   ],
 }
