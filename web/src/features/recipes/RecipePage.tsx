@@ -8,7 +8,7 @@ import { Badge, Button } from '../../ui'
 import { useOriginal, useRecipe, useRecipeVersion } from './hooks'
 import { IngredientPicker } from './IngredientPicker'
 import { isRtl } from './lang'
-import { RecipeTile, useRecipeIcon } from './look'
+import { RecipeCover, useRecipeIcon } from './look'
 import { LanguageToggle, OriginalBody, SourceChip, VersionBody, VersionTimeline } from './parts'
 import { ChatSection } from './slots/ChatSection'
 import { CookButton } from './slots/CookButton'
@@ -69,11 +69,14 @@ export function RecipePage() {
         </>
       }
     >
-      <RecipeTile
+      <RecipeCover
         recipeId={recipe.id}
+        coverBlob={recipe.coverBlob}
+        w={1024}
+        alt={`${recipe.title} cover photo`}
         icon={icon}
         size={48}
-        className="-mt-1 h-[150px] rounded-lg"
+        className="-mt-1 h-[150px] w-full rounded-lg"
       />
       <div className="flex flex-col gap-2">
         {viewingOriginal ? (

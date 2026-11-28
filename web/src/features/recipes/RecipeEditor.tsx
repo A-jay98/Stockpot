@@ -1,4 +1,4 @@
-import { ArrowLeft, ImagePlus, Plus, Trash2, X } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, X } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { v7 } from 'uuid'
@@ -17,9 +17,10 @@ import {
   Textarea,
 } from '../../ui'
 import { FoodIcon } from '../../ui/food-icons'
+import { PhotoPicker } from '../photos/PhotoPicker'
 import { rawLines } from './commands'
 import { useRecipe, useRecipeVersion } from './hooks'
-import { RecipeTile, useIngredientIcon, useRecipeIcon } from './look'
+import { RecipeCover, useIngredientIcon, useRecipeIcon } from './look'
 import { amountOf, groupLines, linesToText, Section } from './parts'
 
 const MAX_LINES = 200
@@ -147,6 +148,7 @@ export function RecipeEditor() {
 function EditorForm({ recipe, version }: { recipe: Recipe | null; version: RecipeVersion | null }) {
   const navigate = useNavigate()
   const [draft, setDraft] = useState<Draft>(() => (recipe ? draftOf(recipe, version) : emptyDraft))
+  const [cover, setCover] = useState<string | null>(recipe?.coverBlob ?? null)
   const [tried, setTried] = useState(false)
   const errors = validate(draft)
   const icon = useRecipeIcon(version)
@@ -177,6 +179,7 @@ function EditorForm({ recipe, version }: { recipe: Recipe | null; version: Recip
         tags,
         ...content,
       })
+      if (cover) await dispatch('recipe.update', { id: rid, coverBlob: cover })
       navigate(`/recipes/${rid}`, { replace: true })
       return
     }
@@ -190,8 +193,14 @@ function EditorForm({ recipe, version }: { recipe: Recipe | null; version: Recip
         ...content,
       })
     }
-    if (subtitle !== recipe.subtitle || tags.join(',') !== recipe.tags.join(',')) {
-      await dispatch('recipe.update', { id: recipe.id, subtitle, tags })
+    const coverChanged = cover !== recipe.coverBlob
+    if (coverChanged || subtitle !== recipe.subtitle || tags.join(',') !== recipe.tags.join(',')) {
+      await dispatch('recipe.update', {
+        id: recipe.id,
+        subtitle,
+        tags,
+        ...(coverChanged ? { coverBlob: cover } : {}),
+      })
     }
     navigate(backTo, { replace: true })
   }
@@ -209,24 +218,38 @@ function EditorForm({ recipe, version }: { recipe: Recipe | null; version: Recip
         </Button>
       }
     >
-      <form onSubmit={save} className="flex flex-col gap-4" noValidate>
-        <div className="flex items-center gap-3">
-          <RecipeTile
-            recipeId={recipe?.id ?? 'new'}
-            icon={icon}
-            size={28}
-            className="size-16 rounded-lg"
+      {/* Outside the form: the picker's buttons must not submit it. */}
+      <section aria-label="Cover photo" className="flex items-center gap-3">
+        <RecipeCover
+          recipeId={recipe?.id ?? 'new'}
+          coverBlob={cover}
+          w={256}
+          alt="Cover photo"
+          icon={icon}
+          size={28}
+          className="size-20 rounded-lg"
+        />
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <PhotoPicker
+            multiple={false}
+            className="flex-wrap"
+            onPicked={(refs) => setCover(refs[0] ?? null)}
           />
-          {/* TODO(m2-2): PhotoPicker → savePhoto → recipe.update { coverBlob }. */}
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <Button type="button" variant="secondary" size="sm" disabled className="self-start">
-              <ImagePlus aria-hidden />
-              Cover photo
+          {cover ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="self-start"
+              onClick={() => setCover(null)}
+            >
+              <Trash2 aria-hidden />
+              Remove cover
             </Button>
-            <span className="text-xs text-ink-muted">Photos arrive with the photo update.</span>
-          </div>
+          ) : null}
         </div>
-
+      </section>
+      <form onSubmit={save} className="flex flex-col gap-4" noValidate>
         <Field label="Name" error={err('title')}>
           {(p) => (
             <Input

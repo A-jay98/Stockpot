@@ -369,3 +369,23 @@ test('saved tab lists, searches and links to new recipe', async () => {
   expect(await screen.findByText(/No saved recipe matches/)).toBeInTheDocument()
   expect(screen.getByRole('link', { name: 'New recipe' })).toHaveAttribute('href', '/recipes/new')
 })
+
+test('cover photo shows on the page and can be removed in the editor', async () => {
+  const ref = 'a'.repeat(64)
+  await seed()
+  await db.recipe.update(R, { coverBlob: ref })
+  const { router } = renderApp(`/recipes/${R}`)
+  const img = await screen.findByRole('img', { name: 'Khoresh gheymeh cover photo' })
+  expect(img).toHaveAttribute('src', `/api/v1/blobs/${ref}?w=1024`)
+
+  await router.navigate(`/recipes/${R}/edit`)
+  expect(await screen.findByRole('img', { name: 'Cover photo' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: 'Remove cover' }))
+  fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+  await waitFor(async () => expect((await db.recipe.get(R))?.coverBlob).toBeNull())
+  expect((await pendingCommands()).at(-1)).toMatchObject({
+    type: 'recipe.update',
+    payload: { id: R, coverBlob: null },
+  })
+  expect(await db.recipe_version.where('recipeId').equals(R).count()).toBe(2)
+})

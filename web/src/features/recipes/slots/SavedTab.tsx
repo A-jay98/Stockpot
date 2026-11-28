@@ -5,7 +5,7 @@ import type { Recipe } from '../../../offline/replica'
 import { Button, List, ListItem, Segmented } from '../../../ui'
 import { normalize, tokenScore, words } from '../../catalog/suggest/text'
 import { useSavedRecipes } from '../hooks'
-import { RecipeTile } from '../look'
+import { RecipeCover } from '../look'
 import { SearchField } from '../SearchField'
 import { ComingSoon } from './ComingSoon'
 
@@ -100,8 +100,11 @@ export function SavedTab() {
               key={r.id}
               asChild
               leading={
-                <RecipeTile
+                <RecipeCover
                   recipeId={r.id}
+                  coverBlob={r.coverBlob}
+                  w={256}
+                  alt=""
                   icon={null}
                   size={19}
                   className="size-full rounded-[10px]"

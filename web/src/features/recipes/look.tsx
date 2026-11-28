@@ -1,9 +1,11 @@
 import { ChefHat } from 'lucide-react'
 import { useMemo } from 'react'
+import type { ThumbWidth } from '../../lib/photos'
 import type { Ingredient, RecipeVersion } from '../../offline/replica'
 import { cn } from '../../ui'
 import { categoryIconKey, FoodIcon, isIconKey } from '../../ui/food-icons'
 import { useCategories, useIngredients } from '../catalog/hooks'
+import { BlobImage } from '../photos/BlobImage'
 
 // Tile colours for recipes without a cover photo: deep enough for a white icon in both themes.
 const TINTS = [
@@ -62,10 +64,7 @@ export function useRecipeIcon(version: RecipeVersion | null | undefined): string
   return null
 }
 
-/**
- * Coloured tile standing in for a cover photo.
- * TODO(m2-2): show `<BlobImage>` for `coverBlob` once the photos pipeline lands.
- */
+/** Coloured tile standing in for a cover photo. */
 export function RecipeTile({
   recipeId,
   icon,
@@ -89,5 +88,36 @@ export function RecipeTile({
         <ChefHat style={{ width: size, height: size }} className="opacity-85" />
       )}
     </span>
+  )
+}
+
+/** The recipe's cover photo, or its coloured tile when it has none. */
+export function RecipeCover({
+  recipeId,
+  coverBlob,
+  icon,
+  size,
+  w,
+  alt,
+  className,
+}: {
+  recipeId: string
+  coverBlob: string | null
+  icon: string | null
+  size: number
+  w: ThumbWidth
+  alt: string
+  className?: string
+}) {
+  if (!coverBlob)
+    return <RecipeTile recipeId={recipeId} icon={icon} size={size} className={className} />
+  return (
+    <BlobImage
+      blobRef={coverBlob}
+      w={w}
+      alt={alt}
+      className={cn('shrink-0 object-cover', className)}
+      style={{ background: recipeTint(recipeId) }}
+    />
   )
 }
