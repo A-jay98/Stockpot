@@ -27,6 +27,18 @@ async function base(db: StockpotDB, id: string, clientTime: string) {
   }
 }
 
+// Leading quantity as the server sees it after normalising: ASCII, Persian or Arabic digits, or a
+// unicode fraction (see `qtyStart` in internal/recipes/lines).
+const QTY_START = /^[\d۰-۹٠-٩¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/
+
+/** Section header ("For the rice:"), mirroring Go's `lines.Header` (≤ 80 bytes, no quantity). */
+export function isHeader(raw: string): boolean {
+  const s = raw.trim()
+  if (!s.endsWith(':') || s.length < 2 || new TextEncoder().encode(s).length > 80) return false
+  const name = s.slice(0, -1).trim()
+  return name !== '' && !QTY_START.test(name)
+}
+
 /**
  * Raw lines as shown before the server parses them: headers ("For the rice:") group what follows.
  * These line ids are client-only (the server assigns its own), so `recipe.line.set_ingredient`
@@ -38,7 +50,7 @@ export function rawLines(raws: string[]): RecipeLine[] {
   for (const r of raws) {
     const raw = r.trim()
     if (!raw) continue
-    if (raw.endsWith(':') && raw.length > 1 && !/^\d/.test(raw)) {
+    if (isHeader(raw)) {
       group = raw.slice(0, -1).trim()
       continue
     }
