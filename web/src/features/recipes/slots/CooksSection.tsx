@@ -1,9 +1,12 @@
 import { ChefHat, Undo2 } from 'lucide-react'
+import { v7 } from 'uuid'
 import { dispatch } from '../../../offline/outbox'
 import { Button } from '../../../ui'
 import { UndoWindowMs } from '../../cook/commands'
 import { type CookEntry, useCooks } from '../../cook/hooks'
+import { today } from '../../inventory/dates'
 import { BlobImage } from '../../photos/BlobImage'
+import { PhotoPicker } from '../../photos/PhotoPicker'
 
 const day = (d: string) =>
   new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
@@ -15,10 +18,27 @@ export function CooksSection({ recipeId }: { recipeId: string; versionId: string
     ...cooks.flatMap((c) => c.photos.map((p) => ({ p, on: c.session.cookedOn }))),
     ...loose.map((p) => ({ p, on: p.takenOn })),
   ]
-  if (cooks.length === 0 && photos.length === 0) return null
   return (
     <section aria-label="Your cooks" className="flex flex-col gap-2">
-      <h2 className="t-label m-0 text-ink-muted">Your cooks</h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="t-label m-0 text-ink-muted">Your cooks</h2>
+        <PhotoPicker
+          onPicked={(refs) => {
+            for (const ref of refs)
+              void dispatch('recipe.photo.add', {
+                id: v7(),
+                recipeId,
+                blobRef: ref,
+                takenOn: today(),
+              })
+          }}
+        />
+      </div>
+      {cooks.length === 0 && photos.length === 0 ? (
+        <p className="t-body-sm m-0 text-ink-muted">
+          Cooked it? Tap “I cooked this” to update your stock and keep a photo of each cook.
+        </p>
+      ) : null}
       {photos.length > 0 ? (
         <ul aria-label="Photos of your cooks" className="m-0 grid list-none grid-cols-4 gap-2 p-0">
           {photos.map(({ p, on }) => (

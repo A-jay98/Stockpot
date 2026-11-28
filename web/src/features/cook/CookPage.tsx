@@ -16,6 +16,7 @@ import { buildChain } from '../inventory/foodRules'
 import { expiryLabel, levelLabel, unitLabel } from '../inventory/status'
 import { BlobImage } from '../photos/BlobImage'
 import { PhotoPicker } from '../photos/PhotoPicker'
+import { kitchenQty } from '../recipes/parts'
 import { type CookData, useCookData } from './hooks'
 import {
   boughtRegularly,
@@ -114,7 +115,7 @@ const LEVELS: StockLevel[] = ['full', 'most', 'half', 'low', 'almost_out']
 const required = (lines: RecipeLine[]) => lines.filter((l) => !l.optional && !l.staple)
 
 const qtyLabel = (q: string, unit: string | null | undefined) =>
-  [q, unitLabel(unit ?? null)].filter(Boolean).join(' ')
+  [kitchenQty(q), unitLabel(unit ?? null)].filter(Boolean).join(' ')
 
 function stepFor(unit: string | null): string {
   switch (unit) {
@@ -414,7 +415,7 @@ function CookSheet({ data, back }: { data: CookData; back: ReactNode }) {
         </Field>
       </section>
 
-      <div className="sticky bottom-[calc(84px+env(safe-area-inset-bottom))] z-20 -mx-4 border-t border-border bg-bg px-4 py-3 md:bottom-0 md:-mx-8 md:flex md:justify-end md:px-8">
+      <div className="sticky bottom-[calc(76px+env(safe-area-inset-bottom))] z-20 -mx-4 border-t border-border bg-bg px-4 py-3 md:bottom-0 md:-mx-8 md:flex md:justify-end md:px-8">
         <Button block className="md:w-auto" disabled={busy} onClick={() => void submit()}>
           <Check aria-hidden />
           {stored > 0
