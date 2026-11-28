@@ -204,6 +204,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/admin/recipes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Recipe import state
+         * @description Imports by status (24 h and 14 days), recent failures, the fetch log, yt-dlp and ffmpeg availability and the import flags.
+         */
+        get: operations["getAdminRecipes"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/recipes/imports/{importId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Queue a failed, blocked or waiting import again */
+        post: operations["retryAdminRecipeImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/catalog": {
         parameters: {
             query?: never;
@@ -1784,6 +1821,58 @@ export interface components {
         RecipeStaples: {
             slugs: string[];
         };
+        AdminRecipes: {
+            /** @description flag.recipe_web_import */
+            webImport: boolean;
+            /** @description flag.recipe_instagram */
+            instagram: boolean;
+            /** @description Imports created in the last 24 hours, by status. */
+            last24h: {
+                [key: string]: number;
+            };
+            /** @description Imports created in the last 14 days, by status. */
+            last14d: {
+                [key: string]: number;
+            };
+            failures: components["schemas"]["AdminRecipeImport"][];
+            fetches: components["schemas"]["AdminRecipeFetch"][];
+            tools: components["schemas"]["AdminRecipeTools"];
+            /** @description A provider with a transcription model is ready. */
+            transcription: boolean;
+        };
+        AdminRecipeImport: {
+            /** Format: uuid */
+            id: string;
+            household: string;
+            kind: string;
+            input?: string;
+            status: string;
+            code: string;
+            detail: string;
+            attempts: number;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AdminRecipeFetch: {
+            /** Format: date-time */
+            at: string;
+            /** @enum {string} */
+            purpose: "page" | "image";
+            url: string;
+            finalUrl?: string;
+            status?: number;
+            /** Format: int64 */
+            bytes: number;
+            durationMs: number;
+            error?: string;
+        };
+        AdminRecipeTools: {
+            ytDlp: boolean;
+            ytDlpVersion?: string;
+            ffmpeg: boolean;
+            ffmpegVersion?: string;
+            error?: string;
+        };
         AdminCatalog: {
             /** @description flag.catalog_enrich */
             enabled: boolean;
@@ -2188,6 +2277,8 @@ export interface components {
             daily_token_cap: number;
             /** @description IANA zone whose midnight resets the daily quota. */
             reset_tz: string;
+            /** @description Speech-to-text model on the provider's /audio/transcriptions endpoint; absent when it doesn't transcribe. */
+            transcription_model?: string;
             timeout_seconds?: number;
         };
         LLMProviderStatus: {
@@ -2287,7 +2378,7 @@ export interface components {
          *     UUIDv7). Fields typed nullable clear the column when sent as null;
          *     absent fields are left unchanged.
          */
-        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"] | components["schemas"]["CmdRecipeCreate"] | components["schemas"]["CmdRecipeVersionCreate"] | components["schemas"]["CmdRecipeVersionRestore"] | components["schemas"]["CmdRecipeUpdate"] | components["schemas"]["CmdRecipeDelete"] | components["schemas"]["CmdRecipeLineSetIngredient"] | components["schemas"]["CmdRecipePhotoAdd"] | components["schemas"]["CmdRecipePhotoRemove"];
+        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"] | components["schemas"]["CmdRecipeCreate"] | components["schemas"]["CmdRecipeVersionCreate"] | components["schemas"]["CmdRecipeVersionRestore"] | components["schemas"]["CmdRecipeUpdate"] | components["schemas"]["CmdRecipeDelete"] | components["schemas"]["CmdRecipeLineSetIngredient"] | components["schemas"]["CmdRecipePhotoAdd"] | components["schemas"]["CmdRecipePhotoRemove"] | components["schemas"]["CmdRecipeImportCreate"] | components["schemas"]["CmdRecipeImportRetry"] | components["schemas"]["CmdRecipeImportCancel"] | components["schemas"]["CmdRecipeImportProvide"];
         CmdCatalogProductCreate: {
             /** Format: uuid */
             id: string;
@@ -2838,6 +2929,85 @@ export interface components {
             payload: {
                 /** Format: uuid */
                 id: string;
+            };
+        };
+        /**
+         * @description Queue an import: a recipe page or Instagram link (kind url; the server
+         *     detects Instagram), 1-4 uploaded photos (kind photo; input is an
+         *     optional note) or pasted text. A bulk import sends one command per
+         *     link with the same batchId; rows 4+ use spare AI quota only.
+         */
+        CmdRecipeImportCreate: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.import.create";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                kind: "url" | "instagram" | "photo" | "text";
+                input?: string | null;
+                blobRefs?: string[] | null;
+                /** Format: uuid */
+                batchId?: string | null;
+            };
+        };
+        /** @description Queue a failed, blocked or waiting import again. */
+        CmdRecipeImportRetry: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.import.retry";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        /** @description Cancel an import that isn't done (removes its row). */
+        CmdRecipeImportCancel: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.import.cancel";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        /**
+         * @description Give an import the text it needs (a reel's caption, or the recipe
+         *     itself after a page failed) and queue it again.
+         */
+        CmdRecipeImportProvide: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.import.provide";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                text: string;
             };
         };
         /**
@@ -3790,6 +3960,48 @@ export interface operations {
         responses: {
             /** @description Sent */
             204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getAdminRecipes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Recipe imports */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminRecipes"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    retryAdminRecipeImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                importId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };

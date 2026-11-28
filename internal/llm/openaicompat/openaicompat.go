@@ -11,7 +11,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"net/textproto"
 	"regexp"
 	"strconv"
 	"strings"
@@ -307,4 +309,83 @@ func redact(s, key string) string {
 		return s
 	}
 	return strings.ReplaceAll(s, key, "[redacted]")
+}
+
+var _ llm.Transcriber = (*Client)(nil)
+
+// Transcribe implements llm.Transcriber with the OpenAI-compatible
+// /audio/transcriptions endpoint (Groq Whisper, OpenAI, local servers).
+func (c *Client) Transcribe(ctx context.Context, model string, req llm.TranscribeRequest) (llm.Transcription, error) {
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+	fields := map[string]string{"model": model, "response_format": "verbose_json", "temperature": "0"}
+	if req.Language != "" {
+		fields["language"] = req.Language
+	}
+	if req.Prompt != "" {
+		fields["prompt"] = req.Prompt
+	}
+	for k, v := range fields {
+		if err := mw.WriteField(k, v); err != nil {
+			return llm.Transcription{}, fmt.Errorf("openaicompat: encode request: %w", err)
+		}
+	}
+	h := make(textproto.MIMEHeader)
+	h.Set("Content-Disposition", fmt.Sprintf(`form-data; name="file"; filename=%q`, req.Filename))
+	h.Set("Content-Type", req.MIME)
+	part, err := mw.CreatePart(h)
+	if err == nil {
+		_, err = part.Write(req.Audio)
+	}
+	if err == nil {
+		err = mw.Close()
+	}
+	if err != nil {
+		return llm.Transcription{}, fmt.Errorf("openaicompat: encode request: %w", err)
+	}
+	if c.cfg.Timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, c.cfg.Timeout)
+		defer cancel()
+	}
+	endpoint := strings.TrimRight(c.cfg.BaseURL, "/") + "/audio/transcriptions"
+	hreq, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, &body)
+	if err != nil {
+		return llm.Transcription{}, fmt.Errorf("openaicompat: %w", err)
+	}
+	hreq.Header.Set("Content-Type", mw.FormDataContentType())
+	hreq.Header.Set("Accept", "application/json")
+	if c.cfg.APIKey != "" {
+		hreq.Header.Set("Authorization", "Bearer "+c.cfg.APIKey)
+	}
+	start := time.Now()
+	resp, err := c.cfg.HTTPClient.Do(hreq)
+	if err != nil {
+		if ctx.Err() != nil && !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return llm.Transcription{}, ctx.Err()
+		}
+		return llm.Transcription{}, &llm.ProviderError{Err: llm.ErrUpstream, Message: redact(err.Error(), c.cfg.APIKey)}
+	}
+	defer func() { _ = resp.Body.Close() }()
+	raw, err := io.ReadAll(io.LimitReader(resp.Body, maxResponseBytes+1))
+	out := llm.Transcription{Provider: c.cfg.ID, Model: model, Latency: time.Since(start)}
+	if err != nil {
+		return out, &llm.ProviderError{Err: llm.ErrUpstream, Status: resp.StatusCode, Message: "reading response: " + err.Error()}
+	}
+	if len(raw) > maxResponseBytes {
+		return out, &llm.ProviderError{Err: llm.ErrUpstream, Status: resp.StatusCode, Message: "response too large"}
+	}
+	if resp.StatusCode/100 != 2 {
+		return out, classify(resp, raw, c.cfg.APIKey)
+	}
+	var tr struct {
+		Text     string  `json:"text"`
+		Language string  `json:"language"`
+		Duration float64 `json:"duration"`
+	}
+	if err := json.Unmarshal(raw, &tr); err != nil {
+		return out, &llm.ProviderError{Err: llm.ErrUpstream, Status: resp.StatusCode, Message: "undecodable response"}
+	}
+	out.Text, out.Language, out.AudioSeconds = strings.TrimSpace(tr.Text), tr.Language, tr.Duration
+	return out, nil
 }

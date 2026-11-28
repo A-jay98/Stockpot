@@ -460,6 +460,21 @@ type RecipeChatMessage struct {
 	CreatedAt      time.Time
 }
 
+type RecipeFetch struct {
+	ID          int64
+	CreatedAt   time.Time
+	HouseholdID *uuid.UUID
+	ImportID    *uuid.UUID
+	Purpose     string
+	Url         string
+	FinalUrl    *string
+	Status      *int32
+	Bytes       int64
+	DurationMs  int32
+	Redirects   int32
+	Error       *string
+}
+
 type RecipeImport struct {
 	ID           uuid.UUID
 	HouseholdID  uuid.UUID
@@ -476,6 +491,14 @@ type RecipeImport struct {
 	RecipeID     *uuid.UUID
 	Attempts     int32
 	DetectedLang *string
+}
+
+type RecipeImportDetail struct {
+	ImportID     uuid.UUID
+	ProvidedText *string
+	Caption      *string
+	Transcript   *string
+	UpdatedAt    time.Time
 }
 
 type RecipePhoto struct {

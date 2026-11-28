@@ -40,6 +40,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/media"
 	"github.com/a-jay98/stockpot/internal/recipes"
 	"github.com/a-jay98/stockpot/internal/recipes/chat"
+	"github.com/a-jay98/stockpot/internal/recipes/importer"
 	"github.com/a-jay98/stockpot/internal/reports"
 	"github.com/a-jay98/stockpot/internal/settings"
 	"github.com/a-jay98/stockpot/internal/shopping"
@@ -155,6 +156,15 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	shopping.Register(cmdRegistry, resolve.Resolver{})
 	recipeCmds := recipes.Register(cmdRegistry, resolve.Resolver{})
 	recipeCmds.OnChatVersion = chat.MarkSaved
+	photos := media.New(pool, blobs)
+	imports := importer.New(importer.Deps{
+		Pool: pool, Settings: store, LLM: gateway, Blobs: blobs,
+		Fetcher: importer.NewFetcher(importer.PublicOnly(importer.OwnAddresses())),
+		Reels:   &importer.YtDLP{},
+		Covers:  importer.MediaCovers{Media: photos}, Owned: importer.MediaOwned,
+		Writer: recipeCmds.W, TranscriptionAvailable: gateway.TranscriptionAvailable,
+	})
+	imports.Register(cmdRegistry)
 	syncStore, err := syncdb.New(ctx, pool)
 	if err != nil {
 		return err
@@ -188,6 +198,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	enricher := catalog.NewEnricher(catalog.EnrichDeps{Pool: pool, Settings: store, LLM: gateway})
 	sweepers = append(sweepers, enricher.Sweepers()...)
 	sweepers = append(sweepers, alerts.Sweepers(alertSvc)...)
+	sweepers = append(sweepers, imports.Sweepers()...)
 	sweepers = append(sweepers, recipes.Sweepers(pool)...)
 	reportSvc := reports.New(reports.Deps{Pool: pool, Settings: store, LLM: gateway})
 	sweepers = append(sweepers, reportSvc.Sweepers()...)
@@ -195,7 +206,8 @@ func Serve(ctx context.Context, cfg config.Config) error {
 		Pool:     pool,
 		Settings: store,
 		Sweepers: sweepers,
-		Workers:  []func(*river.Workers) error{backups.Registrar(), enricher.Registrar(), alertSvc.Registrar(), reportSvc.Registrar()},
+		Workers:  []func(*river.Workers) error{backups.Registrar(), enricher.Registrar(), alertSvc.Registrar(), reportSvc.Registrar(), imports.Registrar()},
+		Queues:   importer.Queues(),
 		Periodic: []*river.PeriodicJob{alerts.PeriodicJob()},
 		Logger:   slog.Default(),
 	})
@@ -205,6 +217,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 
 	backups.Attach(jobClient)
 	enricher.Attach(jobClient)
+	imports.Attach(jobClient)
 	reportSvc.Attach(jobClient)
 
 	adminSvc = admin.New(admin.Deps{
@@ -237,7 +250,8 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Recipes:   &recipes.Assistant{Pool: pool, LLM: gateway, W: recipeCmds.W},
 			Reports:   reportSvc,
 			Chat:      &chat.Service{Pool: pool, LLM: gateway},
-			Blobs:     media.New(pool, blobs),
+			Blobs:     photos,
+			Imports:   imports,
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,

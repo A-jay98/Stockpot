@@ -47,6 +47,8 @@ type Deps struct {
 	Blobs BlobService
 	// Chat serves /api/v1/recipes/{id}/chat*.
 	Chat RecipeChatService
+	// Imports serves /api/v1/admin/recipes*; nil answers 503.
+	Imports RecipeImports
 	// Recipes serves the recipe LLM helpers (swaps, ideas); nil answers 503 llm_unavailable.
 	Recipes RecipeAssistant
 }
@@ -68,6 +70,7 @@ type Server struct {
 	reports   ReportService
 	blobs     BlobService
 	chat      RecipeChatService
+	imports   RecipeImports
 	recipes   RecipeAssistant
 	now       func() time.Time
 }
@@ -78,7 +81,7 @@ var _ StrictServerInterface = (*Server)(nil)
 func NewServer(d Deps) *Server {
 	return &Server{
 		checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM,
-		commands: d.Commands, sync: d.Sync, backups: d.Backups, enrich: d.Enrich, matcher: d.Matcher, alerts: d.Alerts, foodRules: d.FoodRules, blobs: d.Blobs, chat: d.Chat, reports: d.Reports, recipes: d.Recipes, now: time.Now,
+		commands: d.Commands, sync: d.Sync, backups: d.Backups, enrich: d.Enrich, matcher: d.Matcher, alerts: d.Alerts, foodRules: d.FoodRules, blobs: d.Blobs, chat: d.Chat, imports: d.Imports, reports: d.Reports, recipes: d.Recipes, now: time.Now,
 	}
 }
 

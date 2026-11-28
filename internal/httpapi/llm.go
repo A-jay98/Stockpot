@@ -82,6 +82,10 @@ func (s *Server) GetLLMStatus(ctx context.Context, _ GetLLMStatusRequestObject) 
 			RemainingTokens:   p.RemainingTokens,
 			ResetAt:           p.ResetAt,
 		}
+		if p.Config.TranscriptionModel != "" {
+			m := p.Config.TranscriptionModel
+			ps.Config.TranscriptionModel = &m
+		}
 		if p.Config.TimeoutSeconds > 0 {
 			t := p.Config.TimeoutSeconds
 			ps.Config.TimeoutSeconds = &t

@@ -32,6 +32,9 @@ type Deps struct {
 	Workers []func(*river.Workers) error
 	// Periodic adds feature periodic jobs (alerts, …) to the retention job.
 	Periodic []*river.PeriodicJob
+	// Queues adds feature queues (with their own worker limits) beside the
+	// default queue.
+	Queues map[string]river.QueueConfig
 }
 
 // New builds a client with every worker and periodic job registered. Call
@@ -46,10 +49,15 @@ func New(d Deps) (*Client, error) {
 			return nil, fmt.Errorf("register worker: %w", err)
 		}
 	}
+	queues := map[string]river.QueueConfig{river.QueueDefault: {MaxWorkers: 4}}
+	for name, q := range d.Queues {
+		if _, dup := queues[name]; dup {
+			return nil, fmt.Errorf("queue %q defined twice", name)
+		}
+		queues[name] = q
+	}
 	client, err := river.NewClient(riverpgxv5.New(d.Pool), &river.Config{
-		Queues: map[string]river.QueueConfig{
-			river.QueueDefault: {MaxWorkers: 4},
-		},
+		Queues:  queues,
 		Workers: workers,
 		// Longer than the longest job (a backup may take up to 3 h), or River
 		// would start a second copy of it while the first is still running.
