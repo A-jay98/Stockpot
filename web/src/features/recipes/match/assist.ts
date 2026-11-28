@@ -46,8 +46,8 @@ export async function requestSwap(
 ): Promise<number | null> {
   try {
     const res = await unwrap(
-      api.POST('/v1/recipes/{recipeId}/substitutes', {
-        params: { path: { recipeId } },
+      api.POST('/v1/recipes/{id}/substitutes', {
+        params: { path: { id: recipeId } },
         body: { lineId, versionId },
       }),
     )

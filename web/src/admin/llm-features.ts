@@ -1,0 +1,26 @@
+/**
+ * Every LLM feature and what the app does without AI (quota gone, no provider, or AI turned off).
+ * Admin → LLM lists them so it's clear what degrades. Add a row with each new feature.
+ */
+export const llmFeatures: { name: string; what: string; withoutAI: string }[] = [
+  {
+    name: 'catalog_enrich',
+    what: 'Matches new products to ingredients, categories, icons and shelf life (background).',
+    withoutAI: 'Products keep the rule-based match; you can pick the ingredient yourself.',
+  },
+  {
+    name: 'recipes_chat',
+    what: 'Answers questions about a recipe and proposes new versions.',
+    withoutAI: 'Edit the recipe by hand.',
+  },
+  {
+    name: 'recipes_substitute',
+    what: '"Find a swap" for a missing ingredient, using only what is in stock.',
+    withoutAI: 'Seeded swaps still show; swap it by hand while you cook.',
+  },
+  {
+    name: 'recipes_ideas',
+    what: '"More ideas": up to 3 new recipes from what is in stock and expiring.',
+    withoutAI: 'Saved recipes are still ranked by what you have; import or add one.',
+  },
+]

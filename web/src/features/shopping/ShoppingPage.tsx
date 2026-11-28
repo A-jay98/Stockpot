@@ -1,11 +1,11 @@
-import { Check, ListPlus, PackageCheck } from 'lucide-react'
+import { Check, Link2, ListPlus, PackageCheck } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { v7 as uuidv7 } from 'uuid'
 import { Page } from '../../app/Page'
 import { dispatch } from '../../offline/outbox'
-import type { Product } from '../../offline/replica'
+import type { Product, ProductStat } from '../../offline/replica'
 import { Button, cn, Segmented, Sheet, SheetContent, toast } from '../../ui'
-import { categoryIconKey, FoodIcon, resolveFoodIcon } from '../../ui/food-icons'
+import { FoodIcon } from '../../ui/food-icons'
 import {
   useCategories,
   useLocations,
@@ -13,13 +13,15 @@ import {
   useProducts,
   useStores,
 } from '../catalog/hooks'
+import { foodIconFor, useIconLookup } from '../catalog/icons'
+import { type MatchState, matchState, matchWorthShowing } from '../catalog/match'
 import { type PickedItem, ProductPicker } from '../catalog/ProductPicker'
-import { formatQty, guessList } from '../catalog/suggest'
+import { formatQty, guessList, usualPick } from '../catalog/suggest'
 import { recipeReason, useRecipeTitles } from '../recipes/hooks'
 import { ManageList } from '../settings/ManageList'
 import { useAllShoppingItems, useShoppingItems, useShoppingLists, useStockItems } from './hooks'
 import { ItemSheet } from './ItemSheet'
-import { groupRows, productPick, type Row, sameName, toRows } from './items'
+import { groupRows, productNamed, productPick, type Row, toRows } from './items'
 import { PutAwaySheet } from './PutAwaySheet'
 
 export function ShoppingPage() {
@@ -42,17 +44,14 @@ export function ShoppingPage() {
   const [putAway, setPutAway] = useState(false)
   const [managing, setManaging] = useState(false)
 
-  const productByName = useMemo(() => {
-    const m = new Map<string, Product>()
-    for (const p of products) if (!p.brand && !m.has(sameName(p.name))) m.set(sameName(p.name), p)
-    return m
-  }, [products])
+  const icons = useIconLookup()
   const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products])
+  const statsByProduct = useMemo(() => {
+    const m = new Map<string, ProductStat[]>()
+    for (const s of stats) m.set(s.productId, [...(m.get(s.productId) ?? []), s])
+    return m
+  }, [stats])
   const rows = useMemo(() => toRows(items, productById), [items, productById])
-  const categoryIcon = useMemo(
-    () => new Map(categories.map((c) => [c.id, c.icon ?? categoryIconKey(c.slug)])),
-    [categories],
-  )
   const inStore = (r: Row) =>
     !storeFilter || r.storeIds.length === 0 || r.storeIds.includes(storeFilter)
   const open = rows.filter((r) => !r.checkedAt && inStore(r))
@@ -64,18 +63,39 @@ export function ShoppingPage() {
     [products, stats, stock, allItems],
   )
 
+  /** The household product a pick is: its own, the one named the same, else none (a new one). */
+  const knownProduct = (p: PickedItem): Product | undefined => {
+    if (p.productId) return productById.get(p.productId)
+    const named = productNamed(products, p.name)
+    if (named) return named
+    // The household already buys this ingredient under another name ("tangerine" → its
+    // "Tangerines (bag)"): use that product rather than a second one.
+    if (!p.ingredientId) return undefined
+    return products.find((x) => !x.brand && x.ingredientId === p.ingredientId)
+  }
+
+  // Every item is linked to a product: a known one (filling in its usual store and amount), or a
+  // new one the add creates, so it gets its icon and match straight away.
   const add = (picked: PickedItem) => {
-    let p = picked
     if (!list) return
-    // Free text that names a product the household already has uses that product.
-    if (!p.productId && !p.ingredientId) {
-      const known = productByName.get(sameName(p.name))
-      if (known) p = { ...p, productId: known.id, name: known.name }
+    const product = knownProduct(picked)
+    let p = picked
+    if (product) {
+      const usual = usualPick(product, statsByProduct.get(product.id))
+      p = {
+        ...p,
+        productId: product.id,
+        name: product.name,
+        qty: p.qty ?? (p.unit && p.unit !== usual.unit ? undefined : usual.qty),
+        unit: p.unit ?? usual.unit,
+        storeIds: p.storeIds.length ? p.storeIds : usual.storeIds,
+        categoryId: p.categoryId ?? usual.categoryId,
+      }
     }
     const dupe = items.find(
       (i) =>
         !i.checkedAt &&
-        (p.productId ? i.productId === p.productId : i.text.toLowerCase() === p.name.toLowerCase()),
+        (product ? i.productId === product.id : i.text.toLowerCase() === p.name.toLowerCase()),
     )
     if (dupe) {
       toast({ title: `${p.name} is already on the list`, tone: 'info' })
@@ -85,13 +105,23 @@ export function ShoppingPage() {
       id: uuidv7(),
       listId: list.id,
       text: p.name,
-      ...(p.productId ? { productId: p.productId } : {}),
+      productId: product?.id ?? uuidv7(),
+      ...(!product && p.ingredientId ? { ingredientId: p.ingredientId } : {}),
       ...(p.qty ? { qty: p.qty } : {}),
       ...(p.unit ? { unit: p.unit } : {}),
       ...(p.categoryId ? { categoryId: p.categoryId } : {}),
       ...(p.storeIds.length ? { storeIds: p.storeIds } : {}),
+      // A typed unit ("2 kg chicken") is a hand-picked one: it becomes the item's default.
+      ...(p.unitTyped && p.unit ? { rememberAmount: true } : {}),
     })
   }
+
+  const confirmMatch = (product: Product, m: Extract<MatchState, { kind: 'confirm' }>) =>
+    void dispatch('catalog.product.set_ingredient', {
+      id: product.id,
+      ingredientId: m.ingredient.id,
+      extraIngredientIds: m.extras.map((i) => i.id),
+    })
 
   const toggle = (r: Row) =>
     void (r.checkedAt
@@ -102,54 +132,105 @@ export function ShoppingPage() {
           ...productPick(r, products, uuidv7),
         }))
 
-  const iconFor = (r: Row) =>
-    resolveFoodIcon({
-      product: r.product?.icon,
-      category: categoryIcon.get(r.categoryId ?? r.product?.categoryId ?? ''),
-    })
+  // Items added before every item had a product fall back to the product their text names.
+  const iconFor = (r: Row) => {
+    const p = r.product ?? productNamed(products, r.text)
+    return foodIconFor(
+      { icon: p?.icon, ingredientId: p?.ingredientId, categoryId: p?.categoryId ?? r.categoryId },
+      icons,
+    )
+  }
+
+  const matchLine = (r: Row, done: boolean) => {
+    if (!r.product || done) return null
+    const m = matchState(r.product, icons.ingredients)
+    // An unsure match gets its own question below the row instead.
+    // Nothing to say for an item with no match (non-food, or the user cleared it).
+    if (m.kind === 'confirm' || m.kind === 'unmatched' || !matchWorthShowing(r.product, m))
+      return null
+    const names =
+      'ingredient' in m && m.ingredient
+        ? [m.ingredient, ...m.extras].map((i) => i.name).join(' + ')
+        : ''
+    const text = m.kind === 'checking' ? (names ? `${names} (checking)` : 'Matching…') : names
+    return (
+      <span
+        className="t-body-sm flex min-w-0 items-center gap-1 text-ink-muted"
+        data-match={m.kind}
+      >
+        <Link2 aria-hidden className="size-3.5 shrink-0" />
+        <span className="sr-only">Matches </span>
+        <span className="truncate">{text}</span>
+      </span>
+    )
+  }
+
+  const confirmBar = (r: Row, done: boolean) => {
+    if (!r.product || done) return null
+    const m = matchState(r.product, icons.ingredients)
+    if (m.kind !== 'confirm') return null
+    const product = r.product
+    return (
+      <div className="flex items-center gap-2 pt-2 pl-[38px]">
+        <span className="t-body-sm min-w-0 flex-1 text-ink-muted">
+          Is this <b className="text-ink">{m.ingredient.name}</b>?
+        </span>
+        <Button size="sm" variant="secondary" onClick={() => setEditing(r)}>
+          Change
+        </Button>
+        <Button size="sm" onClick={() => confirmMatch(product, m)}>
+          Yes
+        </Button>
+      </div>
+    )
+  }
 
   const row = (r: Row, done = false) => (
-    <li key={r.id} className={cn('flex items-center gap-3 px-3 py-2.5', done && 'opacity-70')}>
-      {/* biome-ignore lint/a11y/useSemanticElements: a styled button; a native checkbox can't take the design */}
-      <button
-        type="button"
-        role="checkbox"
-        aria-checked={done}
-        aria-label={`${done ? 'Uncheck' : 'Check'} ${r.title}`}
-        onClick={() => toggle(r)}
-        className={cn(
-          'grid size-[26px] shrink-0 place-items-center rounded-[8px] border-2 border-border bg-surface p-0 text-on-brand',
-          done && 'border-brand bg-brand',
-        )}
-      >
-        {done && <Check aria-hidden className="size-4" strokeWidth={3} />}
-      </button>
-      <button
-        type="button"
-        onClick={() => setEditing(r)}
-        className="flex min-w-0 flex-1 items-center gap-3 border-0 bg-transparent p-0 text-left text-ink"
-      >
-        <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-surface-2">
-          <FoodIcon k={iconFor(r)} size={20} />
-        </span>
-        <span className="flex min-w-0 flex-1 flex-col">
-          <span className={cn('truncate font-semibold', done && 'line-through text-ink-muted')}>
-            {r.brand ? `${r.title} · ${r.brand}` : r.title}
-          </span>
-          {(r.storeIds.length > 0 || r.note || r.recipeId) && (
-            <span className="t-body-sm truncate text-ink-muted">
-              {[
-                ...r.storeIds.map((id) => stores.find((s) => s.id === id)?.name),
-                r.note,
-                recipeReason(r.recipeId, recipeTitles),
-              ]
-                .filter(Boolean)
-                .join(' · ')}
-            </span>
+    <li key={r.id} className={cn('flex flex-col px-3 py-2.5', done && 'opacity-70')}>
+      <div className="flex items-center gap-3">
+        {/* biome-ignore lint/a11y/useSemanticElements: a styled button; a native checkbox can't take the design */}
+        <button
+          type="button"
+          role="checkbox"
+          aria-checked={done}
+          aria-label={`${done ? 'Uncheck' : 'Check'} ${r.title}`}
+          onClick={() => toggle(r)}
+          className={cn(
+            'grid size-[26px] shrink-0 place-items-center rounded-[8px] border-2 border-border bg-surface p-0 text-on-brand',
+            done && 'border-brand bg-brand',
           )}
-        </span>
-        <span className="font-semibold tabular-nums">{formatQty(r.qty, r.unit)}</span>
-      </button>
+        >
+          {done && <Check aria-hidden className="size-4" strokeWidth={3} />}
+        </button>
+        <button
+          type="button"
+          onClick={() => setEditing(r)}
+          className="flex min-w-0 flex-1 items-center gap-3 border-0 bg-transparent p-0 text-left text-ink"
+        >
+          <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-surface-2">
+            <FoodIcon k={iconFor(r)} size={20} />
+          </span>
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className={cn('truncate font-semibold', done && 'line-through text-ink-muted')}>
+              {r.brand ? `${r.title} · ${r.brand}` : r.title}
+            </span>
+            {(r.storeIds.length > 0 || r.note || r.recipeId) && (
+              <span className="t-body-sm truncate text-ink-muted">
+                {[
+                  ...r.storeIds.map((id) => stores.find((s) => s.id === id)?.name),
+                  r.note,
+                  recipeReason(r.recipeId, recipeTitles),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
+              </span>
+            )}
+            {matchLine(r, done)}
+          </span>
+          <span className="font-semibold tabular-nums">{formatQty(r.qty, r.unit)}</span>
+        </button>
+      </div>
+      {confirmBar(r, done)}
     </li>
   )
 
@@ -254,7 +335,11 @@ export function ShoppingPage() {
           </ul>
         </section>
       )}
-      <ItemSheet row={editing} stores={stores} onClose={() => setEditing(null)} />
+      <ItemSheet
+        row={editing && (rows.find((x) => x.id === editing.id) ?? editing)}
+        stores={stores}
+        onClose={() => setEditing(null)}
+      />
       {list && (
         <PutAwaySheet
           open={putAway}

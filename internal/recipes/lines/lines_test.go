@@ -1,6 +1,7 @@
 package lines_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/a-jay98/stockpot/internal/recipes/lines"
@@ -66,6 +67,14 @@ func TestAllGroupsUnderHeaders(t *testing.T) {
 	}
 	if ls[1].Raw != "1 cup basmati rice" || ls[1].Name != "basmati rice" {
 		t.Fatalf("line: %+v", ls[1])
+	}
+}
+
+func TestRawsRoundTrips(t *testing.T) {
+	in := []string{"2 cups flour", "For the rice:", "1 cup basmati rice", "1 tsp salt", "Sauce:", "2 tbsp butter"}
+	got := lines.Raws(lines.All(append([]string{""}, in...)))
+	if strings.Join(got, "|") != strings.Join(in, "|") {
+		t.Fatalf("Raws = %q, want %q", got, in)
 	}
 }
 

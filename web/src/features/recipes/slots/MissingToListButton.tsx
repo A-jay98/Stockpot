@@ -60,7 +60,9 @@ export function MissingToListButton({
           listId: list.id,
           recipeId,
           text: it.text,
-          ...(it.productId ? { productId: it.productId } : {}),
+          // Every item gets a product: the household's, or a new one with the line's ingredient.
+          productId: it.productId ?? uuidv7(),
+          ...(!it.productId && it.ingredientId ? { ingredientId: it.ingredientId } : {}),
           ...(it.qty && it.unit ? { qty: it.qty, unit: it.unit } : {}),
         })
       const listName = list.name

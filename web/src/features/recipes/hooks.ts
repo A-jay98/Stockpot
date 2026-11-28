@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../offline/db'
-import type { Recipe, RecipeVersion } from '../../offline/replica'
+import type { Recipe, RecipeOriginal, RecipeVersion } from '../../offline/replica'
 import './commands' // registers the optimistic reducers
 
 /** Saved recipes, most recently cooked first, then by title. */
@@ -48,4 +48,49 @@ export const useRecipeTitles = (): Map<string, string> =>
 export const recipeReason = (recipeId: string | null | undefined, titles: Map<string, string>) => {
   const t = recipeId ? titles.get(recipeId) : undefined
   return t ? `Recipe: ${t}` : ''
+}
+
+/** Version `n` of a recipe (the /recipes/:id/v/:n route). */
+export const useVersionByN = (
+  recipeId: string | undefined,
+  n: number,
+): RecipeVersion | null | undefined =>
+  useLiveQuery(
+    async () =>
+      recipeId && Number.isInteger(n)
+        ? ((await db.recipe_version
+            .where('recipeId')
+            .equals(recipeId)
+            .filter((v) => v.n === n)
+            .first()) ?? null)
+        : null,
+    [recipeId, n],
+  )
+
+/**
+ * The untranslated text of a version: its own `original`, else the one held by the version it
+ * points at (later versions of a translated import carry `originalVersionId`).
+ */
+export const useOriginal = (version: RecipeVersion | null | undefined): RecipeOriginal | null =>
+  useLiveQuery(
+    async () => {
+      if (!version) return null
+      if (version.original) return version.original
+      if (!version.originalVersionId) return null
+      return (await db.recipe_version.get(version.originalVersionId))?.original ?? null
+    },
+    [version?.id, version?.original, version?.originalVersionId],
+    null,
+  )
+
+/**
+ * Like `useRecipeVersion`, but `undefined` until the query for *this* id has answered (a live
+ * query keeps its previous result while new deps load), then the row or null if it isn't here.
+ */
+export function useSettledVersion(id: string | null | undefined): RecipeVersion | null | undefined {
+  const res = useLiveQuery(
+    async () => ({ id, row: id ? ((await db.recipe_version.get(id)) ?? null) : null }),
+    [id],
+  )
+  return res && res.id === id ? res.row : undefined
 }

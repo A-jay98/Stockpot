@@ -1,9 +1,11 @@
 import { CornerDownLeft, Plus } from 'lucide-react'
 import { type KeyboardEvent, useMemo, useState } from 'react'
 import { cn, Input } from '../../ui'
-import { categoryIconKey, FoodIcon, resolveFoodIcon } from '../../ui/food-icons'
-import { useCategories, useStores } from './hooks'
+import { FoodIcon } from '../../ui/food-icons'
+import { useStores } from './hooks'
+import { foodIconFor, useIconLookup } from './icons'
 import { formatQty, type Suggestion, search } from './suggest'
+import { normalize, SCORE_TYPO, tokenScore, words } from './suggest/text'
 import { useSuggestIndex } from './useSuggest'
 
 /** What the user picked, shared by shopping add and inventory add. */
@@ -16,6 +18,23 @@ export type PickedItem = {
   qty?: string
   unit?: string
   categoryId?: string
+  /** The unit was typed ("2 kg cheese"), i.e. chosen by hand rather than prefilled. */
+  unitTyped?: boolean
+}
+
+/**
+ * Picking a catalog ingredient keeps what was typed as the item's name when it named the
+ * ingredient another way ("philadelphia" for Cream cheese, via an alias), so the list says
+ * what the user wrote and shows the match next to it. A prefix or typo of the name keeps the name.
+ */
+export function pickedName(s: Pick<Suggestion, 'entry'>, typed: string): string | undefined {
+  if (s.entry.kind !== 'ingredient') return undefined
+  const name = words(s.entry.nameNorm)
+  const tokens = words(normalize(typed))
+  if (!tokens.length || tokens.every((t) => name.some((w) => tokenScore(t, w) >= SCORE_TYPO)))
+    return undefined
+  const text = typed.trim()
+  return text.charAt(0).toLocaleUpperCase() + text.slice(1)
 }
 
 type Props = {
@@ -35,12 +54,8 @@ export function ProductPicker({ onPick, autoFocus }: Props) {
   const [active, setActive] = useState(0)
   const index = useSuggestIndex()
   const stores = useStores()
-  const categories = useCategories()
+  const icons = useIconLookup()
   const storeName = useMemo(() => new Map(stores.map((s) => [s.id, s.name])), [stores])
-  const categoryIcon = useMemo(
-    () => new Map(categories.map((c) => [c.id, c.icon ?? categoryIconKey(c.slug)])),
-    [categories],
-  )
 
   const result = useMemo(() => search(index, query), [index, query])
   const { suggestions, parsed } = result
@@ -58,9 +73,14 @@ export function ProductPicker({ onPick, autoFocus }: Props) {
   }
 
   const pick = (item: PickedItem) => {
-    onPick(item)
+    onPick(parsed.unit ? { ...item, unitTyped: true } : item)
     setQuery('')
     setActive(0)
+  }
+
+  const choose = (s: Suggestion): PickedItem => {
+    const name = pickedName(s, parsed.text || query)
+    return name ? { ...s.item, name } : s.item
   }
 
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -74,7 +94,7 @@ export function ProductPicker({ onPick, autoFocus }: Props) {
     const atEnd = e.currentTarget.selectionStart === query.length
     if ((e.key === 'Tab' || e.key === 'ArrowRight') && ghost && top && atEnd) {
       e.preventDefault()
-      pick(top.item)
+      pick(choose(top))
       return
     }
     if (e.key !== 'Enter') return
@@ -82,7 +102,7 @@ export function ProductPicker({ onPick, autoFocus }: Props) {
     if (!query.trim() || !parsed.tokens.length) return
     const chosen = suggestions[active]
     // The top row is only taken for granted when the match is confident; a lower row was chosen.
-    if (chosen && (active > 0 || chosen.confident)) pick(chosen.item)
+    if (chosen && (active > 0 || chosen.confident)) pick(choose(chosen))
     else pick(freeText())
   }
 
@@ -107,7 +127,7 @@ export function ProductPicker({ onPick, autoFocus }: Props) {
               aria-label="Accept completion"
               className="pointer-events-auto cursor-pointer border-0 bg-transparent p-0 text-ink-muted"
               onMouseDown={(e) => e.preventDefault()}
-              onClick={() => top && pick(top.item)}
+              onClick={() => top && pick(choose(top))}
             >
               {ghost}
             </button>
@@ -144,18 +164,10 @@ export function ProductPicker({ onPick, autoFocus }: Props) {
                   'flex w-full items-center gap-3 rounded-md border-0 bg-transparent px-2.5 py-2 text-left text-ink hover:bg-surface-2',
                   i === active && 'bg-brand-soft hover:bg-brand-soft',
                 )}
-                onClick={() => pick(s.item)}
+                onClick={() => pick(choose(s))}
               >
                 <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-surface-2">
-                  <FoodIcon
-                    k={resolveFoodIcon({
-                      product: s.entry.icon,
-                      category: s.entry.categoryId
-                        ? categoryIcon.get(s.entry.categoryId)
-                        : undefined,
-                    })}
-                    size={20}
-                  />
+                  <FoodIcon k={foodIconFor(s.entry, icons)} size={20} />
                 </span>
                 <span className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate font-semibold">{label(s)}</span>

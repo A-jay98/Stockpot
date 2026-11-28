@@ -2,7 +2,13 @@ import { v7 } from 'uuid'
 import type { CommandPayloads } from '../../offline/commands'
 import type { StockpotDB } from '../../offline/db'
 import { registerReducer } from '../../offline/reducers'
-import type { Recipe, RecipeLine, RecipeStep, RecipeVersion } from '../../offline/replica'
+import type {
+  Recipe,
+  RecipeLine,
+  RecipePhoto,
+  RecipeStep,
+  RecipeVersion,
+} from '../../offline/replica'
 
 // Optimistic recipe reducers. The server parses and matches ingredient lines (architecture-m2 §4);
 // until the next pull a new version shows its raw lines. Each reducer sets fields, so replays after
@@ -21,6 +27,18 @@ async function base(db: StockpotDB, id: string, clientTime: string) {
   }
 }
 
+// Leading quantity as the server sees it after normalising: ASCII, Persian or Arabic digits, or a
+// unicode fraction (see `qtyStart` in internal/recipes/lines).
+const QTY_START = /^[\d۰-۹٠-٩¼½¾⅐⅑⅒⅓⅔⅕⅖⅗⅘⅙⅚⅛⅜⅝⅞]/
+
+/** Section header ("For the rice:"), mirroring Go's `lines.Header` (≤ 80 bytes, no quantity). */
+export function isHeader(raw: string): boolean {
+  const s = raw.trim()
+  if (!s.endsWith(':') || s.length < 2 || new TextEncoder().encode(s).length > 80) return false
+  const name = s.slice(0, -1).trim()
+  return name !== '' && !QTY_START.test(name)
+}
+
 /**
  * Raw lines as shown before the server parses them: headers ("For the rice:") group what follows.
  * These line ids are client-only (the server assigns its own), so `recipe.line.set_ingredient`
@@ -32,7 +50,7 @@ export function rawLines(raws: string[]): RecipeLine[] {
   for (const r of raws) {
     const raw = r.trim()
     if (!raw) continue
-    if (raw.endsWith(':') && raw.length > 1 && !/^\d/.test(raw)) {
+    if (isHeader(raw)) {
       group = raw.slice(0, -1).trim()
       continue
     }
@@ -180,20 +198,25 @@ registerReducer(
   { targets: (p) => [p.recipeId, p.versionId] },
 )
 
-registerReducer('recipe.update', async (db, p) => {
-  const row = await db.recipe.get(p.id)
-  if (!row) return
-  const next: Recipe = { ...row }
-  if (p.tags !== undefined)
-    next.tags = [...new Set((p.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean))]
-  if (p.saved != null) {
-    next.saved = p.saved
-    if (p.saved) next.ideaExpiresAt = null
-  }
-  if (p.coverBlob !== undefined) next.coverBlob = p.coverBlob
-  if (p.subtitle !== undefined) next.subtitle = p.subtitle?.trim() || null
-  await db.recipe.put(next)
-})
+registerReducer(
+  'recipe.update',
+  async (db, p) => {
+    const row = await db.recipe.get(p.id)
+    if (!row) return
+    const next: Recipe = { ...row }
+    if (p.tags !== undefined)
+      next.tags = [...new Set((p.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean))]
+    if (p.saved != null) {
+      next.saved = p.saved
+      if (p.saved) next.ideaExpiresAt = null
+    }
+    if (p.coverBlob !== undefined) next.coverBlob = p.coverBlob
+    if (p.subtitle !== undefined) next.subtitle = p.subtitle?.trim() || null
+    await db.recipe.put(next)
+  },
+  // A new cover is a photo: the outbox uploads it before sending the command.
+  { blobs: (p) => (p.coverBlob ? [p.coverBlob] : []) },
+)
 
 registerReducer('recipe.delete', async (db, p) => {
   await db.recipe_version.where('recipeId').equals(p.id).delete()
@@ -214,3 +237,40 @@ registerReducer('recipe.line.set_ingredient', async (db, p) => {
     }),
   })
 })
+
+registerReducer(
+  'recipe.photo.add',
+  async (db, p, { clientTime }) => {
+    if (await db.recipe_photo.get(p.id)) return
+    if (!(await db.recipe.get(p.recipeId))) return
+    const photo: RecipePhoto = {
+      ...(await base(db, p.id, clientTime)),
+      recipeId: p.recipeId,
+      cookSessionId: p.cookSessionId ?? null,
+      blobRef: p.blobRef,
+      takenOn: p.takenOn ?? null,
+      caption: p.caption?.trim() || null,
+      createdBy: null,
+    }
+    await db.recipe_photo.put(photo)
+  },
+  { targets: (p) => [p.id], blobs: (p) => [p.blobRef] },
+)
+
+registerReducer('recipe.photo.remove', async (db, p) => {
+  await db.recipe_photo.delete(p.id)
+})
+
+/** The inverse of rawLines: a version's lines as raw text, with a header before each new group. */
+export function versionRawLines(lines: RecipeLine[]): string[] {
+  const out: string[] = []
+  let group: string | undefined
+  for (const l of lines) {
+    if ((l.group ?? undefined) !== group) {
+      group = l.group ?? undefined
+      if (group) out.push(`${group}:`)
+    }
+    out.push(l.raw)
+  }
+  return out
+}

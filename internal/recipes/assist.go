@@ -22,8 +22,8 @@ import (
 
 // LLM features (architecture-m2 §12). Both are Interactive: a person taps and waits.
 var (
-	FeatureSubstitute = llm.Feature{Name: "recipe_substitute", CacheTTL: 7 * 24 * time.Hour}
-	FeatureIdeas      = llm.Feature{Name: "recipe_ideas", CacheTTL: 24 * time.Hour}
+	FeatureSubstitute = llm.Feature{Name: "recipes_substitute", CacheTTL: 7 * 24 * time.Hour}
+	FeatureIdeas      = llm.Feature{Name: "recipes_ideas", CacheTTL: 24 * time.Hour}
 )
 
 // Limits on what the assistant sends and keeps.
@@ -258,7 +258,7 @@ func (a *Assistant) Substitute(ctx context.Context, hh, recipe uuid.UUID, versio
 	// Don't hold a connection (or a lock) while the model thinks.
 	_ = tx.Rollback(ctx)
 	resp, err := a.LLM.Complete(ctx, llm.Request{
-		Feature: FeatureSubstitute, Schema: substituteSchema, SchemaName: "recipe_substitute", MaxTokens: 800,
+		Feature: FeatureSubstitute, Schema: substituteSchema, SchemaName: "recipes_substitute", MaxTokens: 800,
 		Messages: []llm.Message{{Role: llm.RoleSystem, Text: substituteSystem}, {Role: llm.RoleUser, Text: string(prompt)}},
 	})
 	if err != nil {
@@ -437,7 +437,7 @@ func (a *Assistant) Ideas(ctx context.Context, hh uuid.UUID, user *uuid.UUID, no
 	}{have, soon, avoid, note})
 	_ = tx.Rollback(ctx)
 	resp, err := a.LLM.Complete(ctx, llm.Request{
-		Feature: FeatureIdeas, Schema: ideasSchema, SchemaName: "recipe_ideas", MaxTokens: 3000,
+		Feature: FeatureIdeas, Schema: ideasSchema, SchemaName: "recipes_ideas", MaxTokens: 3000,
 		Messages: []llm.Message{{Role: llm.RoleSystem, Text: ideasSystem}, {Role: llm.RoleUser, Text: string(prompt)}},
 	})
 	if err != nil {
@@ -591,7 +591,7 @@ func ExpireIdeas(ctx context.Context, pool *pgxpool.Pool, now time.Time) (int64,
 // Sweepers are the recipe jobs run by the daily retention pass.
 func Sweepers(pool *pgxpool.Pool) []jobs.Sweeper {
 	return []jobs.Sweeper{{
-		Name:  "recipe_ideas",
+		Name:  "recipes_ideas",
 		Sweep: func(ctx context.Context, now time.Time) (int64, error) { return ExpireIdeas(ctx, pool, now) },
 	}}
 }

@@ -52,7 +52,7 @@ func (s *Server) FindRecipeSubstitutes(ctx context.Context, req FindRecipeSubsti
 	if err != nil {
 		return nil, err
 	}
-	swaps, err := s.recipes.Substitute(ctx, hh, req.RecipeId, req.Body.VersionId, req.Body.LineId)
+	swaps, err := s.recipes.Substitute(ctx, hh, req.Id, req.Body.VersionId, req.Body.LineId)
 	if err != nil {
 		if p, ok := recipeProblem(ctx, err); ok {
 			return FindRecipeSubstitutesdefaultApplicationProblemPlusJSONResponse{Body: p, StatusCode: p.Status}, nil

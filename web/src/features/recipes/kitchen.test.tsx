@@ -7,7 +7,12 @@ import { jsonResponse, renderApp } from '../../test-utils'
 import { addDays, today } from '../inventory/dates'
 
 const HH = '0190a1b2-0000-7000-8000-0000000000a1'
-const base = { householdId: HH, createdAt: '', updatedAt: '', rev: 1 }
+const base = {
+  householdId: HH,
+  createdAt: '2026-11-01T12:00:00Z',
+  updatedAt: '2026-11-01T12:00:00Z',
+  rev: 1,
+}
 let calls: Request[] = []
 
 beforeEach(async () => {
@@ -245,7 +250,10 @@ test('missing to list adds missing lines with products and the recipe, once', as
     listId: 'list-1',
   })
   expect(byText.Basmati).toMatchObject({ productId: 'p-rice', qty: '1', unit: 'cup' })
-  expect(byText.saffron).toMatchObject({ productId: null, qty: null })
+  // A line with no product gets a new one named after it (the server creates it).
+  expect(byText.saffron).toMatchObject({ qty: null, recipeId: 'curry' })
+  expect(byText.saffron?.productId).toBeTruthy()
+  expect((await db.product.get(byText.saffron?.productId ?? ''))?.name).toBe('saffron')
 
   // A second tap adds nothing: they're already open on the list.
   fireEvent.click(screen.getByRole('button', { name: 'Missing to list (3)' }))

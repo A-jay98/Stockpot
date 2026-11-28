@@ -7,7 +7,10 @@ import { scaleQty } from './rank'
 export type MissingItem = {
   lineId: string
   text: string
+  /** The household's product for it; absent means a new product named `text`. */
   productId?: string
+  /** The line's ingredient, for a new product. */
+  ingredientId?: string
   qty?: string
   unit?: string
 }
@@ -65,6 +68,7 @@ export function missingItems(
     const unit = m.line.unit ? unitFromWord(m.line.unit) : undefined
     const item: MissingItem = { lineId: m.line.line_id, text: product?.name ?? m.line.name }
     if (product) item.productId = product.id
+    else if (want) item.ingredientId = want
     if (m.line.qty && unit) {
       item.qty = scaleQty(m.line.qty_max ?? m.line.qty, factor)
       item.unit = unit
