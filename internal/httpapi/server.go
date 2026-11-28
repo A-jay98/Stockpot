@@ -43,6 +43,8 @@ type Deps struct {
 	Alerts Alerts
 	// Blobs serves /api/v1/blobs*.
 	Blobs BlobService
+	// Chat serves /api/v1/recipes/{id}/chat*.
+	Chat RecipeChatService
 }
 
 // Server implements StrictServerInterface. Handlers live in one file per
@@ -60,6 +62,7 @@ type Server struct {
 	alerts    Alerts
 	foodRules FoodRuleService
 	blobs     BlobService
+	chat      RecipeChatService
 	now       func() time.Time
 }
 
@@ -69,7 +72,7 @@ var _ StrictServerInterface = (*Server)(nil)
 func NewServer(d Deps) *Server {
 	return &Server{
 		checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM,
-		commands: d.Commands, sync: d.Sync, backups: d.Backups, enrich: d.Enrich, matcher: d.Matcher, alerts: d.Alerts, foodRules: d.FoodRules, blobs: d.Blobs, now: time.Now,
+		commands: d.Commands, sync: d.Sync, backups: d.Backups, enrich: d.Enrich, matcher: d.Matcher, alerts: d.Alerts, foodRules: d.FoodRules, blobs: d.Blobs, chat: d.Chat, now: time.Now,
 	}
 }
 

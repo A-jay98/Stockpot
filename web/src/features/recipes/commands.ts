@@ -259,3 +259,17 @@ registerReducer(
 registerReducer('recipe.photo.remove', async (db, p) => {
   await db.recipe_photo.delete(p.id)
 })
+
+/** The inverse of rawLines: a version's lines as raw text, with a header before each new group. */
+export function versionRawLines(lines: RecipeLine[]): string[] {
+  const out: string[] = []
+  let group: string | undefined
+  for (const l of lines) {
+    if ((l.group ?? undefined) !== group) {
+      group = l.group ?? undefined
+      if (group) out.push(`${group}:`)
+    }
+    out.push(l.raw)
+  }
+  return out
+}

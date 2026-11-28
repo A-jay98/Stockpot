@@ -341,6 +341,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/recipes/{id}/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * The recipe's chat, oldest first
+         * @description Not synced; online only. At most the newest 200 messages.
+         */
+        get: operations["listRecipeChat"];
+        put?: never;
+        /**
+         * Ask about the recipe or say what changed
+         * @description Sends the text, the current version, the last 20 messages and the
+         *     household's cook notes to the assistant (LLM feature recipes_chat) and
+         *     stores the user's message and the reply. A reply may carry a proposal:
+         *     the changed fields, which the client applies to the current version and
+         *     saves with recipe.version.create (origin chat, fromMessageId). On 503 llm_unavailable nothing is stored;
+         *     the client offers the editor instead.
+         */
+        post: operations["postRecipeChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recipes/{id}/chat/{messageId}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set a proposal aside ("Not now")
+         * @description Idempotent. 409 chat_proposal_saved when the proposal is already a version.
+         */
+        post: operations["dismissRecipeChatProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/settings": {
         parameters: {
             query?: never;
@@ -2638,6 +2692,57 @@ export interface components {
                 ingredientId: string | null;
             };
         };
+        RecipeChatInput: {
+            text: string;
+        };
+        RecipeChat: {
+            messages: components["schemas"]["RecipeChatMessage"][];
+        };
+        RecipeChatMessage: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            recipeId: string;
+            /**
+             * Format: uuid
+             * @description The recipe's current version when the message was written; a proposal is based on it.
+             */
+            versionId: string;
+            versionN: number;
+            /** @enum {string} */
+            role: "user" | "assistant";
+            text: string;
+            proposal?: components["schemas"]["RecipeChatProposal"];
+            /** @enum {string} */
+            proposalState: "none" | "pending" | "saved" | "dismissed";
+            /** @description Why the change the reply describes could not be offered as a version. */
+            proposalError?: string;
+            /**
+             * Format: uuid
+             * @description The version a saved proposal became (absent if it was deleted).
+             */
+            savedVersionId?: string;
+            savedVersionN?: number;
+            /** Format: uuid */
+            userId?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /**
+         * @description The fields the assistant would change; absent fields stay as they are.
+         *     The client applies them to the recipe's current version and sends the
+         *     result as recipe.version.create. ingredients and steps, when present,
+         *     are complete lists; notes "" clears the notes.
+         */
+        RecipeChatProposal: {
+            changeSummary: string;
+            title?: string;
+            servings?: number;
+            totalMinutes?: number;
+            ingredients?: string[];
+            steps?: components["schemas"]["RecipeStep"][];
+            notes?: string;
+        };
         RecipeStep: {
             text: string;
             minutes?: number | null;
@@ -3498,6 +3603,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogMatch"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    listRecipeChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The messages */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeChat"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    postRecipeChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecipeChatInput"];
+            };
+        };
+        responses: {
+            /** @description The user's message and the reply */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeChat"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    dismissRecipeChatProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The message */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeChatMessage"];
                 };
             };
             default: components["responses"]["Problem"];
