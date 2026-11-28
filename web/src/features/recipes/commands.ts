@@ -2,7 +2,13 @@ import { v7 } from 'uuid'
 import type { CommandPayloads } from '../../offline/commands'
 import type { StockpotDB } from '../../offline/db'
 import { registerReducer } from '../../offline/reducers'
-import type { Recipe, RecipeLine, RecipeStep, RecipeVersion } from '../../offline/replica'
+import type {
+  Recipe,
+  RecipeLine,
+  RecipePhoto,
+  RecipeStep,
+  RecipeVersion,
+} from '../../offline/replica'
 
 // Optimistic recipe reducers. The server parses and matches ingredient lines (architecture-m2 §4);
 // until the next pull a new version shows its raw lines. Each reducer sets fields, so replays after
@@ -180,20 +186,25 @@ registerReducer(
   { targets: (p) => [p.recipeId, p.versionId] },
 )
 
-registerReducer('recipe.update', async (db, p) => {
-  const row = await db.recipe.get(p.id)
-  if (!row) return
-  const next: Recipe = { ...row }
-  if (p.tags !== undefined)
-    next.tags = [...new Set((p.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean))]
-  if (p.saved != null) {
-    next.saved = p.saved
-    if (p.saved) next.ideaExpiresAt = null
-  }
-  if (p.coverBlob !== undefined) next.coverBlob = p.coverBlob
-  if (p.subtitle !== undefined) next.subtitle = p.subtitle?.trim() || null
-  await db.recipe.put(next)
-})
+registerReducer(
+  'recipe.update',
+  async (db, p) => {
+    const row = await db.recipe.get(p.id)
+    if (!row) return
+    const next: Recipe = { ...row }
+    if (p.tags !== undefined)
+      next.tags = [...new Set((p.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean))]
+    if (p.saved != null) {
+      next.saved = p.saved
+      if (p.saved) next.ideaExpiresAt = null
+    }
+    if (p.coverBlob !== undefined) next.coverBlob = p.coverBlob
+    if (p.subtitle !== undefined) next.subtitle = p.subtitle?.trim() || null
+    await db.recipe.put(next)
+  },
+  // A new cover is a photo: the outbox uploads it before sending the command.
+  { blobs: (p) => (p.coverBlob ? [p.coverBlob] : []) },
+)
 
 registerReducer('recipe.delete', async (db, p) => {
   await db.recipe_version.where('recipeId').equals(p.id).delete()
@@ -212,4 +223,27 @@ registerReducer('recipe.line.set_ingredient', async (db, p) => {
       return p.ingredientId ? { ...rest, ingredient_id: p.ingredientId, match_confidence: 1 } : rest
     }),
   })
+})
+
+registerReducer(
+  'recipe.photo.add',
+  async (db, p, { clientTime }) => {
+    if (await db.recipe_photo.get(p.id)) return
+    if (!(await db.recipe.get(p.recipeId))) return
+    const photo: RecipePhoto = {
+      ...(await base(db, p.id, clientTime)),
+      recipeId: p.recipeId,
+      cookSessionId: p.cookSessionId ?? null,
+      blobRef: p.blobRef,
+      takenOn: p.takenOn ?? null,
+      caption: p.caption?.trim() || null,
+      createdBy: null,
+    }
+    await db.recipe_photo.put(photo)
+  },
+  { targets: (p) => [p.id], blobs: (p) => [p.blobRef] },
+)
+
+registerReducer('recipe.photo.remove', async (db, p) => {
+  await db.recipe_photo.delete(p.id)
 })

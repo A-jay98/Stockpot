@@ -14,7 +14,13 @@ export type MetaRow = { key: string; value: unknown }
  * SHA-256, the same ref the server computes, so commands can reference it before the upload
  * (architecture-m2 §6). Local only, never synced.
  */
-export type PendingBlobRow = { ref: string; blob: Blob; createdAt: string }
+export type PendingBlobRow = {
+  ref: string
+  blob: Blob
+  createdAt: string
+  /** Failed upload tries; see MAX_UPLOAD_ATTEMPTS in src/lib/photos.ts. */
+  attempts?: number
+}
 
 export type OutboxStatus = 'pending' | 'sending' | 'rejected'
 

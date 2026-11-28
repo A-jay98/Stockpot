@@ -37,6 +37,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/llm"
 	"github.com/a-jay98/stockpot/internal/llm/openaicompat"
 	"github.com/a-jay98/stockpot/internal/logging"
+	"github.com/a-jay98/stockpot/internal/media"
 	"github.com/a-jay98/stockpot/internal/recipes"
 	"github.com/a-jay98/stockpot/internal/settings"
 	"github.com/a-jay98/stockpot/internal/shopping"
@@ -222,6 +223,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Matcher:   catalog.Matcher{Pool: pool, Res: resolve.Resolver{}},
 			Alerts:    alertSvc,
 			FoodRules: inventory.NewRuleService(pool),
+			Blobs:     media.New(pool, blobs),
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,

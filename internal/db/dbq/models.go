@@ -103,6 +103,25 @@ type BackupRun struct {
 	DeleteNote    *string
 }
 
+type BlobOwner struct {
+	Ref         string
+	HouseholdID uuid.UUID
+	UploadedBy  *uuid.UUID
+	Size        int64
+	ContentType string
+	Width       int32
+	Height      int32
+	CreatedAt   time.Time
+}
+
+type BlobVariant struct {
+	Ref        string
+	Width      int32
+	VariantRef string
+	Size       int64
+	CreatedAt  time.Time
+}
+
 type Category struct {
 	ID          uuid.UUID
 	HouseholdID *uuid.UUID
