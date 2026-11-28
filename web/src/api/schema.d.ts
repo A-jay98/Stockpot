@@ -341,6 +341,55 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/recipes/{recipeId}/substitutes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Find a swap for a missing ingredient line
+         * @description Asks the LLM (feature recipe_substitute, cached 7 days on version,
+         *     line and in-stock set) for swaps made only from what the household has
+         *     in stock. Swaps are saved as household substitution rows for this
+         *     recipe and arrive through sync; the answer lists them. An empty list
+         *     means nothing in stock works. 503 llm_unavailable means swap by hand;
+         *     422 line_unmatched means the line needs an ingredient match first.
+         */
+        post: operations["findRecipeSubstitutes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recipes/ideas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest recipes from what is in stock
+         * @description One LLM call (feature recipe_ideas, cached 1 day on the in-stock,
+         *     expiring and existing-title sets) that creates up to 3 unsaved idea
+         *     recipes (source idea, removed after 7 days unless saved with
+         *     recipe.update saved=true). They arrive through sync; the answer lists
+         *     their ids. 503 llm_unavailable means add a recipe by hand.
+         */
+        post: operations["createRecipeIdeas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/settings": {
         parameters: {
             query?: never;
@@ -1473,6 +1522,30 @@ export interface components {
             id: string;
             name: string;
             brand?: string;
+        };
+        RecipeSubstituteRequest: {
+            /** Format: uuid */
+            lineId: string;
+            /**
+             * Format: uuid
+             * @description The version the line belongs to; default the recipe's current version.
+             */
+            versionId?: string;
+        };
+        RecipeSubstitutes: {
+            substitutions: components["schemas"]["RecipeSubstitute"][];
+        };
+        RecipeSubstitute: {
+            /** Format: uuid */
+            id: string;
+            note: string;
+        };
+        RecipeIdeasRequest: {
+            /** @description Free text for the model, e.g. "vegetarian, under 30 minutes". */
+            note?: string;
+        };
+        RecipeIdeas: {
+            recipeIds: string[];
         };
         AdminCatalog: {
             /** @description flag.catalog_enrich */
@@ -3390,6 +3463,58 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogMatch"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    findRecipeSubstitutes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                recipeId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecipeSubstituteRequest"];
+            };
+        };
+        responses: {
+            /** @description The swaps saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeSubstitutes"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    createRecipeIdeas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RecipeIdeasRequest"];
+            };
+        };
+        responses: {
+            /** @description The ideas created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeIdeas"];
                 };
             };
             default: components["responses"]["Problem"];
