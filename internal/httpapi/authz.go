@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -117,7 +118,7 @@ func authorize(spec *openapi3.T, roles RouteRoles, az Authorizer) (func(http.Han
 			}
 			switch err := az.Authorize(r, roles[route.Operation.OperationID]); {
 			case err == nil:
-				next.ServeHTTP(w, r)
+				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), operationKey{}, route.Operation.OperationID)))
 			case errors.Is(err, ErrUnauthenticated):
 				writeProblem(w, r, http.StatusUnauthorized, CodeUnauthenticated, "Sign in to continue.")
 			default:
@@ -125,4 +126,13 @@ func authorize(spec *openapi3.T, roles RouteRoles, az Authorizer) (func(http.Han
 			}
 		})
 	}, nil
+}
+
+// operationKey carries the matched operation id from authorize to the
+// middleware after it.
+type operationKey struct{}
+
+func operationID(ctx context.Context) string {
+	id, _ := ctx.Value(operationKey{}).(string)
+	return id
 }

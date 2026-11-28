@@ -37,6 +37,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/llm"
 	"github.com/a-jay98/stockpot/internal/llm/openaicompat"
 	"github.com/a-jay98/stockpot/internal/logging"
+	"github.com/a-jay98/stockpot/internal/media"
 	"github.com/a-jay98/stockpot/internal/recipes"
 	"github.com/a-jay98/stockpot/internal/recipes/chat"
 	"github.com/a-jay98/stockpot/internal/settings"
@@ -225,6 +226,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Alerts:    alertSvc,
 			FoodRules: inventory.NewRuleService(pool),
 			Chat:      &chat.Service{Pool: pool, LLM: gateway},
+			Blobs:     media.New(pool, blobs),
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,

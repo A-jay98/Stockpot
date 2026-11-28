@@ -42,6 +42,8 @@ tags:
     description: Ingredients, matching and the household catalog.
   - name: sync
     description: Offline sync engine - commands, pulls and change events.
+  - name: blobs
+    description: Photo upload and download (content-addressed).
   - name: notifications
     description: Inbox, alert preferences and Telegram linking.
   - name: recipes
@@ -1586,6 +1588,81 @@ paths:
                 $ref: "#/components/schemas/AdminFoodRules"
         default:
           $ref: "#/components/responses/Problem"
+  /v1/blobs:
+    post:
+      operationId: uploadBlob
+      summary: Upload a photo for the household
+      description: |
+        Raw image bytes: JPEG, PNG or WebP (the type is read from the
+        bytes), at most 8 MB and 4096 px per side. The ref is the SHA-256 of the bytes, so clients compute it
+        before uploading and reference it in commands while offline.
+        Uploading bytes that already exist only grants this household access.
+      tags: [blobs]
+      x-roles: [user]
+      x-max-body-bytes: 8388608
+      requestBody:
+        required: true
+        content:
+          image/*:
+            schema:
+              type: string
+              format: binary
+      responses:
+        "201":
+          description: Stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BlobUploaded"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/blobs/{ref}:
+    get:
+      operationId: getBlob
+      summary: A photo the household uploaded, or a resized copy
+      description: |
+        404 unless the active household uploaded `ref`. `Cache-Control:
+        private, no-cache` with `ETag` = the ref (a content hash), so
+        revalidation is a cheap 304; the service worker keeps offline copies. `w` serves a JPEG at that
+        width, built on first request; a width at or above the original's
+        serves the original.
+      tags: [blobs]
+      x-roles: [user]
+      parameters:
+        - name: ref
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: "^[0-9a-f]{64}$"
+        - name: w
+          in: query
+          schema:
+            type: integer
+            enum: [256, 512, 1024]
+        - name: If-None-Match
+          in: header
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The image
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+            ETag:
+              schema:
+                type: string
+          content:
+            image/*:
+              schema:
+                type: string
+                format: binary
+        "304":
+          description: Not modified (the ETag matched)
+        default:
+          $ref: "#/components/responses/Problem"
 components:
   headers:
     SetCookie:
@@ -2957,6 +3034,8 @@ components:
         - $ref: "#/components/schemas/CmdRecipeUpdate"
         - $ref: "#/components/schemas/CmdRecipeDelete"
         - $ref: "#/components/schemas/CmdRecipeLineSetIngredient"
+        - $ref: "#/components/schemas/CmdRecipePhotoAdd"
+        - $ref: "#/components/schemas/CmdRecipePhotoRemove"
       discriminator:
         propertyName: type
         mapping:
@@ -3001,6 +3080,8 @@ components:
           recipe.update: "#/components/schemas/CmdRecipeUpdate"
           recipe.delete: "#/components/schemas/CmdRecipeDelete"
           recipe.line.set_ingredient: "#/components/schemas/CmdRecipeLineSetIngredient"
+          recipe.photo.add: "#/components/schemas/CmdRecipePhotoAdd"
+          recipe.photo.remove: "#/components/schemas/CmdRecipePhotoRemove"
     CmdCatalogProductCreate:
       type: object
       required: [id, type, payload, clientTime]
@@ -3543,6 +3624,15 @@ components:
               type: string
               format: uuid
               nullable: true
+              description: "A household product, or with text the client's id for a new product named text (created on apply)."
+            ingredientId:
+              type: string
+              format: uuid
+              nullable: true
+              description: "The ingredient the user picked for a new product (sets match_source=user)."
+            rememberAmount:
+              type: boolean
+              description: "unit/qty were chosen by hand: save them as the product's default_unit/default_qty."
             text:
               type: string
               maxLength: 200
@@ -4003,6 +4093,71 @@ components:
         type:
           type: string
           enum: [recipe.delete]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdRecipePhotoAdd:
+      description: |
+        Attach an uploaded photo (POST /v1/blobs) to a recipe, optionally to
+        one cook. Rejected (invalid) unless the household owns the blob.
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.photo.add]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, recipeId, blobRef]
+          properties:
+            id:
+              type: string
+              format: uuid
+            recipeId:
+              type: string
+              format: uuid
+            blobRef:
+              type: string
+              pattern: '^[0-9a-f]{64}$'
+            cookSessionId:
+              type: string
+              format: uuid
+              nullable: true
+            takenOn:
+              type: string
+              format: date
+              nullable: true
+            caption:
+              type: string
+              maxLength: 300
+              nullable: true
+    CmdRecipePhotoRemove:
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.photo.remove]
         clientTime:
           type: string
           format: date-time
@@ -4828,3 +4983,19 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/AdminFoodRule"
+    BlobUploaded:
+      type: object
+      required: [ref, size, contentType, width, height]
+      properties:
+        ref:
+          type: string
+          description: Lower-case hex SHA-256 of the bytes.
+        size:
+          type: integer
+          format: int64
+        contentType:
+          type: string
+        width:
+          type: integer
+        height:
+          type: integer
