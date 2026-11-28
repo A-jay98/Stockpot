@@ -41,6 +41,8 @@ type Deps struct {
 	Matcher CatalogMatcher
 	// Alerts serves /api/v1/notifications* and /api/v1/admin/telegram; nil answers 503.
 	Alerts Alerts
+	// Recipes serves the recipe LLM helpers (/api/v1/recipes/*); nil answers 503 llm_unavailable.
+	Recipes RecipeAssistant
 }
 
 // Server implements StrictServerInterface. Handlers live in one file per
@@ -57,6 +59,7 @@ type Server struct {
 	matcher   CatalogMatcher
 	alerts    Alerts
 	foodRules FoodRuleService
+	recipes   RecipeAssistant
 	now       func() time.Time
 }
 
@@ -66,7 +69,7 @@ var _ StrictServerInterface = (*Server)(nil)
 func NewServer(d Deps) *Server {
 	return &Server{
 		checks: d.Checks, admin: d.Admin, identity: d.Identity, llm: d.LLM,
-		commands: d.Commands, sync: d.Sync, backups: d.Backups, enrich: d.Enrich, matcher: d.Matcher, alerts: d.Alerts, foodRules: d.FoodRules, now: time.Now,
+		commands: d.Commands, sync: d.Sync, backups: d.Backups, enrich: d.Enrich, matcher: d.Matcher, alerts: d.Alerts, foodRules: d.FoodRules, recipes: d.Recipes, now: time.Now,
 	}
 }
 

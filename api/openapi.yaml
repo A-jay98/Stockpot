@@ -40,6 +40,8 @@ tags:
     description: Shelf-life (food) rules behind expiry estimates.
   - name: catalog
     description: Ingredients, matching and the household catalog.
+  - name: recipes
+    description: Recipe helpers that need the server (LLM swaps and ideas); recipes themselves sync.
   - name: sync
     description: Offline sync engine - commands, pulls and change events.
   - name: notifications
@@ -393,6 +395,68 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CatalogMatch"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/recipes/{recipeId}/substitutes:
+    post:
+      operationId: findRecipeSubstitutes
+      summary: Find a swap for a missing ingredient line
+      description: |
+        Asks the LLM (feature recipe_substitute, cached 7 days on version,
+        line and in-stock set) for swaps made only from what the household has
+        in stock. Swaps are saved as household substitution rows for this
+        recipe and arrive through sync; the answer lists them. An empty list
+        means nothing in stock works. 503 llm_unavailable means swap by hand;
+        422 line_unmatched means the line needs an ingredient match first.
+      tags: [recipes]
+      x-roles: [user]
+      parameters:
+        - name: recipeId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecipeSubstituteRequest"
+      responses:
+        "200":
+          description: The swaps saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeSubstitutes"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/recipes/ideas:
+    post:
+      operationId: createRecipeIdeas
+      summary: Suggest recipes from what is in stock
+      description: |
+        One LLM call (feature recipe_ideas, cached 1 day on the in-stock,
+        expiring and existing-title sets) that creates up to 3 unsaved idea
+        recipes (source idea, removed after 7 days unless saved with
+        recipe.update saved=true). They arrive through sync; the answer lists
+        their ids. 503 llm_unavailable means add a recipe by hand.
+      tags: [recipes]
+      x-roles: [user]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecipeIdeasRequest"
+      responses:
+        "200":
+          description: The ideas created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeIdeas"
         default:
           $ref: "#/components/responses/Problem"
   /v1/admin/settings:
@@ -1978,6 +2042,50 @@ components:
           type: string
         brand:
           type: string
+    RecipeSubstituteRequest:
+      type: object
+      required: [lineId]
+      properties:
+        lineId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+          description: The version the line belongs to; default the recipe's current version.
+    RecipeSubstitutes:
+      type: object
+      required: [substitutions]
+      properties:
+        substitutions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeSubstitute"
+    RecipeSubstitute:
+      type: object
+      required: [id, note]
+      properties:
+        id:
+          type: string
+          format: uuid
+        note:
+          type: string
+    RecipeIdeasRequest:
+      type: object
+      properties:
+        note:
+          type: string
+          maxLength: 200
+          description: Free text for the model, e.g. "vegetarian, under 30 minutes".
+    RecipeIdeas:
+      type: object
+      required: [recipeIds]
+      properties:
+        recipeIds:
+          type: array
+          items:
+            type: string
+            format: uuid
     AdminCatalog:
       type: object
       required: [enabled, intervalMinutes, counts, headroom, runs, llmIngredients, review]
