@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import leftoverNames from '../../../../internal/cook/testdata/leftover_names.json'
 import { format } from '../../lib/units'
 import { StockpotDB } from '../../offline/db'
 import { dispatch } from '../../offline/outbox'
@@ -210,9 +211,8 @@ describe('plan', () => {
     expect(suggest(oil, line({}), null, cat).take).toEqual({ kind: 'level', level: 'most' })
   })
 
-  test('leftover names', () => {
-    expect(leftoverName('Chicken curry')).toBe('Leftover chicken curry')
-    expect(leftoverName('BBQ ribs')).toBe('Leftover BBQ ribs')
+  test('leftover names (shared with Go)', () => {
+    for (const c of leftoverNames) expect(leftoverName(c.title)).toBe(c.name)
   })
 
   test('undo event ids match the server (uuidv5)', () => {
@@ -388,6 +388,51 @@ describe('reducers', () => {
     expect((await db.cook_session.get('cook-1'))?.undoneAt).not.toBeNull()
     expect((await db.recipe.get('r1'))?.cookedCount).toBe(0)
     // A second undo (replay) changes nothing.
+    await dispatch('recipe.cook.undo', { id: 'cook-1' }, db)
+    expect((await db.stock_item.get('thighs'))?.quantity).toBe('900')
+  })
+
+  test('level uses keep reason "cook"', async () => {
+    await dispatch('recipe.cook', cook, db)
+    expect(await db.stock_event.get('0190a1b2-0000-7000-8000-00000000e003')).toMatchObject({
+      kind: 'adjust',
+      reason: 'cook',
+    })
+  })
+
+  test('offline undo brings back items the cook finished', async () => {
+    const oilDone = {
+      stockItemId: 'oil',
+      eventId: '0190a1b2-0000-7000-8000-00000000e003',
+      finished: true,
+    }
+    await dispatch('recipe.cook', { ...cook, uses: [...cook.uses.slice(0, 2), oilDone] }, db)
+    expect(await db.stock_item.get('onion')).toBeUndefined()
+    expect(await db.stock_item.get('oil')).toBeUndefined()
+    await dispatch('recipe.cook.undo', { id: 'cook-1' }, db)
+    expect((await db.stock_item.get('onion'))?.quantity).toBe('2')
+    expect((await db.stock_item.get('oil'))?.level).toBe('most')
+  })
+
+  test('two lines can use one item; undo restores it', async () => {
+    const twice = {
+      ...cook,
+      store: [],
+      uses: [
+        { stockItemId: 'thighs', eventId: '0190a1b2-0000-7000-8000-00000000e011', quantity: '300' },
+        { stockItemId: 'thighs', eventId: '0190a1b2-0000-7000-8000-00000000e012', quantity: '700' },
+      ],
+    }
+    await dispatch('recipe.cook', twice, db)
+    expect(await db.stock_item.get('thighs')).toBeUndefined()
+    const uses = (await db.cook_session.get('cook-1'))?.uses as CookUseRecord[]
+    expect(uses.map((u) => [u.quantity, u.finished])).toEqual([
+      ['300', false],
+      ['600', true],
+    ])
+    const { applyReducer } = await import('../../offline/reducers')
+    await applyReducer(db, 'recipe.cook', twice, '2026-11-28T12:00:00Z')
+    expect(await db.stock_item.get('thighs')).toBeUndefined()
     await dispatch('recipe.cook.undo', { id: 'cook-1' }, db)
     expect((await db.stock_item.get('thighs'))?.quantity).toBe('900')
   })

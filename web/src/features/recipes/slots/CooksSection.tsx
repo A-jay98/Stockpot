@@ -69,7 +69,9 @@ export function CooksSection({ recipeId }: { recipeId: string; versionId: string
 }
 
 function CookLine({ entry: { session: s } }: { entry: CookEntry }) {
-  const stored = s.stored.reduce((n, x) => n + x.portions, 0)
+  const stored = (s.stored as { portions: number; skipped?: boolean }[])
+    .filter((x) => !x.skipped)
+    .reduce((n, x) => n + x.portions, 0)
   const used = (s.uses as { skipped?: boolean }[]).filter((u) => !u.skipped).length
   const skipped = s.uses.length - used
   const canUndo = Date.now() - Date.parse(s.createdAt) < UndoWindowMs

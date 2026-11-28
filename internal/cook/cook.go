@@ -414,18 +414,21 @@ func ensureLeftover(ctx context.Context, tx pgx.Tx, hh, recipe uuid.UUID, title 
 		}
 		name = fmt.Sprintf("%s (%d)", base, n)
 	}
-	_, err = tx.Exec(ctx, `INSERT INTO product (id, household_id, name, category_id, default_location_kind, recipe_id, match_source, enrich_state)
-		VALUES ($1, $2, $3, (SELECT id FROM category WHERE household_id IS NULL AND slug = 'leftovers'), 'fridge', $4, 'none', 'skipped')
-		ON CONFLICT (id) DO NOTHING`, want, hh, name, recipe)
-	if err != nil {
-		return id, err
+	insert := func(id uuid.UUID) (bool, error) {
+		tag, err := tx.Exec(ctx, `INSERT INTO product (id, household_id, name, category_id, default_location_kind, recipe_id, match_source, enrich_state)
+			VALUES ($1, $2, $3, (SELECT id FROM category WHERE household_id IS NULL AND slug = 'leftovers'), 'fridge', $4, 'none', 'skipped')
+			ON CONFLICT (id) DO NOTHING`, id, hh, name, recipe)
+		return tag.RowsAffected() == 1, err
 	}
-	var owned uuid.UUID
-	err = tx.QueryRow(ctx, `SELECT id FROM product WHERE household_id = $1 AND recipe_id = $2 AND deleted_at IS NULL`, hh, recipe).Scan(&owned)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return id, commands.Invalid("leftoverProductId is another product")
+	ok, err := insert(want)
+	if err != nil || ok {
+		return want, err
 	}
-	return owned, err
+	// want is taken (a deleted leftover product the client still had): the
+	// cook happened, so store under a fresh id; the next pull brings it.
+	id = uuid.New()
+	_, err = insert(id)
+	return id, err
 }
 
 // refreshCounts recomputes the recipe's cooked_count and last_cooked_at from

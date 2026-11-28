@@ -29,6 +29,8 @@ export type CookUseRecord = {
   finished?: boolean
   shopping_item_id?: string
   skipped?: boolean
+  /** Local only: the row as it was before this use finished it, so an offline undo can put it back. */
+  restore?: StockItem
 }
 
 /** A `cook_session.stored` entry. */
@@ -38,6 +40,7 @@ export type CookStoreRecord = {
   stock_item_id: string
   event_id: string
   expires_on?: string
+  skipped?: boolean
 }
 
 /** Undo is accepted for 24 h after a cook (the server checks too). */
@@ -151,12 +154,15 @@ async function applyUse(
     else if (u.level) {
       rec.level_after = u.level
       next = { ...it, level: u.level }
-      ev.kind = 'adjust'
-      ev.reason = u.level
+      ev.kind = 'adjust' // reason stays "cook"; the new level is on the item and in level_after
     }
   }
   if (next) await db.stock_item.put(mark(next, u.eventId))
-  else await db.stock_item.delete(it.id)
+  else {
+    rec.finished = true
+    rec.restore = it
+    await db.stock_item.delete(it.id)
+  }
   await logEvent(db, clientTime, {
     id: u.eventId,
     stockItemId: it.id,
@@ -182,6 +188,15 @@ async function applyUse(
     rec.shopping_item_id = u.toShopping.id
   }
   return rec
+}
+
+/** No event outside the cook session touched the item after `eventId` (the server's rule). */
+async function untouchedSince(db: StockpotDB, itemId: string, eventId: string, session: string) {
+  const cookEvent = await db.stock_event.get(eventId)
+  const events = await db.stock_event.where('stockItemId').equals(itemId).toArray()
+  return events.every(
+    (e) => e.cookSessionId === session || (!!cookEvent && e.createdAt <= cookEvent.createdAt),
+  )
 }
 
 /** The recipe's leftover product: the existing one, else a new one under `want`. */
@@ -213,9 +228,10 @@ async function ensureLeftover(
 
 /** "Leftover chicken curry" (the server adds " (2)" when that name is taken). */
 export function leftoverName(title: string): string {
-  const r = [...title]
+  const r = [...title.trim()]
+  if (r.length === 0) return 'Leftovers'
   if (r.length > 1 && r[1] === r[1]?.toUpperCase() && r[1] !== r[1]?.toLowerCase())
-    return `Leftover ${title}`
+    return `Leftover ${r.join('')}`
   return `Leftover ${(r[0] ?? '').toLowerCase()}${r.slice(1).join('')}`
 }
 
@@ -243,12 +259,11 @@ registerReducer(
     if (!recipe) return
     const prev = await db.cook_session.get(p.id)
     if (prev?.undoneAt) return
-    const priorUses = new Map(
-      ((prev?.uses ?? []) as CookUseRecord[]).map((u) => [u.stock_item_id, u]),
-    )
+    // Keyed by event: two lines may use the same item, one after the other.
+    const priorUses = new Map(((prev?.uses ?? []) as CookUseRecord[]).map((u) => [u.event_id, u]))
     const uses: CookUseRecord[] = []
     for (const u of p.uses) {
-      uses.push(await applyUse(db, p.id, p.recipeId, u, priorUses.get(u.stockItemId), clientTime))
+      uses.push(await applyUse(db, p.id, p.recipeId, u, priorUses.get(u.eventId), clientTime))
     }
     const stored: CookStoreRecord[] = []
     let leftoverProductId: string | null = prev?.leftoverProductId ?? null
@@ -329,12 +344,25 @@ registerReducer(
 registerReducer('recipe.cook.undo', async (db, p, { clientTime }) => {
   const s = await db.cook_session.get(p.id)
   if (!s || s.undoneAt) return
-  for (const u of s.uses as CookUseRecord[]) {
+  // Newest first, as the server: a use that finished an item brings it back before an earlier
+  // use of the same item puts its delta on top.
+  for (const u of [...(s.uses as CookUseRecord[])].reverse()) {
     if (u.skipped) continue
     const undoId = undoEventId(u.event_id)
     const it = await db.stock_item.get(u.stock_item_id)
-    // A finished item is back after the next pull; deltas onto a live item apply now.
-    if (it && !applied(it, undoId)) {
+    if (!it && u.restore && (await untouchedSince(db, u.stock_item_id, u.event_id, s.id))) {
+      await db.stock_item.put(mark(u.restore, undoId))
+      await logEvent(db, clientTime, {
+        id: undoId,
+        stockItemId: u.stock_item_id,
+        kind: 'adjust',
+        delta: u.quantity ?? (u.portions != null ? String(u.portions) : null),
+        unit: u.restore.amountKind === 'level' ? null : u.restore.unit,
+        toLocationId: u.restore.locationId,
+        reason: 'cook_undo',
+        cookSessionId: s.id,
+      })
+    } else if (it && !applied(it, undoId)) {
       let next: StockItem | null = null
       if (it.amountKind === 'exact' && it.quantity && u.quantity)
         next = { ...it, quantity: add(it.quantity, u.quantity) }
@@ -362,6 +390,7 @@ registerReducer('recipe.cook.undo', async (db, p, { clientTime }) => {
     }
   }
   for (const st of s.stored as CookStoreRecord[]) {
+    if (st.skipped) continue
     const it = await db.stock_item.get(st.stock_item_id)
     const events = await db.stock_event.where('stockItemId').equals(st.stock_item_id).toArray()
     // Leftovers nobody touched since go; ones someone used are real stock now.

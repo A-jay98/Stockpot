@@ -549,3 +549,21 @@ func TestLeftoverNameAccentedTitle(t *testing.T) {
 		t.Errorf("name %q", name)
 	}
 }
+
+func TestCookWithDeletedLeftoverProduct(t *testing.T) {
+	e := newEnv(t)
+	store := func() map[string]any {
+		return e.cookPayload(nil, []map[string]any{{"stockItemId": uuid.New(), "eventId": uuid.New(), "locationId": e.loc["fridge"], "portions": 1}})
+	}
+	e.ok(t, "recipe.cook", store())
+	if _, err := e.pool.Exec(t.Context(), `UPDATE product SET deleted_at = now() WHERE id = $1`, e.leftover); err != nil {
+		t.Fatal(err)
+	}
+	// The client still proposes the deleted product's id.
+	p := store()
+	e.ok(t, "recipe.cook", p)
+	s := e.session(t, p["id"])
+	if s.Leftover == nil || *s.Leftover == e.leftover {
+		t.Errorf("want a new leftover product, got %v", s.Leftover)
+	}
+}
