@@ -398,6 +398,20 @@ type Recipe struct {
 	ImportID         *uuid.UUID
 }
 
+type RecipeChatMessage struct {
+	ID             uuid.UUID
+	HouseholdID    uuid.UUID
+	RecipeID       uuid.UUID
+	VersionID      uuid.UUID
+	Role           string
+	Text           string
+	Proposal       []byte
+	ProposalState  string
+	SavedVersionID *uuid.UUID
+	UserID         *uuid.UUID
+	CreatedAt      time.Time
+}
+
 type RecipeImport struct {
 	ID           uuid.UUID
 	HouseholdID  uuid.UUID

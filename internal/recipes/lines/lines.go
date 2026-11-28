@@ -326,3 +326,21 @@ func parseNumber(s string) (string, bool) {
 	out = strings.TrimRight(strings.TrimRight(out, "0"), ".")
 	return out, true
 }
+
+// Raws is the inverse of All: the raw lines in order, with a section header
+// ("For the rice:") before each change of group, so All(Raws(ls)) keeps
+// every line's group and text.
+func Raws(ls []Line) []string {
+	out := make([]string, 0, len(ls))
+	group := ""
+	for _, l := range ls {
+		if l.Group != group {
+			group = l.Group
+			if group != "" {
+				out = append(out, group+":")
+			}
+		}
+		out = append(out, l.Raw)
+	}
+	return out
+}
