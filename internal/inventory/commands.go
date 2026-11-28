@@ -337,6 +337,8 @@ type event struct {
 	Unit     *string
 	From, To *uuid.UUID
 	Reason   *string
+	// CookSession links the events "I cooked this" writes to its session.
+	CookSession *uuid.UUID
 }
 
 func writeEvent(ctx context.Context, tx pgx.Tx, hh uuid.UUID, e event) error {
@@ -348,9 +350,9 @@ func writeEvent(ctx context.Context, tx pgx.Tx, hh uuid.UUID, e event) error {
 	if id, ok := commands.ID(ctx); ok {
 		cmd = &id
 	}
-	_, err := tx.Exec(ctx, `INSERT INTO stock_event (id, household_id, stock_item_id, kind, delta, unit, from_location_id, to_location_id, reason, actor_id, command_id)
-		VALUES ($1, $2, $3, $4, $5::text::numeric, $6, $7, $8, $9, $10, $11)`,
-		e.ID, hh, e.Item, e.Kind, e.Delta, e.Unit, e.From, e.To, e.Reason, actor, cmd)
+	_, err := tx.Exec(ctx, `INSERT INTO stock_event (id, household_id, stock_item_id, kind, delta, unit, from_location_id, to_location_id, reason, actor_id, command_id, cook_session_id)
+		VALUES ($1, $2, $3, $4, $5::text::numeric, $6, $7, $8, $9, $10, $11, $12)`,
+		e.ID, hh, e.Item, e.Kind, e.Delta, e.Unit, e.From, e.To, e.Reason, actor, cmd, e.CookSession)
 	return err
 }
 
@@ -366,21 +368,22 @@ func (h *handlers) chain(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID) 
 type newItem struct {
 	ID, Product, Location uuid.UUID
 	Amount
-	ExpiresOn  *time.Time
-	ExpiryKind *string
-	OpenedOn   *time.Time
-	FrozenOn   *time.Time
-	Source     string
-	Parent     *uuid.UUID
-	Note       *string
+	ExpiresOn   *time.Time
+	ExpiryKind  *string
+	OpenedOn    *time.Time
+	FrozenOn    *time.Time
+	Source      string
+	Parent      *uuid.UUID
+	Note        *string
+	CookSession *uuid.UUID
 }
 
 func insertItem(ctx context.Context, tx pgx.Tx, hh uuid.UUID, n newItem) error {
 	_, err := tx.Exec(ctx, `INSERT INTO stock_item (id, household_id, product_id, location_id, amount_kind, quantity, unit, portions, level,
-			expires_on, expiry_kind, opened_on, frozen_on, source, parent_item_id, note)
-		VALUES ($1, $2, $3, $4, $5, $6::text::numeric, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)`,
+			expires_on, expiry_kind, opened_on, frozen_on, source, parent_item_id, note, cook_session_id)
+		VALUES ($1, $2, $3, $4, $5, $6::text::numeric, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
 		n.ID, hh, n.Product, n.Location, n.Kind, n.Quantity, n.Unit, n.Portions, n.Level,
-		n.ExpiresOn, n.ExpiryKind, n.OpenedOn, n.FrozenOn, n.Source, n.Parent, n.Note)
+		n.ExpiresOn, n.ExpiryKind, n.OpenedOn, n.FrozenOn, n.Source, n.Parent, n.Note, n.CookSession)
 	return err
 }
 
@@ -531,7 +534,6 @@ func (h *handlers) consume(ctx context.Context, tx pgx.Tx, p StockConsume) error
 	if err != nil {
 		return err
 	}
-	ev := event{ID: p.EventID, Item: p.ID, Kind: "consume", Unit: it.Unit, From: it.LocationID, Reason: p.Reason}
 	switch it.Kind {
 	case "exact":
 		if p.Quantity == nil || p.Portions != nil {
@@ -544,37 +546,65 @@ func (h *handlers) consume(ctx context.Context, tx pgx.Tx, p StockConsume) error
 		if p.Unit != nil && *p.Unit != *it.Unit {
 			return commands.Invalid("unit must be %s", *it.Unit)
 		}
-		taken, left, err := numOps(ctx, tx, *it.Quantity, q)
-		if err != nil {
-			return err
-		}
-		if isZero(left) {
-			err = finish(ctx, tx, p.ID)
-		} else {
-			_, err = tx.Exec(ctx, `UPDATE stock_item SET quantity = $2::text::numeric WHERE id = $1`, p.ID, left)
-		}
-		if err != nil {
-			return err
-		}
-		ev.Delta = delta(true, &taken, nil)
+		p.Quantity = &q
 	case "portions":
 		if p.Portions == nil || p.Quantity != nil || *p.Portions <= 0 {
 			return commands.Invalid("consume a number of portions")
 		}
-		taken := min(*p.Portions, *it.Portions)
-		if left := *it.Portions - taken; left == 0 {
-			err = finish(ctx, tx, p.ID)
-		} else {
-			_, err = tx.Exec(ctx, `UPDATE stock_item SET portions = $2 WHERE id = $1`, p.ID, left)
-		}
-		if err != nil {
-			return err
-		}
-		ev.Delta = delta(true, nil, &taken)
 	default:
 		return commands.Invalid("a rough-level item changes by set_level")
 	}
-	return writeEvent(ctx, tx, hh, ev)
+	t, err := take(ctx, tx, it, p.Quantity, p.Portions, false)
+	if err != nil {
+		return err
+	}
+	return writeEvent(ctx, tx, hh, event{ID: p.EventID, Item: p.ID, Kind: "consume", Delta: delta(true, t.Quantity, t.Portions), Unit: it.Unit, From: it.LocationID, Reason: p.Reason})
+}
+
+// taken is what a consume took from an exact or portions item.
+type taken struct {
+	Quantity *string
+	Portions *int
+	Finished bool
+}
+
+// take consumes a validated delta (or, with all, everything) from it, never
+// below zero, and finishes the item when nothing is left. It is a delta, so
+// concurrent consumes commute.
+func take(ctx context.Context, tx pgx.Tx, it *item, qty *string, portions *int, all bool) (taken, error) {
+	var t taken
+	var err error
+	switch it.Kind {
+	case "exact":
+		want := *it.Quantity
+		if !all {
+			want = *qty
+		}
+		var got, left string
+		if got, left, err = numOps(ctx, tx, *it.Quantity, want); err != nil {
+			return t, err
+		}
+		t.Quantity, t.Finished = &got, isZero(left)
+		if !t.Finished {
+			_, err = tx.Exec(ctx, `UPDATE stock_item SET quantity = $2::text::numeric WHERE id = $1`, it.ID, left)
+		}
+	case "portions":
+		got := *it.Portions
+		if !all {
+			got = min(*portions, *it.Portions)
+		}
+		left := *it.Portions - got
+		t.Portions, t.Finished = &got, left == 0
+		if !t.Finished {
+			_, err = tx.Exec(ctx, `UPDATE stock_item SET portions = $2 WHERE id = $1`, it.ID, left)
+		}
+	default:
+		return t, commands.Invalid("a rough-level item changes by set_level")
+	}
+	if err == nil && t.Finished {
+		err = finish(ctx, tx, it.ID)
+	}
+	return t, err
 }
 
 func (h *handlers) restock(ctx context.Context, tx pgx.Tx, p StockRestock) error {

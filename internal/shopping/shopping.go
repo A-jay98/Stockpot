@@ -645,3 +645,9 @@ func today(ctx context.Context) time.Time {
 	y, m, d := commands.ClientTime(ctx).In(HouseholdZone).Date()
 	return time.Date(y, m, d, 0, 0, 0, 0, time.UTC)
 }
+
+// AddItem adds an item exactly as shopping.item.add does, for commands that
+// add items as part of their own work ("I cooked this": used it all).
+func AddItem(ctx context.Context, tx pgx.Tx, p ItemAdd) error {
+	return (&handlers{}).itemAdd(ctx, tx, p)
+}

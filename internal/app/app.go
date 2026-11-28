@@ -27,6 +27,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/catalog/resolve"
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/config"
+	"github.com/a-jay98/stockpot/internal/cook"
 	"github.com/a-jay98/stockpot/internal/db"
 	"github.com/a-jay98/stockpot/internal/httpapi"
 	"github.com/a-jay98/stockpot/internal/identity"
@@ -155,6 +156,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	shopping.Register(cmdRegistry, resolve.Resolver{})
 	recipeCmds := recipes.Register(cmdRegistry, resolve.Resolver{})
 	recipeCmds.OnChatVersion = chat.MarkSaved
+	cook.Register(cmdRegistry)
 	syncStore, err := syncdb.New(ctx, pool)
 	if err != nil {
 		return err

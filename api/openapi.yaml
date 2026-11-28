@@ -3292,6 +3292,9 @@ components:
         - $ref: "#/components/schemas/CmdRecipeLineSetIngredient"
         - $ref: "#/components/schemas/CmdRecipePhotoAdd"
         - $ref: "#/components/schemas/CmdRecipePhotoRemove"
+        - $ref: "#/components/schemas/CmdCatalogProductSetConversion"
+        - $ref: "#/components/schemas/CmdRecipeCook"
+        - $ref: "#/components/schemas/CmdRecipeCookUndo"
       discriminator:
         propertyName: type
         mapping:
@@ -3338,6 +3341,9 @@ components:
           recipe.line.set_ingredient: "#/components/schemas/CmdRecipeLineSetIngredient"
           recipe.photo.add: "#/components/schemas/CmdRecipePhotoAdd"
           recipe.photo.remove: "#/components/schemas/CmdRecipePhotoRemove"
+          catalog.product.set_conversion: "#/components/schemas/CmdCatalogProductSetConversion"
+          recipe.cook: "#/components/schemas/CmdRecipeCook"
+          recipe.cook.undo: "#/components/schemas/CmdRecipeCookUndo"
     CmdCatalogProductCreate:
       type: object
       required: [id, type, payload, clientTime]
@@ -4414,6 +4420,229 @@ components:
         type:
           type: string
           enum: [recipe.photo.remove]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdCatalogProductSetConversion:
+      description: |
+        Set one of a product's cross-dimension conversions ("1 ea = 150 g"),
+        or remove it with a null amount. A product's conversion beats its
+        ingredient's for the same unit.
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [catalog.product.set_conversion]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, unit, amount]
+          properties:
+            id:
+              type: string
+              format: uuid
+            unit:
+              type: string
+              maxLength: 16
+            amount:
+              type: string
+              maxLength: 40
+              nullable: true
+              description: 'Quantity and a mass or volume unit, e.g. "150 g".'
+    CmdRecipeCook:
+      description: |
+        "I cooked this" (tag cook). One transaction: deducts each use from
+        its stock item (deltas, so concurrent edits commute; an item deleted
+        meanwhile is skipped and reported as `skipped` in the session's
+        `uses`), adds used-up items to the shopping list, stores leftover
+        portions as items of the recipe's leftover product, attaches photos,
+        and records the cook session.
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.cook]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, recipeId, versionId, cookedOn, portionsMade, uses, store]
+          properties:
+            id:
+              type: string
+              format: uuid
+              description: The cook session's id.
+            recipeId:
+              type: string
+              format: uuid
+            versionId:
+              type: string
+              format: uuid
+            cookedOn:
+              type: string
+              format: date
+            portionsMade:
+              type: integer
+              minimum: 1
+              maximum: 100
+            leftoverProductId:
+              type: string
+              format: uuid
+              nullable: true
+              description: The client's id for the recipe's leftover product, used only when it has none yet.
+            uses:
+              type: array
+              maxItems: 200
+              items:
+                $ref: "#/components/schemas/CookUse"
+            store:
+              type: array
+              maxItems: 20
+              items:
+                $ref: "#/components/schemas/CookStore"
+            subs:
+              type: array
+              maxItems: 200
+              items:
+                type: object
+                additionalProperties: false
+                required: [lineId, substitutionId]
+                properties:
+                  lineId:
+                    type: string
+                    format: uuid
+                  substitutionId:
+                    type: string
+                    format: uuid
+            photos:
+              type: array
+              maxItems: 10
+              items:
+                type: object
+                additionalProperties: false
+                required: [id, blobRef]
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  blobRef:
+                    type: string
+                    pattern: '^[0-9a-f]{64}$'
+            note:
+              type: string
+              maxLength: 2000
+              nullable: true
+    CookUse:
+      description: |
+        One stock item used: exactly one of quantity (in the item's unit),
+        portions, level (the new rough level) or finished (used it all).
+      type: object
+      additionalProperties: false
+      required: [stockItemId, eventId]
+      properties:
+        lineId:
+          type: string
+          format: uuid
+          nullable: true
+        stockItemId:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        quantity:
+          type: string
+          pattern: '^[0-9]+(\.[0-9]+)?$'
+          nullable: true
+        portions:
+          type: integer
+          minimum: 1
+          maximum: 100000
+          nullable: true
+        level:
+          type: string
+          enum: [full, most, half, low, almost_out]
+          nullable: true
+        finished:
+          type: boolean
+        toShopping:
+          type: object
+          nullable: true
+          additionalProperties: false
+          required: [id, listId]
+          description: Put the item's product on a list (it was used up). The item remembers the recipe.
+          properties:
+            id:
+              type: string
+              format: uuid
+            listId:
+              type: string
+              format: uuid
+            qty:
+              type: string
+              pattern: '^[0-9]+(\.[0-9]+)?$'
+              nullable: true
+            unit:
+              type: string
+              maxLength: 16
+              nullable: true
+    CookStore:
+      type: object
+      additionalProperties: false
+      required: [stockItemId, eventId, locationId, portions]
+      properties:
+        stockItemId:
+          type: string
+          format: uuid
+        eventId:
+          type: string
+          format: uuid
+        locationId:
+          type: string
+          format: uuid
+        portions:
+          type: integer
+          minimum: 1
+          maximum: 100
+    CmdRecipeCookUndo:
+      description: |
+        Undo a cook within 24 hours: gives back what it used (compensating
+        events with ids uuidv5(event id, "cook.undo")), removes stored
+        leftovers nobody touched since and list items still unchecked,
+        removes its photos, and marks the session undone.
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.cook.undo]
         clientTime:
           type: string
           format: date-time

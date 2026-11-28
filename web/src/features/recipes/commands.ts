@@ -221,6 +221,7 @@ registerReducer(
 registerReducer('recipe.delete', async (db, p) => {
   await db.recipe_version.where('recipeId').equals(p.id).delete()
   await db.recipe_photo.where('recipeId').equals(p.id).delete()
+  await db.cook_session.where('recipeId').equals(p.id).delete()
   await db.substitution.where('recipeId').equals(p.id).delete()
   await db.recipe.delete(p.id)
 })

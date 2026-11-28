@@ -43,7 +43,10 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "75 g"
+  }
  },
  {
   "slug": "clementine",
@@ -93,7 +96,10 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "180 g"
+  }
  },
  {
   "slug": "blood-orange",
@@ -123,7 +129,10 @@
   "shelf_life": {
    "fridge": 28
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "100 g"
+  }
  },
  {
   "slug": "lime",
@@ -138,7 +147,10 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "65 g"
+  }
  },
  {
   "slug": "grapefruit",
@@ -154,7 +166,10 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "300 g"
+  }
  },
  {
   "slug": "pomelo",
@@ -183,7 +198,11 @@
   "shelf_life": {
    "fridge": 30
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "180 g",
+   "cup": "125 g"
+  }
  },
  {
   "slug": "gala-apple",
@@ -265,7 +284,10 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "180 g"
+  }
  },
  {
   "slug": "banana",
@@ -283,7 +305,11 @@
    "fridge": 7,
    "pantry": 5
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "120 g",
+   "cup": "150 g"
+  }
  },
  {
   "slug": "plantain",
@@ -313,7 +339,10 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "150 g"
+  }
  },
  {
   "slug": "strawberry",
@@ -331,7 +360,11 @@
    "fridge": 5,
    "freezer": 300
   },
-  "default_unit": "box"
+  "default_unit": "box",
+  "conversions": {
+   "cup": "150 g",
+   "ea": "12 g"
+  }
  },
  {
   "slug": "blueberry",
@@ -349,7 +382,10 @@
    "fridge": 10,
    "freezer": 300
   },
-  "default_unit": "box"
+  "default_unit": "box",
+  "conversions": {
+   "cup": "150 g"
+  }
  },
  {
   "slug": "raspberry",
@@ -366,7 +402,10 @@
    "fridge": 4,
    "freezer": 300
   },
-  "default_unit": "box"
+  "default_unit": "box",
+  "conversions": {
+   "cup": "125 g"
+  }
  },
  {
   "slug": "blackberry",
@@ -448,7 +487,10 @@
   "shelf_life": {
    "fridge": 5
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "150 g"
+  }
  },
  {
   "slug": "nectarine",
@@ -523,7 +565,10 @@
    "fridge": 5,
    "freezer": 180
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "200 g"
+  }
  },
  {
   "slug": "pineapple",
@@ -541,7 +586,10 @@
    "fridge": 5,
    "freezer": 300
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "900 g"
+  }
  },
  {
   "slug": "watermelon",
@@ -622,7 +670,10 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "75 g"
+  }
  },
  {
   "slug": "pomegranate",
@@ -640,7 +691,10 @@
   "shelf_life": {
    "fridge": 30
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "280 g"
+  }
  },
  {
   "slug": "fig",
@@ -674,7 +728,11 @@
    "fridge": 60,
    "pantry": 365
   },
-  "default_unit": "box"
+  "default_unit": "box",
+  "conversions": {
+   "ea": "8 g",
+   "cup": "150 g"
+  }
  },
  {
   "slug": "papaya",
@@ -779,7 +837,10 @@
   "shelf_life": {
    "fridge": 5
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "150 g"
+  }
  },
  {
   "slug": "rhubarb",
@@ -808,7 +869,10 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "150 g"
+  }
  },
  {
   "slug": "dried-fruit",
@@ -850,7 +914,11 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "125 g",
+   "cup": "180 g"
+  }
  },
  {
   "slug": "cherry-tomato",
@@ -866,7 +934,11 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "box"
+  "default_unit": "box",
+  "conversions": {
+   "ea": "15 g",
+   "cup": "150 g"
+  }
  },
  {
   "slug": "roma-tomato",
@@ -882,7 +954,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "65 g"
+  }
  },
  {
   "slug": "potato",
@@ -901,7 +976,11 @@
    "fridge": 30,
    "pantry": 30
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "215 g",
+   "cup": "150 g"
+  }
  },
  {
   "slug": "sweet-potato",
@@ -919,7 +998,10 @@
    "fridge": 30,
    "pantry": 30
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "200 g"
+  }
  },
  {
   "slug": "baby-potato",
@@ -935,7 +1017,10 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "ea": "40 g"
+  }
  },
  {
   "slug": "onion",
@@ -953,7 +1038,11 @@
    "fridge": 30,
    "pantry": 30
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "150 g",
+   "cup": "160 g"
+  }
  },
  {
   "slug": "red-onion",
@@ -967,7 +1056,10 @@
    "fridge": 30,
    "pantry": 30
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "150 g"
+  }
  },
  {
   "slug": "green-onion",
@@ -985,7 +1077,11 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "ea": "15 g",
+   "bunch": "100 g"
+  }
  },
  {
   "slug": "shallot",
@@ -999,7 +1095,10 @@
    "fridge": 30,
    "pantry": 30
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "45 g"
+  }
  },
  {
   "slug": "leek",
@@ -1014,7 +1113,10 @@
   "shelf_life": {
    "fridge": 10
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "250 g"
+  }
  },
  {
   "slug": "garlic",
@@ -1031,7 +1133,12 @@
    "fridge": 30,
    "pantry": 30
   },
-  "default_unit": "head"
+  "default_unit": "head",
+  "conversions": {
+   "clove": "5 g",
+   "head": "50 g",
+   "tbsp": "9 g"
+  }
  },
  {
   "slug": "ginger",
@@ -1049,7 +1156,11 @@
    "fridge": 21,
    "freezer": 180
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "tbsp": "6 g",
+   "cup": "100 g"
+  }
  },
  {
   "slug": "carrot",
@@ -1065,7 +1176,11 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "60 g",
+   "cup": "130 g"
+  }
  },
  {
   "slug": "baby-carrot",
@@ -1096,7 +1211,12 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "ea": "40 g",
+   "bunch": "500 g",
+   "cup": "100 g"
+  }
  },
  {
   "slug": "cucumber",
@@ -1112,7 +1232,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "300 g"
+  }
  },
  {
   "slug": "english-cucumber",
@@ -1147,7 +1270,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "200 g"
+  }
  },
  {
   "slug": "squash",
@@ -1179,7 +1305,10 @@
    "fridge": 30,
    "pantry": 30
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "1200 g"
+  }
  },
  {
   "slug": "spaghetti-squash",
@@ -1226,7 +1355,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "450 g"
+  }
  },
  {
   "slug": "bell-pepper",
@@ -1246,7 +1378,11 @@
   "shelf_life": {
    "fridge": 10
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "150 g",
+   "cup": "150 g"
+  }
  },
  {
   "slug": "pepper",
@@ -1274,7 +1410,10 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "15 g"
+  }
  },
  {
   "slug": "chili-pepper",
@@ -1294,7 +1433,10 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "10 g"
+  }
  },
  {
   "slug": "broccoli",
@@ -1313,7 +1455,11 @@
    "fridge": 7,
    "freezer": 300
   },
-  "default_unit": "head"
+  "default_unit": "head",
+  "conversions": {
+   "head": "500 g",
+   "cup": "90 g"
+  }
  },
  {
   "slug": "broccolini",
@@ -1345,7 +1491,11 @@
    "fridge": 7,
    "freezer": 300
   },
-  "default_unit": "head"
+  "default_unit": "head",
+  "conversions": {
+   "head": "600 g",
+   "cup": "100 g"
+  }
  },
  {
   "slug": "cruciferous",
@@ -1373,7 +1523,11 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "head"
+  "default_unit": "head",
+  "conversions": {
+   "head": "900 g",
+   "cup": "90 g"
+  }
  },
  {
   "slug": "napa-cabbage",
@@ -1421,7 +1575,11 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "bunch": "200 g",
+   "cup": "25 g"
+  }
  },
  {
   "slug": "leafy-greens",
@@ -1456,7 +1614,12 @@
    "fridge": 5,
    "freezer": 300
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "bag": "300 g",
+   "bunch": "300 g",
+   "cup": "30 g"
+  }
  },
  {
   "slug": "lettuce",
@@ -1473,7 +1636,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "head"
+  "default_unit": "head",
+  "conversions": {
+   "head": "500 g"
+  }
  },
  {
   "slug": "romaine",
@@ -1491,7 +1657,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "head"
+  "default_unit": "head",
+  "conversions": {
+   "head": "600 g"
+  }
  },
  {
   "slug": "iceberg-lettuce",
@@ -1523,7 +1692,11 @@
   "shelf_life": {
    "fridge": 5
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "bag": "140 g",
+   "cup": "20 g"
+  }
  },
  {
   "slug": "mixed-greens",
@@ -1589,7 +1762,10 @@
   "shelf_life": {
    "fridge": 5
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "bunch": "400 g"
+  }
  },
  {
   "slug": "asparagus",
@@ -1605,7 +1781,10 @@
   "shelf_life": {
    "fridge": 5
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "bunch": "450 g"
+  }
  },
  {
   "slug": "green-beans",
@@ -1623,7 +1802,10 @@
    "fridge": 7,
    "freezer": 300
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "110 g"
+  }
  },
  {
   "slug": "snap-peas",
@@ -1659,7 +1841,10 @@
    "fridge": 5,
    "freezer": 300
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "145 g"
+  }
  },
  {
   "slug": "corn",
@@ -1678,7 +1863,11 @@
    "fridge": 5,
    "freezer": 300
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "100 g",
+   "cup": "150 g"
+  }
  },
  {
   "slug": "mushroom",
@@ -1695,7 +1884,11 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "ea": "18 g",
+   "cup": "70 g"
+  }
  },
  {
   "slug": "white-mushroom",
@@ -1745,7 +1938,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "85 g"
+  }
  },
  {
   "slug": "shiitake",
@@ -1777,7 +1973,11 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "ea": "10 g",
+   "bunch": "250 g"
+  }
  },
  {
   "slug": "beet",
@@ -1794,7 +1994,11 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "ea": "130 g",
+   "bunch": "500 g"
+  }
  },
  {
   "slug": "turnip",
@@ -2032,7 +2236,12 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "bunch": "30 g",
+   "cup": "20 g",
+   "tbsp": "2 g"
+  }
  },
  {
   "slug": "parsley",
@@ -2051,7 +2260,11 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "bunch": "60 g",
+   "cup": "30 g"
+  }
  },
  {
   "slug": "cilantro",
@@ -2069,7 +2282,11 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "bunch": "60 g",
+   "cup": "16 g"
+  }
  },
  {
   "slug": "basil",
@@ -2086,7 +2303,11 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "bunch": "30 g",
+   "cup": "24 g"
+  }
  },
  {
   "slug": "mint",
@@ -2103,7 +2324,11 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "bunch": "30 g",
+   "cup": "20 g"
+  }
  },
  {
   "slug": "dill",
@@ -2119,7 +2344,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "bunch": "30 g"
+  }
  },
  {
   "slug": "rosemary",
@@ -2229,7 +2457,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "bunch"
+  "default_unit": "bunch",
+  "conversions": {
+   "bunch": "100 g"
+  }
  },
  {
   "slug": "lemongrass",
@@ -2265,7 +2496,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "l"
+  "default_unit": "l",
+  "conversions": {
+   "cup": "258 g"
+  }
  },
  {
   "slug": "dairy",
@@ -2375,7 +2609,11 @@
    "fridge": 7,
    "pantry": 730
   },
-  "default_unit": "can"
+  "default_unit": "can",
+  "conversions": {
+   "can": "400 ml",
+   "cup": "240 g"
+  }
  },
  {
   "slug": "plant-milk",
@@ -2415,7 +2653,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "carton"
+  "default_unit": "carton",
+  "conversions": {
+   "cup": "240 g"
+  }
  },
  {
   "slug": "sour-cream",
@@ -2430,7 +2671,11 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "tub"
+  "default_unit": "tub",
+  "conversions": {
+   "cup": "240 g",
+   "tbsp": "15 g"
+  }
  },
  {
   "slug": "cream-cheese",
@@ -2447,7 +2692,11 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "tub"
+  "default_unit": "tub",
+  "conversions": {
+   "cup": "230 g",
+   "tbsp": "15 g"
+  }
  },
  {
   "slug": "butter",
@@ -2466,7 +2715,11 @@
    "fridge": 60,
    "freezer": 270
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "cup": "227 g",
+   "tbsp": "14 g"
+  }
  },
  {
   "slug": "margarine",
@@ -2501,7 +2754,11 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "tub"
+  "default_unit": "tub",
+  "conversions": {
+   "cup": "245 g",
+   "tbsp": "15 g"
+  }
  },
  {
   "slug": "greek-yogurt",
@@ -2520,7 +2777,10 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "tub"
+  "default_unit": "tub",
+  "conversions": {
+   "cup": "250 g"
+  }
  },
  {
   "slug": "plain-yogurt",
@@ -2582,7 +2842,10 @@
   "shelf_life": {
    "fridge": 30
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "cup": "110 g"
+  }
  },
  {
   "slug": "cheddar",
@@ -2640,7 +2903,11 @@
    "fridge": 90,
    "freezer": 180
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "cup": "90 g",
+   "tbsp": "5 g"
+  }
  },
  {
   "slug": "feta",
@@ -2659,7 +2926,10 @@
   "shelf_life": {
    "fridge": 30
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "cup": "150 g"
+  }
  },
  {
   "slug": "swiss-cheese",
@@ -2720,7 +2990,10 @@
   "shelf_life": {
    "fridge": 10
   },
-  "default_unit": "tub"
+  "default_unit": "tub",
+  "conversions": {
+   "cup": "225 g"
+  }
  },
  {
   "slug": "ricotta",
@@ -2735,7 +3008,10 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "tub"
+  "default_unit": "tub",
+  "conversions": {
+   "cup": "250 g"
+  }
  },
  {
   "slug": "goat-cheese",
@@ -2825,7 +3101,10 @@
   "shelf_life": {
    "fridge": 30
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "ea": "50 g"
+  }
  },
  {
   "slug": "egg-white",
@@ -2918,7 +3197,10 @@
    "fridge": 2,
    "freezer": 270
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "ea": "200 g"
+  }
  },
  {
   "slug": "chicken-thigh",
@@ -2935,7 +3217,10 @@
    "fridge": 2,
    "freezer": 270
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "ea": "110 g"
+  }
  },
  {
   "slug": "chicken-drumstick",
@@ -2953,7 +3238,10 @@
    "fridge": 2,
    "freezer": 270
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "ea": "110 g"
+  }
  },
  {
   "slug": "chicken-wings",
@@ -3217,7 +3505,11 @@
    "fridge": 14,
    "freezer": 180
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "slice": "25 g",
+   "pack": "375 g"
+  }
  },
  {
   "slug": "ham",
@@ -3255,7 +3547,10 @@
    "fridge": 5,
    "freezer": 60
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "ea": "75 g"
+  }
  },
  {
   "slug": "hot-dog",
@@ -3541,7 +3836,10 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "ea": "15 g"
+  }
  },
  {
   "slug": "scallops",
@@ -3671,7 +3969,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "can"
+  "default_unit": "can",
+  "conversions": {
+   "can": "170 g"
+  }
  },
  {
   "slug": "sardines",
@@ -3804,7 +4105,11 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "pack": "450 g",
+   "cup": "250 g"
+  }
  },
  {
   "slug": "tempeh",
@@ -3857,7 +4162,11 @@
    "fridge": 7,
    "freezer": 90
   },
-  "default_unit": "ea"
+  "default_unit": "ea",
+  "conversions": {
+   "slice": "30 g",
+   "ea": "675 g"
+  }
  },
  {
   "slug": "baguette",
@@ -3927,7 +4236,10 @@
    "fridge": 14,
    "freezer": 180
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "ea": "45 g"
+  }
  },
  {
   "slug": "pita",
@@ -3947,7 +4259,10 @@
    "fridge": 7,
    "freezer": 90
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "ea": "60 g"
+  }
  },
  {
   "slug": "hamburger-buns",
@@ -4134,7 +4449,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "cup": "100 g"
+  }
  },
  {
   "slug": "spaghetti",
@@ -4254,7 +4572,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "185 g"
+  }
  },
  {
   "slug": "basmati-rice",
@@ -4272,7 +4593,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "185 g"
+  }
  },
  {
   "slug": "brown-rice",
@@ -4285,7 +4609,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "190 g"
+  }
  },
  {
   "slug": "sushi-rice",
@@ -4319,7 +4646,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "170 g"
+  }
  },
  {
   "slug": "couscous",
@@ -4336,7 +4666,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "175 g"
+  }
  },
  {
   "slug": "bulgur",
@@ -4352,7 +4685,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "140 g"
+  }
  },
  {
   "slug": "oats",
@@ -4372,7 +4708,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "90 g"
+  }
  },
  {
   "slug": "cereal",
@@ -4432,7 +4771,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "190 g"
+  }
  },
  {
   "slug": "legumes",
@@ -4466,7 +4808,11 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "can"
+  "default_unit": "can",
+  "conversions": {
+   "can": "540 ml",
+   "cup": "165 g"
+  }
  },
  {
   "slug": "black-beans",
@@ -4482,7 +4828,11 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "can"
+  "default_unit": "can",
+  "conversions": {
+   "can": "540 ml",
+   "cup": "170 g"
+  }
  },
  {
   "slug": "kidney-beans",
@@ -4499,7 +4849,11 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "can"
+  "default_unit": "can",
+  "conversions": {
+   "can": "540 ml",
+   "cup": "175 g"
+  }
  },
  {
   "slug": "white-beans",
@@ -4518,7 +4872,11 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "can"
+  "default_unit": "can",
+  "conversions": {
+   "can": "540 ml",
+   "cup": "180 g"
+  }
  },
  {
   "slug": "split-peas",
@@ -4534,7 +4892,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "200 g"
+  }
  },
  {
   "slug": "baked-beans",
@@ -4569,7 +4930,11 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "can"
+  "default_unit": "can",
+  "conversions": {
+   "can": "796 ml",
+   "cup": "240 g"
+  }
  },
  {
   "slug": "tomato-paste",
@@ -4587,7 +4952,11 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "can"
+  "default_unit": "can",
+  "conversions": {
+   "can": "156 ml",
+   "tbsp": "16 g"
+  }
  },
  {
   "slug": "passata",
@@ -4602,7 +4971,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bottle"
+  "default_unit": "bottle",
+  "conversions": {
+   "cup": "245 g"
+  }
  },
  {
   "slug": "pasta-sauce",
@@ -4676,7 +5048,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "carton"
+  "default_unit": "carton",
+  "conversions": {
+   "cup": "240 g"
+  }
  },
  {
   "slug": "peanut-butter",
@@ -4695,7 +5070,11 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "tbsp": "16 g",
+   "cup": "260 g"
+  }
  },
  {
   "slug": "spreads",
@@ -4773,7 +5152,11 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "tbsp": "21 g",
+   "cup": "340 g"
+  }
  },
  {
   "slug": "maple-syrup",
@@ -4790,7 +5173,11 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bottle"
+  "default_unit": "bottle",
+  "conversions": {
+   "tbsp": "20 g",
+   "cup": "320 g"
+  }
  },
  {
   "slug": "tahini",
@@ -4806,7 +5193,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "tbsp": "15 g"
+  }
  },
  {
   "slug": "nuts",
@@ -4823,7 +5213,10 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "140 g"
+  }
  },
  {
   "slug": "almonds",
@@ -4841,7 +5234,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "145 g"
+  }
  },
  {
   "slug": "walnuts",
@@ -4858,7 +5254,10 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "115 g"
+  }
  },
  {
   "slug": "cashews",
@@ -4955,7 +5354,11 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "tbsp": "9 g",
+   "cup": "135 g"
+  }
  },
  {
   "slug": "sunflower-seeds",
@@ -4984,7 +5387,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "tbsp": "9 g"
+  }
  },
  {
   "slug": "chia-seeds",
@@ -5067,7 +5473,11 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "125 g",
+   "tbsp": "8 g"
+  }
  },
  {
   "slug": "bread-flour",
@@ -5100,7 +5510,11 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "200 g",
+   "tbsp": "12.5 g"
+  }
  },
  {
   "slug": "brown-sugar",
@@ -5115,7 +5529,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "220 g"
+  }
  },
  {
   "slug": "icing-sugar",
@@ -5131,7 +5548,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "120 g"
+  }
  },
  {
   "slug": "baking-powder",
@@ -5147,7 +5567,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "box"
+  "default_unit": "box",
+  "conversions": {
+   "tsp": "4 g"
+  }
  },
  {
   "slug": "baking-soda",
@@ -5165,7 +5588,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "box"
+  "default_unit": "box",
+  "conversions": {
+   "tsp": "5 g"
+  }
  },
  {
   "slug": "yeast",
@@ -5183,7 +5609,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "tsp": "3 g"
+  }
  },
  {
   "slug": "cornstarch",
@@ -5200,7 +5629,11 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "box"
+  "default_unit": "box",
+  "conversions": {
+   "tbsp": "8 g",
+   "cup": "128 g"
+  }
  },
  {
   "slug": "vanilla",
@@ -5234,7 +5667,11 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "box"
+  "default_unit": "box",
+  "conversions": {
+   "tbsp": "5 g",
+   "cup": "85 g"
+  }
  },
  {
   "slug": "chocolate-chips",
@@ -5251,7 +5688,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "cup": "170 g"
+  }
  },
  {
   "slug": "baking-mix",
@@ -5284,7 +5724,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "box"
+  "default_unit": "box",
+  "conversions": {
+   "cup": "110 g"
+  }
  },
  {
   "slug": "shredded-coconut",
@@ -5313,7 +5756,11 @@
    "seasoning"
   ],
   "shelf_life": {},
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "tsp": "2.5 g",
+   "tbsp": "7.5 g"
+  }
  },
  {
   "slug": "salt",
@@ -5331,7 +5778,10 @@
   "shelf_life": {
    "pantry": 1825
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "tsp": "6 g"
+  }
  },
  {
   "slug": "black-pepper",
@@ -5350,7 +5800,10 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "tsp": "2.3 g"
+  }
  },
  {
   "slug": "cumin",
@@ -5367,7 +5820,10 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "tsp": "2 g"
+  }
  },
  {
   "slug": "paprika",
@@ -5383,7 +5839,10 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "tsp": "2.3 g"
+  }
  },
  {
   "slug": "turmeric",
@@ -5400,7 +5859,10 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "tsp": "3 g"
+  }
  },
  {
   "slug": "cinnamon",
@@ -5418,7 +5880,10 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "tsp": "2.6 g"
+  }
  },
  {
   "slug": "chili-powder",
@@ -5532,7 +5997,10 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "pack"
+  "default_unit": "pack",
+  "conversions": {
+   "tsp": "0.7 g"
+  }
  },
  {
   "slug": "sumac",
@@ -5613,7 +6081,10 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "ea": "0.2 g"
+  }
  },
  {
   "slug": "dried-thyme",
@@ -5657,7 +6128,10 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "bag"
+  "default_unit": "bag",
+  "conversions": {
+   "ea": "5 g"
+  }
  },
  {
   "slug": "condiment",
@@ -5688,7 +6162,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "bottle"
+  "default_unit": "bottle",
+  "conversions": {
+   "tbsp": "17 g"
+  }
  },
  {
   "slug": "mustard",
@@ -5707,7 +6184,10 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "tbsp": "15 g"
+  }
  },
  {
   "slug": "mayonnaise",
@@ -5725,7 +6205,11 @@
    "fridge": 60,
    "pantry": 365
   },
-  "default_unit": "jar"
+  "default_unit": "jar",
+  "conversions": {
+   "cup": "220 g",
+   "tbsp": "14 g"
+  }
  },
  {
   "slug": "relish",
@@ -5796,7 +6280,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bottle"
+  "default_unit": "bottle",
+  "conversions": {
+   "cup": "255 g"
+  }
  },
  {
   "slug": "fish-sauce",
@@ -5888,7 +6375,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bottle"
+  "default_unit": "bottle",
+  "conversions": {
+   "cup": "218 g"
+  }
  },
  {
   "slug": "olive-oil",
@@ -5906,7 +6396,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bottle"
+  "default_unit": "bottle",
+  "conversions": {
+   "cup": "216 g"
+  }
  },
  {
   "slug": "vegetable-oil",
@@ -5924,7 +6417,10 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "bottle"
+  "default_unit": "bottle",
+  "conversions": {
+   "cup": "218 g"
+  }
  },
  {
   "slug": "sesame-oil",
@@ -5990,7 +6486,10 @@
   "shelf_life": {
    "pantry": 1825
   },
-  "default_unit": "bottle"
+  "default_unit": "bottle",
+  "conversions": {
+   "cup": "240 g"
+  }
  },
  {
   "slug": "frozen-vegetables",

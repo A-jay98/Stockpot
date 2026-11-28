@@ -2287,7 +2287,7 @@ export interface components {
          *     UUIDv7). Fields typed nullable clear the column when sent as null;
          *     absent fields are left unchanged.
          */
-        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"] | components["schemas"]["CmdRecipeCreate"] | components["schemas"]["CmdRecipeVersionCreate"] | components["schemas"]["CmdRecipeVersionRestore"] | components["schemas"]["CmdRecipeUpdate"] | components["schemas"]["CmdRecipeDelete"] | components["schemas"]["CmdRecipeLineSetIngredient"] | components["schemas"]["CmdRecipePhotoAdd"] | components["schemas"]["CmdRecipePhotoRemove"];
+        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"] | components["schemas"]["CmdRecipeCreate"] | components["schemas"]["CmdRecipeVersionCreate"] | components["schemas"]["CmdRecipeVersionRestore"] | components["schemas"]["CmdRecipeUpdate"] | components["schemas"]["CmdRecipeDelete"] | components["schemas"]["CmdRecipeLineSetIngredient"] | components["schemas"]["CmdRecipePhotoAdd"] | components["schemas"]["CmdRecipePhotoRemove"] | components["schemas"]["CmdCatalogProductSetConversion"] | components["schemas"]["CmdRecipeCook"] | components["schemas"]["CmdRecipeCookUndo"];
         CmdCatalogProductCreate: {
             /** Format: uuid */
             id: string;
@@ -2875,6 +2875,137 @@ export interface components {
              * @enum {string}
              */
             type: "recipe.photo.remove";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
+        /**
+         * @description Set one of a product's cross-dimension conversions ("1 ea = 150 g"),
+         *     or remove it with a null amount. A product's conversion beats its
+         *     ingredient's for the same unit.
+         */
+        CmdCatalogProductSetConversion: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "catalog.product.set_conversion";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                unit: string;
+                /** @description Quantity and a mass or volume unit, e.g. "150 g". */
+                amount: string | null;
+            };
+        };
+        /**
+         * @description "I cooked this" (tag cook). One transaction: deducts each use from
+         *     its stock item (deltas, so concurrent edits commute; an item deleted
+         *     meanwhile is skipped and reported as `skipped` in the session's
+         *     `uses`), adds used-up items to the shopping list, stores leftover
+         *     portions as items of the recipe's leftover product, attaches photos,
+         *     and records the cook session.
+         */
+        CmdRecipeCook: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.cook";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /**
+                 * Format: uuid
+                 * @description The cook session's id.
+                 */
+                id: string;
+                /** Format: uuid */
+                recipeId: string;
+                /** Format: uuid */
+                versionId: string;
+                /** Format: date */
+                cookedOn: string;
+                portionsMade: number;
+                /**
+                 * Format: uuid
+                 * @description The client's id for the recipe's leftover product, used only when it has none yet.
+                 */
+                leftoverProductId?: string | null;
+                uses: components["schemas"]["CookUse"][];
+                store: components["schemas"]["CookStore"][];
+                subs?: {
+                    /** Format: uuid */
+                    lineId: string;
+                    /** Format: uuid */
+                    substitutionId: string;
+                }[];
+                photos?: {
+                    /** Format: uuid */
+                    id: string;
+                    blobRef: string;
+                }[];
+                note?: string | null;
+            };
+        };
+        /**
+         * @description One stock item used: exactly one of quantity (in the item's unit),
+         *     portions, level (the new rough level) or finished (used it all).
+         */
+        CookUse: {
+            /** Format: uuid */
+            lineId?: string | null;
+            /** Format: uuid */
+            stockItemId: string;
+            /** Format: uuid */
+            eventId: string;
+            quantity?: string | null;
+            portions?: number | null;
+            /** @enum {string|null} */
+            level?: "full" | "most" | "half" | "low" | "almost_out" | null;
+            finished?: boolean;
+            /** @description Put the item's product on a list (it was used up). The item remembers the recipe. */
+            toShopping?: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                listId: string;
+                qty?: string | null;
+                unit?: string | null;
+            } | null;
+        };
+        CookStore: {
+            /** Format: uuid */
+            stockItemId: string;
+            /** Format: uuid */
+            eventId: string;
+            /** Format: uuid */
+            locationId: string;
+            portions: number;
+        };
+        /**
+         * @description Undo a cook within 24 hours: gives back what it used (compensating
+         *     events with ids uuidv5(event id, "cook.undo")), removes stored
+         *     leftovers nobody touched since and list items still unchecked,
+         *     removes its photos, and marks the session undone.
+         */
+        CmdRecipeCookUndo: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.cook.undo";
             /** Format: date-time */
             clientTime: string;
             payload: {
