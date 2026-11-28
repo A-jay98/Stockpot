@@ -87,7 +87,10 @@ beforeEach(async () => {
   ])
   await db.shopping_list.put({ ...base('list'), name: 'Groceries', sort: 0 })
   await db.ingredient.bulkPut([ing('chicken'), ing('onion', { ea: '150 g' }), ing('coconut-milk')])
-  await db.product.bulkPut([prod('p-ch', 'Chicken thighs', 'chicken'), prod('p-on', 'Onions', 'onion')])
+  await db.product.bulkPut([
+    prod('p-ch', 'Chicken thighs', 'chicken'),
+    prod('p-on', 'Onions', 'onion'),
+  ])
   await db.product_stat.put({
     ...base('st'),
     productId: 'p-on',
@@ -132,9 +135,19 @@ beforeEach(async () => {
     servings: 4,
     totalMinutes: null,
     ingredients: [
-      line('01', '800 g chicken', { qty: '800', unit: 'g', name: 'chicken', ingredient_id: 'chicken' }),
+      line('01', '800 g chicken', {
+        qty: '800',
+        unit: 'g',
+        name: 'chicken',
+        ingredient_id: 'chicken',
+      }),
       line('02', '2 onions', { qty: '2', unit: 'ea', name: 'onions', ingredient_id: 'onion' }),
-      line('03', '1 can coconut milk', { qty: '1', unit: 'can', name: 'coconut milk', ingredient_id: 'coconut-milk' }),
+      line('03', '1 can coconut milk', {
+        qty: '1',
+        unit: 'can',
+        name: 'coconut milk',
+        ingredient_id: 'coconut-milk',
+      }),
       line('04', 'salt to taste', { name: 'salt', optional: true, staple: true }),
     ],
     steps: [],

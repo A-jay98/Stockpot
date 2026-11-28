@@ -1,5 +1,6 @@
 import 'fake-indexeddb/auto'
 import { afterEach, beforeEach, describe, expect, test } from 'vitest'
+import { format } from '../../lib/units'
 import { StockpotDB } from '../../offline/db'
 import { dispatch } from '../../offline/outbox'
 import type {
@@ -12,7 +13,6 @@ import type {
   RecipeVersion,
   StockItem,
 } from '../../offline/replica'
-import { format } from '../../lib/units'
 import { type CookUseRecord, leftoverName, undoEventId } from './commands'
 import {
   type Catalog,
@@ -42,7 +42,11 @@ const ingredient = (id: string, parentId: string | null, conversions = {}): Ingr
   source: 'seed',
   conversions,
 })
-const product = (id: string, ingredientId: string | null, extra: Partial<Product> = {}): Product => ({
+const product = (
+  id: string,
+  ingredientId: string | null,
+  extra: Partial<Product> = {},
+): Product => ({
   ...base,
   id,
   name: id,
@@ -153,7 +157,10 @@ describe('plan', () => {
   test('exact items get the converted amount, clamped to what is there', () => {
     const l = line({ qty: '2', unit: 'ea', ingredient_id: 'onion' })
     const onion = item('o', 'p-onion', { quantity: '1', unit: 'kg' })
-    expect(suggest(onion, l, scaledQty(l, 4, 4), cat).take).toEqual({ kind: 'exact', quantity: '0.3' })
+    expect(suggest(onion, l, scaledQty(l, 4, 4), cat).take).toEqual({
+      kind: 'exact',
+      quantity: '0.3',
+    })
     const few = item('o2', 'p-onion', { quantity: '200', unit: 'g' })
     const s = suggest(few, l, scaledQty(l, 4, 4), cat)
     expect(s.take).toEqual({ kind: 'exact', quantity: '200' })
@@ -168,18 +175,32 @@ describe('plan', () => {
 
   test('an unknown conversion asks for the amount', () => {
     const l = line({ qty: '2', unit: 'tbsp', ingredient_id: 'oil' })
-    const s = suggest(item('x', 'p-oil', { quantity: '500', unit: 'g' }), l, scaledQty(l, 4, 4), cat)
+    const s = suggest(
+      item('x', 'p-oil', { quantity: '500', unit: 'g' }),
+      l,
+      scaledQty(l, 4, 4),
+      cat,
+    )
     expect(s).toEqual({ take: { kind: 'exact', quantity: '0' }, needsAmount: true })
   })
 
   test('portions: ceil through a portion conversion, else 1', () => {
     const l = line({ qty: '800', unit: 'g', ingredient_id: 'chicken' })
     const stew = item('s', 'p-stew', { amountKind: 'portions', portions: 5 })
-    expect(suggest(stew, l, scaledQty(l, 4, 4), cat).take).toEqual({ kind: 'portions', portions: 2 })
+    expect(suggest(stew, l, scaledQty(l, 4, 4), cat).take).toEqual({
+      kind: 'portions',
+      portions: 2,
+    })
     const l2 = line({ qty: '900', unit: 'g', ingredient_id: 'chicken' })
-    expect(suggest(stew, l2, scaledQty(l2, 4, 4), cat).take).toEqual({ kind: 'portions', portions: 3 })
+    expect(suggest(stew, l2, scaledQty(l2, 4, 4), cat).take).toEqual({
+      kind: 'portions',
+      portions: 3,
+    })
     const plain = item('p', 'p-chicken', { amountKind: 'portions', portions: 4 })
-    expect(suggest(plain, l, scaledQty(l, 4, 4), cat).take).toEqual({ kind: 'portions', portions: 1 })
+    expect(suggest(plain, l, scaledQty(l, 4, 4), cat).take).toEqual({
+      kind: 'portions',
+      portions: 1,
+    })
   })
 
   test('levels step down one, then finished', () => {
@@ -204,8 +225,21 @@ describe('plan', () => {
 
 describe('reducers', () => {
   const db = new StockpotDB('cook-test')
-  const location = (id: string, kind: Location['kind']): Location => ({ ...base, id, name: kind, kind, sort: 1 })
-  const leftovers: Category = { ...base, id: 'c-left', slug: 'leftovers', name: 'Leftovers', icon: null, sort: 1 }
+  const location = (id: string, kind: Location['kind']): Location => ({
+    ...base,
+    id,
+    name: kind,
+    kind,
+    sort: 1,
+  })
+  const leftovers: Category = {
+    ...base,
+    id: 'c-left',
+    slug: 'leftovers',
+    name: 'Leftovers',
+    icon: null,
+    sort: 1,
+  }
   const recipe: Recipe = {
     ...base,
     id: 'r1',
@@ -251,7 +285,11 @@ describe('reducers', () => {
     await db.category.put(leftovers)
     await db.recipe.put(recipe)
     await db.recipe_version.put(version)
-    await db.product.bulkPut([product('p-thighs', 'chicken-thigh'), product('p-onion', 'onion'), product('p-oil', 'oil')])
+    await db.product.bulkPut([
+      product('p-thighs', 'chicken-thigh'),
+      product('p-onion', 'onion'),
+      product('p-oil', 'oil'),
+    ])
     await db.shopping_list.put({ ...base, id: 'list', name: 'Groceries', sort: 0 })
     await db.stock_item.bulkPut([
       item('thighs', 'p-thighs', { quantity: '900', unit: 'g' }),
@@ -270,13 +308,32 @@ describe('reducers', () => {
     leftoverProductId: 'p-new-left',
     uses: [
       { stockItemId: 'thighs', eventId: '0190a1b2-0000-7000-8000-00000000e001', quantity: '800' },
-      { stockItemId: 'onion', eventId: '0190a1b2-0000-7000-8000-00000000e002', finished: true, toShopping: { id: 's1', listId: 'list' } },
-      { stockItemId: 'oil', eventId: '0190a1b2-0000-7000-8000-00000000e003', level: 'half' as const },
+      {
+        stockItemId: 'onion',
+        eventId: '0190a1b2-0000-7000-8000-00000000e002',
+        finished: true,
+        toShopping: { id: 's1', listId: 'list' },
+      },
+      {
+        stockItemId: 'oil',
+        eventId: '0190a1b2-0000-7000-8000-00000000e003',
+        level: 'half' as const,
+      },
       { stockItemId: 'gone', eventId: '0190a1b2-0000-7000-8000-00000000e004', quantity: '1' },
     ],
     store: [
-      { stockItemId: 'left-fridge', eventId: '0190a1b2-0000-7000-8000-00000000e005', locationId: 'l-fridge', portions: 3 },
-      { stockItemId: 'left-freezer', eventId: '0190a1b2-0000-7000-8000-00000000e006', locationId: 'l-freezer', portions: 1 },
+      {
+        stockItemId: 'left-fridge',
+        eventId: '0190a1b2-0000-7000-8000-00000000e005',
+        locationId: 'l-fridge',
+        portions: 3,
+      },
+      {
+        stockItemId: 'left-freezer',
+        eventId: '0190a1b2-0000-7000-8000-00000000e006',
+        locationId: 'l-freezer',
+        portions: 1,
+      },
     ],
     note: 'Good',
   }
@@ -287,16 +344,27 @@ describe('reducers', () => {
     expect(await db.stock_item.get('onion')).toBeUndefined()
     expect((await db.stock_item.get('oil'))?.level).toBe('half')
     const left = await db.stock_item.get('left-fridge')
-    expect(left).toMatchObject({ amountKind: 'portions', portions: 3, source: 'cook', cookSessionId: 'cook-1' })
+    expect(left).toMatchObject({
+      amountKind: 'portions',
+      portions: 3,
+      source: 'cook',
+      cookSessionId: 'cook-1',
+    })
     expect((await db.stock_item.get('left-freezer'))?.frozenOn).toBe('2026-11-28')
-    expect(await db.product.get('p-new-left')).toMatchObject({ name: 'Leftover chicken curry', recipeId: 'r1', categoryId: 'c-left' })
+    expect(await db.product.get('p-new-left')).toMatchObject({
+      name: 'Leftover chicken curry',
+      recipeId: 'r1',
+      categoryId: 'c-left',
+    })
     expect(await db.shopping_item.get('s1')).toMatchObject({ productId: 'p-onion', recipeId: 'r1' })
     const s = await db.cook_session.get('cook-1')
     const uses = s?.uses as CookUseRecord[]
     expect(uses.map((u) => !!u.skipped)).toEqual([false, false, false, true])
     expect(uses[0]).toMatchObject({ quantity: '800', amount_kind: 'exact' })
     expect((await db.recipe.get('r1'))?.cookedCount).toBe(1)
-    expect((await db.stock_event.get('0190a1b2-0000-7000-8000-00000000e001'))?.cookSessionId).toBe('cook-1')
+    expect((await db.stock_event.get('0190a1b2-0000-7000-8000-00000000e001'))?.cookSessionId).toBe(
+      'cook-1',
+    )
   })
 
   test('replays apply each delta once, and again after a pull overwrote the row', async () => {

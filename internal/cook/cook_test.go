@@ -119,9 +119,12 @@ func (e *env) add(t *testing.T, name string, amount map[string]any) uuid.UUID {
 	return id
 }
 
-func exact(q, u string) map[string]any { return map[string]any{"amountKind": "exact", "quantity": q, "unit": u} }
-func portions(n int) map[string]any     { return map[string]any{"amountKind": "portions", "portions": n} }
-func level(l string) map[string]any     { return map[string]any{"amountKind": "level", "level": l} }
+func exact(q, u string) map[string]any {
+	return map[string]any{"amountKind": "exact", "quantity": q, "unit": u}
+}
+
+func portions(n int) map[string]any { return map[string]any{"amountKind": "portions", "portions": n} }
+func level(l string) map[string]any { return map[string]any{"amountKind": "level", "level": l} }
 
 type item struct {
 	Qty      *string

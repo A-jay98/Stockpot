@@ -368,13 +368,13 @@ func (h *handlers) chain(ctx context.Context, tx pgx.Tx, hh, product uuid.UUID) 
 type newItem struct {
 	ID, Product, Location uuid.UUID
 	Amount
-	ExpiresOn  *time.Time
-	ExpiryKind *string
-	OpenedOn   *time.Time
-	FrozenOn   *time.Time
-	Source     string
-	Parent     *uuid.UUID
-	Note       *string
+	ExpiresOn   *time.Time
+	ExpiryKind  *string
+	OpenedOn    *time.Time
+	FrozenOn    *time.Time
+	Source      string
+	Parent      *uuid.UUID
+	Note        *string
 	CookSession *uuid.UUID
 }
 
