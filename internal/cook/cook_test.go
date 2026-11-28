@@ -439,3 +439,10 @@ func TestSetConversion(t *testing.T) {
 	e.rejected(t, "catalog.product.set_conversion", map[string]any{"id": product, "unit": "cup", "amount": "250 ml"}, commands.CodeInvalid)
 	e.rejected(t, "catalog.product.set_conversion", map[string]any{"id": uuid.New(), "unit": "cup", "amount": "1 g"}, commands.CodeGone)
 }
+
+// web/src/features/cook/cook.test.ts asserts the same value for undoEventId.
+func TestUndoEventIDMatchesClient(t *testing.T) {
+	if got := cook.UndoEventID(uuid.MustParse("0190a1b2-0000-7000-8000-000000000e01")).String(); got != "e997a083-105a-50c2-8c9a-264b67cad07a" {
+		t.Fatalf("UndoEventID = %s", got)
+	}
+}
