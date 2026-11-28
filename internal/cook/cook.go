@@ -18,6 +18,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/identity"
 	"github.com/a-jay98/stockpot/internal/inventory"
+	"github.com/a-jay98/stockpot/internal/media"
 	"github.com/a-jay98/stockpot/internal/shopping"
 )
 
@@ -104,9 +105,6 @@ type StoreRecord struct {
 	ExpiresOn   *string   `json:"expires_on,omitempty"`
 }
 
-// RefOwned reports whether the household may reference a blob (media.Owned).
-type RefOwned func(ctx context.Context, tx pgx.Tx, hh uuid.UUID, ref string) (bool, error)
-
 // UndoWindow is how long after cooking undo is offered and accepted.
 const UndoWindow = 24 * time.Hour
 
@@ -118,11 +116,11 @@ const (
 	dateLayout      = "2006-01-02"
 )
 
-type handlers struct{ owned RefOwned }
+type handlers struct{}
 
-// Register adds recipe.cook and recipe.cook.undo to r. owned checks photo refs.
-func Register(r *commands.Registry, owned RefOwned) {
-	h := &handlers{owned: owned}
+// Register adds recipe.cook and recipe.cook.undo to r.
+func Register(r *commands.Registry) {
+	h := &handlers{}
 	commands.Register(r, "recipe.cook", h.cook)
 	commands.Register(r, "recipe.cook.undo", h.undo)
 }
@@ -226,7 +224,7 @@ func (h *handlers) cook(ctx context.Context, tx pgx.Tx, p Cook) error {
 		}
 	}
 	for _, ph := range p.Photos {
-		ok, err := h.owned(ctx, tx, hh, ph.BlobRef)
+		ok, err := media.Owned(ctx, tx, hh, ph.BlobRef)
 		if err != nil {
 			return err
 		}
