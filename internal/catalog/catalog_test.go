@@ -567,3 +567,32 @@ func TestResolverMatchesPunctuatedAliases(t *testing.T) {
 		}
 	}
 }
+
+func TestReseedKeepsAnEditedBuyUnit(t *testing.T) {
+	e := newEnv(t)
+	ctx := t.Context()
+	unit := func(slug string) (u string) {
+		t.Helper()
+		if err := e.pool.QueryRow(ctx, `SELECT coalesce(default_unit, '') FROM ingredient WHERE household_id IS NULL AND slug = $1`, slug).Scan(&u); err != nil {
+			t.Fatal(err)
+		}
+		return u
+	}
+	// Salt fixed through the Defaults page / a report (audited); rice changed with no audit.
+	if _, err := e.pool.Exec(ctx, `UPDATE ingredient SET default_unit = 'box' WHERE household_id IS NULL AND slug IN ('salt', 'rice')`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.pool.Exec(ctx, `INSERT INTO audit_event (action, target_type, target_id)
+		SELECT 'catalog.default.update', 'ingredient', id::text FROM ingredient WHERE household_id IS NULL AND slug = 'salt'`); err != nil {
+		t.Fatal(err)
+	}
+	if err := catalog.Seed(ctx, e.pool); err != nil {
+		t.Fatal(err)
+	}
+	if got := unit("salt"); got != "box" {
+		t.Fatalf("salt = %q, want the edited box", got)
+	}
+	if got := unit("rice"); got != "bag" {
+		t.Fatalf("rice = %q, want the seed's bag", got)
+	}
+}

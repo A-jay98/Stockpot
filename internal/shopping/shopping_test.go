@@ -557,3 +557,27 @@ func TestAddFillsTheBuyUnit(t *testing.T) {
 		t.Fatalf("salt again = %s %s", str(q), str(u))
 	}
 }
+
+func TestAClearedUnitIsNotRefilled(t *testing.T) {
+	e := newEnv(t)
+	p := uuid.New()
+	id := e.addItem(t, map[string]any{"text": "Mystery powder", "productId": p})
+	e.mustDo(t, "shopping.item.update", map[string]any{"id": id, "unit": nil, "note": "any size"})
+	var salt uuid.UUID
+	if err := e.pool.QueryRow(t.Context(), `SELECT id FROM ingredient WHERE household_id IS NULL AND slug = 'salt'`).Scan(&salt); err != nil {
+		t.Fatal(err)
+	}
+	e.mustDo(t, "catalog.product.set_ingredient", map[string]any{"id": p, "ingredientId": salt})
+	var unit *string
+	if err := e.pool.QueryRow(t.Context(), `SELECT unit FROM shopping_item WHERE id = $1`, id).Scan(&unit); err != nil {
+		t.Fatal(err)
+	}
+	if unit != nil {
+		t.Fatalf("edited item got unit %q", *unit)
+	}
+	// An untouched item of the same product does get it.
+	other := e.addItem(t, map[string]any{"productId": p, "text": "Mystery powder"})
+	if err := e.pool.QueryRow(t.Context(), `SELECT unit FROM shopping_item WHERE id = $1`, other).Scan(&unit); err != nil || unit == nil || *unit != "bag" {
+		t.Fatalf("untouched item unit = %v (%v)", unit, err)
+	}
+}

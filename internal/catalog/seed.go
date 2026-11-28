@@ -76,6 +76,12 @@ func Seed(ctx context.Context, pool *pgxpool.Pool) error {
 
 const zeroUUID = "'00000000-0000-0000-0000-000000000000'::uuid"
 
+// unitEdited is true for a seed ingredient whose default_unit an admin or an
+// applied problem report changed (audited as reports.ActionDefaultUpdate):
+// startup seeding keeps that value instead of resetting it to the seed file's.
+const unitEdited = `EXISTS (SELECT 1 FROM audit_event a WHERE a.action = 'catalog.default.update'
+	AND a.target_type = 'ingredient' AND a.target_id = ingredient.id::text)`
+
 func seedTx(ctx context.Context, tx pgx.Tx, items []SeedIngredient) error {
 	for _, it := range items {
 		shelf, _ := json.Marshal(it.ShelfLife)
@@ -85,10 +91,13 @@ func seedTx(ctx context.Context, tx pgx.Tx, items []SeedIngredient) error {
 			VALUES (NULL, $1, $2, $3, (SELECT id FROM category WHERE household_id IS NULL AND slug = $4), $5, $6, $7, $8, 'seed')
 			ON CONFLICT ((coalesce(household_id, `+zeroUUID+`)), slug) DO UPDATE
 			SET name = EXCLUDED.name, plural = EXCLUDED.plural, category_id = EXCLUDED.category_id, icon = EXCLUDED.icon,
-			    aliases = EXCLUDED.aliases, shelf_life = EXCLUDED.shelf_life, default_unit = EXCLUDED.default_unit
+			    aliases = EXCLUDED.aliases, shelf_life = EXCLUDED.shelf_life,
+			    default_unit = CASE WHEN `+unitEdited+` THEN ingredient.default_unit ELSE EXCLUDED.default_unit END
 			WHERE ingredient.source = 'seed' AND ingredient.deleted_at IS NULL
-			  AND (ingredient.name, ingredient.plural, ingredient.category_id, ingredient.icon, ingredient.aliases, ingredient.shelf_life, ingredient.default_unit)
-			      IS DISTINCT FROM (EXCLUDED.name, EXCLUDED.plural, EXCLUDED.category_id, EXCLUDED.icon, EXCLUDED.aliases, EXCLUDED.shelf_life, EXCLUDED.default_unit)`,
+			  AND (ingredient.name, ingredient.plural, ingredient.category_id, ingredient.icon, ingredient.aliases, ingredient.shelf_life,
+			       CASE WHEN `+unitEdited+` THEN ingredient.default_unit ELSE EXCLUDED.default_unit END)
+			      IS DISTINCT FROM (EXCLUDED.name, EXCLUDED.plural, EXCLUDED.category_id, EXCLUDED.icon, EXCLUDED.aliases, EXCLUDED.shelf_life,
+			       ingredient.default_unit)`,
 			it.Slug, it.Name, it.Plural, it.Category, it.Icon, aliases, shelf, it.DefaultUnit)
 		if err != nil {
 			return fmt.Errorf("seed ingredient %s: %w", it.Slug, err)

@@ -17,6 +17,8 @@ type Brand = {
   brand: string
   /** Normalized names (and common short forms) the store can be called. */
   names: string[]
+  /** Names too common to match inside a longer name ("Penny's Bakery"): whole name only. */
+  whole?: string[]
   bg: string
   fg?: string
   mark?: string
@@ -49,20 +51,21 @@ const brands: Brand[] = [
   },
   {
     brand: 'Real Canadian Superstore',
-    names: ['superstore', 'real canadian superstore', 'rcss'],
+    names: ['real canadian superstore', 'rcss'],
+    whole: ['superstore'],
     bg: '#E31837',
     mono: 'RC',
   },
   { brand: 'Sobeys', names: ['sobeys'], bg: '#00704A', mono: 'S' },
-  { brand: 'Save-On-Foods', names: ['save on foods', 'save on'], bg: '#E31837', mono: 'SO' },
+  { brand: 'Save-On-Foods', names: ['save on foods'], bg: '#E31837', mono: 'SO' },
   { brand: 'FreshCo', names: ['freshco'], bg: '#78BE20', fg: '#111111', mono: 'F' },
-  { brand: 'Metro', names: ['metro'], bg: '#E2001A', mono: 'M' },
+  { brand: 'Metro', names: [], whole: ['metro'], bg: '#E2001A', mono: 'M' },
   { brand: 'Food Basics', names: ['food basics'], bg: '#00A94F', mono: 'FB' },
   { brand: 'T&T', names: ['t t', 't and t', 't t supermarket'], bg: '#E60012', mono: 'T&T' },
   { brand: 'H Mart', names: ['h mart', 'hmart'], bg: '#E31837', mono: 'H' },
   {
     brand: 'Shoppers Drug Mart',
-    names: ['shoppers drug mart', 'shoppers'],
+    names: ['shoppers drug mart'],
     bg: '#D71920',
     mono: 'SDM',
   },
@@ -81,13 +84,19 @@ const brands: Brand[] = [
     mono: 'S',
   },
   { brand: 'Waitrose', names: ['waitrose'], bg: '#5C8B1F', mono: 'W' },
-  { brand: 'Iceland', names: ['iceland'], bg: '#CC092F', mark: 'iceland' },
+  {
+    brand: 'Iceland',
+    names: [],
+    whole: ['iceland', 'iceland foods'],
+    bg: '#CC092F',
+    mark: 'iceland',
+  },
   { brand: 'Carrefour', names: ['carrefour'], bg: '#004E9F', mark: 'carrefour' },
   { brand: 'Auchan', names: ['auchan'], bg: '#D6180B', mark: 'auchan' },
   { brand: 'REWE', names: ['rewe'], bg: '#CC071E', mark: 'rewe' },
   { brand: 'EDEKA', names: ['edeka'], bg: '#1B66B3', fg: '#FFE500', mark: 'edeka' },
   { brand: 'Kaufland', names: ['kaufland'], bg: '#E10915', mark: 'kaufland' },
-  { brand: 'Penny', names: ['penny'], bg: '#CD1414', mark: 'penny' },
+  { brand: 'Penny', names: [], whole: ['penny', 'penny markt'], bg: '#CD1414', mark: 'penny' },
   { brand: 'Albert Heijn', names: ['albert heijn'], bg: '#04ACE6', mark: 'albertheijn' },
 ]
 
@@ -99,7 +108,9 @@ const padded = (s: string) =>
 /** The well-known brand a store name is, if any. */
 export function brandOf(name: string): Brand | undefined {
   const n = padded(name)
-  return brands.find((b) => b.names.some((x) => n.includes(padded(x))))
+  return brands.find(
+    (b) => b.names.some((x) => n.includes(padded(x))) || b.whole?.some((x) => n === padded(x)),
+  )
 }
 
 // Store colours for stores we don't know: steady per name, readable with white text.

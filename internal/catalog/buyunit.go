@@ -14,7 +14,8 @@ import (
 // its usual purchase unit, else its ingredient's (or the nearest ancestor's)
 // default_unit, which is how the ingredient is bought ("salt" -> bag).
 // A count-like unit with no quantity gets 1, so the list shows "bag", "2× bag".
-// Items the user already gave a unit keep it.
+// Items the user already gave a unit keep it, and so do items edited since
+// they were added (a unit cleared in the item sheet stays cleared).
 func FillBuyUnits(ctx context.Context, tx pgx.Tx, product uuid.UUID) error {
 	_, err := tx.Exec(ctx, `
 		WITH RECURSIVE chain (id, parent_id, unit, depth) AS (
@@ -41,7 +42,8 @@ func FillBuyUnits(ctx context.Context, tx pgx.Tx, product uuid.UUID) error {
 		SET unit = pick.unit,
 		    qty = coalesce(s.qty, pick.qty, CASE WHEN pick.unit = ANY ($2) THEN 1 END)
 		FROM pick
-		WHERE s.product_id = $1 AND s.unit IS NULL AND s.checked_at IS NULL AND s.deleted_at IS NULL`,
+		WHERE s.product_id = $1 AND s.unit IS NULL AND s.checked_at IS NULL AND s.deleted_at IS NULL
+		  AND s.updated_at = s.created_at`,
 		product, units.OfDimension(units.Count))
 	return err
 }

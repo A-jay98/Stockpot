@@ -435,3 +435,13 @@ test('swiping right puts an item in the cart; left offers one more and remove', 
   // The drag did not open the item sheet.
   expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
 })
+
+test('a weighed item offers only remove when swiped left', async () => {
+  const user = userEvent.setup()
+  await openList()
+  await user.type(await screen.findByLabelText('Item name'), '750 g ground beef{Enter}')
+  const row = await screen.findByRole('button', { name: /^ground beef/i })
+  swipe(row, -100)
+  expect(await screen.findByRole('button', { name: 'Remove' })).toBeVisible()
+  expect(screen.queryByRole('button', { name: 'One more' })).not.toBeInTheDocument()
+})

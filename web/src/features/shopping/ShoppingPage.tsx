@@ -141,11 +141,12 @@ export function ShoppingPage() {
           ...productPick(r, products, uuidv7),
         }))
 
-  // Swipe left: one more of it (packages and pieces), or remove it with an undo.
+  // Swipe left: one more of it (packages and pieces only), or remove it with an undo.
+  const countable = (r: Row) => isCountUnit(r.unit ?? 'ea')
   const bump = (r: Row) =>
     void dispatch('shopping.item.update', {
       id: r.id,
-      qty: String((Number(r.qty) || 1) + 1),
+      qty: String(Math.round(Number(r.qty) || 1) + 1),
       ...(r.unit ? {} : { unit: 'ea' }),
     })
   const remove = (r: Row) => {
@@ -163,6 +164,8 @@ export function ShoppingPage() {
             ...(r.productId ? { productId: r.productId } : {}),
             qty: r.qty,
             unit: r.unit,
+            sort: r.sort,
+            ...(r.recipeId ? { recipeId: r.recipeId } : {}),
             ...(r.categoryId ? { categoryId: r.categoryId } : {}),
             storeIds: r.storeIds,
             ...(r.note ? { note: r.note } : {}),
@@ -251,7 +254,7 @@ export function ShoppingPage() {
           onAction: () => toggle(r),
         }}
         end={
-          done
+          done || !countable(r)
             ? [
                 {
                   label: 'Remove',

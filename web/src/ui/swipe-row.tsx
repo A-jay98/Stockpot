@@ -37,9 +37,15 @@ const DECIDE = 8 // px before a drag counts as horizontal or vertical
  */
 export function SwipeRow({ children, start, end = [], open, onOpenChange, className }: Props) {
   const ref = useRef<HTMLDivElement>(null)
-  const drag = useRef<{ x: number; y: number; base: number; dir?: 'h' | 'v'; id: number } | null>(
-    null,
-  )
+  const drag = useRef<{
+    x: number
+    y: number
+    base: number
+    dir?: 'h' | 'v'
+    id: number
+    /** Live offset: pointerup can arrive before the last move re-renders. */
+    at?: number
+  } | null>(null)
   const moved = useRef(false)
   const [dx, setDx] = useState<number | null>(null)
   const openW = end.length * ACTION_W
@@ -67,17 +73,18 @@ export function SwipeRow({ children, start, end = [], open, onOpenChange, classN
     let x = d.base + mx
     if (!start) x = Math.min(x, 0)
     if (!end.length) x = Math.max(x, 0)
+    d.at = x
     setDx(x)
   }
   const up = (e: PointerEvent<HTMLDivElement>) => {
     const d = drag.current
     drag.current = null
-    if (!d || d.id !== e.pointerId || d.dir !== 'h' || dx === null) {
+    if (!d || d.id !== e.pointerId || d.dir !== 'h' || d.at === undefined) {
       setDx(null)
       return
     }
     const w = width()
-    const x = dx
+    const x = d.at
     setDx(null)
     if (start && x > Math.min(110, w * 0.3)) {
       onOpenChange(false)
