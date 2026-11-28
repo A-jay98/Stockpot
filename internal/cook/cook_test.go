@@ -26,16 +26,15 @@ import (
 func TestMain(m *testing.M) { os.Exit(testdb.Main(m)) }
 
 type env struct {
-	pool      *pgxpool.Pool
-	svc       *commands.Service
-	hh        uuid.UUID
-	ctx       context.Context
-	loc       map[string]uuid.UUID
-	list      uuid.UUID
-	recipe    uuid.UUID
-	version   uuid.UUID
-	leftover  uuid.UUID
-	fridgeDay time.Time
+	pool     *pgxpool.Pool
+	svc      *commands.Service
+	hh       uuid.UUID
+	ctx      context.Context
+	loc      map[string]uuid.UUID
+	list     uuid.UUID
+	recipe   uuid.UUID
+	version  uuid.UUID
+	leftover uuid.UUID
 }
 
 func newEnv(t *testing.T) *env {
