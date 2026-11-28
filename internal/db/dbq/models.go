@@ -306,6 +306,34 @@ type NotificationPref struct {
 	UpdatedAt  time.Time
 }
 
+type ProblemReport struct {
+	ID            uuid.UUID
+	CreatedAt     time.Time
+	UpdatedAt     time.Time
+	HouseholdID   uuid.UUID
+	ReporterID    *uuid.UUID
+	Kind          string
+	Source        string
+	SubjectID     *uuid.UUID
+	ProductID     *uuid.UUID
+	IngredientID  *uuid.UUID
+	Context       []byte
+	Suggested     *string
+	Note          *string
+	Status        string
+	Attempts      int32
+	LlmVerdict    *string
+	LlmValue      *string
+	LlmReason     *string
+	LlmConfidence *float32
+	LlmProvider   *string
+	LlmAt         *time.Time
+	Applied       []byte
+	ResolvedBy    *string
+	ResolvedAt    *time.Time
+	AdminNote     *string
+}
+
 type Product struct {
 	ID                  uuid.UUID
 	HouseholdID         uuid.UUID

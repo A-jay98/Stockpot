@@ -1,8 +1,9 @@
-import { Trash2 } from 'lucide-react'
+import { Flag, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { dispatch } from '../../offline/outbox'
 import type { Store } from '../../offline/replica'
 import { Button, cn, Field, Input, Sheet, SheetContent } from '../../ui'
+import { ReportSheet } from '../reports/ReportSheet'
 import type { Row } from './items'
 
 const unitOptions = [
@@ -40,6 +41,7 @@ function Body({ row, stores, onClose }: { row: Row; stores: Store[]; onClose: ()
   const [unit, setUnit] = useState(row.unit ?? '')
   const [note, setNote] = useState(row.note ?? '')
   const [storeIds, setStoreIds] = useState(row.storeIds)
+  const [reporting, setReporting] = useState(false)
   const valid = qty === '' || /^\d+(\.\d+)?$/.test(qty)
 
   const save = async () => {
@@ -127,6 +129,17 @@ function Body({ row, stores, onClose }: { row: Row; stores: Store[]; onClose: ()
           <Input {...p} value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} />
         )}
       </Field>
+      <Button variant="ghost" className="self-start" onClick={() => setReporting(true)}>
+        <Flag aria-hidden /> Report a problem
+      </Button>
+      <ReportSheet
+        open={reporting}
+        onClose={() => setReporting(false)}
+        source="shopping_item"
+        subjectId={row.id}
+        title={row.title}
+        unit={row.unit}
+      />
     </SheetContent>
   )
 }

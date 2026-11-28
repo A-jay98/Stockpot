@@ -52,13 +52,13 @@ const Actor = "system:report_review"
 
 // Errors.
 var (
-	ErrInvalid    = errors.New("invalid report")
-	ErrNoSubject  = errors.New("the reported item was not found")
-	ErrTooMany    = errors.New("too many reports today; try again tomorrow")
-	ErrNotFound   = errors.New("report not found")
-	ErrBadAction  = errors.New("this action does not fit the report")
-	ErrNoTarget   = errors.New("the report names no product or ingredient to change")
-	ErrBadUnit    = errors.New("unknown unit")
+	ErrInvalid     = errors.New("invalid report")
+	ErrNoSubject   = errors.New("the reported item was not found")
+	ErrTooMany     = errors.New("too many reports today; try again tomorrow")
+	ErrNotFound    = errors.New("report not found")
+	ErrBadAction   = errors.New("this action does not fit the report")
+	ErrNoTarget    = errors.New("the report names no product or ingredient to change")
+	ErrBadUnit     = errors.New("unknown unit")
 	ErrNotAttached = errors.New("reports: not attached to the job client")
 )
 
