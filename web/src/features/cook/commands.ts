@@ -40,6 +40,9 @@ export type CookStoreRecord = {
   expires_on?: string
 }
 
+/** Undo is accepted for 24 h after a cook (the server checks too). */
+export const UndoWindowMs = 24 * 60 * 60 * 1000
+
 /** The compensating event undo writes for an event: uuidv5(event id, "cook.undo"), as the server. */
 export const undoEventId = (eventId: string) => v5('cook.undo', eventId)
 
@@ -106,7 +109,13 @@ async function applyUse(
   const it = await db.stock_item.get(u.stockItemId)
   // Already applied (or finished by this cook and removed): keep what it did.
   if (prior && (!it || applied(it, u.eventId))) return prior
-  if (!it) return { line_id: u.lineId ?? undefined, stock_item_id: u.stockItemId, event_id: u.eventId, skipped: true }
+  if (!it)
+    return {
+      line_id: u.lineId ?? undefined,
+      stock_item_id: u.stockItemId,
+      event_id: u.eventId,
+      skipped: true,
+    }
   const rec: CookUseRecord = {
     line_id: u.lineId ?? undefined,
     stock_item_id: it.id,
@@ -117,7 +126,11 @@ async function applyUse(
     finished: !!u.finished,
   }
   let next: StockItem | null = it
-  const ev: Pick<StockEvent, 'kind' | 'delta' | 'reason'> = { kind: 'consume', delta: null, reason: 'cook' }
+  const ev: Pick<StockEvent, 'kind' | 'delta' | 'reason'> = {
+    kind: 'consume',
+    delta: null,
+    reason: 'cook',
+  }
   if (it.amountKind === 'exact' && it.quantity) {
     const want = u.finished ? it.quantity : (u.quantity ?? '0')
     const taken = cmp(want, it.quantity) >= 0 ? it.quantity : want
@@ -193,14 +206,16 @@ async function ensureLeftover(
     clientTime,
   )
   const p = await db.product.get(want)
-  if (p) await db.product.put({ ...p, recipeId, enrichState: 'skipped', defaultLocationKind: 'fridge' })
+  if (p)
+    await db.product.put({ ...p, recipeId, enrichState: 'skipped', defaultLocationKind: 'fridge' })
   return want
 }
 
 /** "Leftover chicken curry" (the server adds " (2)" when that name is taken). */
 export function leftoverName(title: string): string {
   const r = [...title]
-  if (r.length > 1 && r[1] === r[1]?.toUpperCase() && r[1] !== r[1]?.toLowerCase()) return `Leftover ${title}`
+  if (r.length > 1 && r[1] === r[1]?.toUpperCase() && r[1] !== r[1]?.toLowerCase())
+    return `Leftover ${title}`
   return `Leftover ${(r[0] ?? '').toLowerCase()}${r.slice(1).join('')}`
 }
 
@@ -210,7 +225,10 @@ async function refreshCounts(db: StockpotDB, recipeId: string) {
   const live = (await db.cook_session.where('recipeId').equals(recipeId).toArray()).filter(
     (s) => !s.undoneAt,
   )
-  const last = live.map((s) => s.cookedOn).sort().at(-1)
+  const last = live
+    .map((s) => s.cookedOn)
+    .sort()
+    .at(-1)
   await db.recipe.put({
     ...recipe,
     cookedCount: live.length,
@@ -235,7 +253,13 @@ registerReducer(
     const stored: CookStoreRecord[] = []
     let leftoverProductId: string | null = prev?.leftoverProductId ?? null
     if (p.store.length > 0 && p.leftoverProductId) {
-      leftoverProductId = await ensureLeftover(db, recipe.id, recipe.title, p.leftoverProductId, clientTime)
+      leftoverProductId = await ensureLeftover(
+        db,
+        recipe.id,
+        recipe.title,
+        p.leftoverProductId,
+        clientTime,
+      )
       for (const s of p.store) {
         if (!(await db.stock_item.get(s.stockItemId))) {
           await applyReducer(
@@ -272,7 +296,13 @@ registerReducer(
       await applyReducer(
         db,
         'recipe.photo.add',
-        { id: ph.id, recipeId: p.recipeId, blobRef: ph.blobRef, cookSessionId: p.id, takenOn: p.cookedOn },
+        {
+          id: ph.id,
+          recipeId: p.recipeId,
+          blobRef: ph.blobRef,
+          cookSessionId: p.id,
+          takenOn: p.cookedOn,
+        },
         clientTime,
       )
     }
@@ -306,9 +336,12 @@ registerReducer('recipe.cook.undo', async (db, p, { clientTime }) => {
     // A finished item is back after the next pull; deltas onto a live item apply now.
     if (it && !applied(it, undoId)) {
       let next: StockItem | null = null
-      if (it.amountKind === 'exact' && it.quantity && u.quantity) next = { ...it, quantity: add(it.quantity, u.quantity) }
-      else if (it.amountKind === 'portions' && it.portions != null && u.portions) next = { ...it, portions: it.portions + u.portions }
-      else if (it.amountKind === 'level' && u.level_before && it.level === u.level_after) next = { ...it, level: u.level_before }
+      if (it.amountKind === 'exact' && it.quantity && u.quantity)
+        next = { ...it, quantity: add(it.quantity, u.quantity) }
+      else if (it.amountKind === 'portions' && it.portions != null && u.portions)
+        next = { ...it, portions: it.portions + u.portions }
+      else if (it.amountKind === 'level' && u.level_before && it.level === u.level_after)
+        next = { ...it, level: u.level_before }
       if (next) {
         await db.stock_item.put(mark(next, undoId))
         await logEvent(db, clientTime, {
