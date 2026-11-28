@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto'
-import { fireEvent, screen, waitFor } from '@testing-library/react'
+import { fireEvent, screen } from '@testing-library/react'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { db } from '../../offline/db'
 import type { RecipeLine } from '../../offline/replica'
@@ -31,22 +31,21 @@ afterEach(async () => {
   await Promise.all(db.tables.map((t) => t.clear()))
 })
 
-const ing = (id: string, parentId: string | null = null) =>
-  ({
-    ...base,
-    householdId: null,
-    id,
-    slug: id,
-    name: id,
-    plural: null,
-    parentId,
-    categoryId: null,
-    icon: null,
-    aliases: [],
-    shelfLife: {},
-    defaultUnit: null,
-    source: 'seed',
-  }) as const
+const ing = (id: string, parentId: string | null = null) => ({
+  ...base,
+  householdId: null,
+  id,
+  slug: id,
+  name: id,
+  plural: null,
+  parentId,
+  categoryId: null,
+  icon: null,
+  aliases: [],
+  shelfLife: {},
+  defaultUnit: null,
+  source: 'seed' as const,
+})
 
 const product = (id: string, name: string, ingredientId: string) => ({
   ...base,
@@ -92,7 +91,13 @@ const stock = (id: string, productId: string, quantity: string, expiresOn: strin
   note: null,
 })
 
-const line = (id: string, raw: string, name: string, ingredient_id?: string, more = {}): RecipeLine => ({
+const line = (
+  id: string,
+  raw: string,
+  name: string,
+  ingredient_id?: string,
+  more = {},
+): RecipeLine => ({
   line_id: id,
   raw,
   name,
@@ -194,7 +199,9 @@ test('kitchen tab ranks recipes with what is in stock, soon chips and the first 
   expect(screen.getByText(/^2 of 6/)).toBeInTheDocument()
   expect(screen.getByText('Chicken thighs, tomorrow')).toBeInTheDocument()
   expect(screen.getByText('Cilantro, 2 days')).toBeInTheDocument()
-  expect(screen.getByText('No coconut milk? Use Greek yogurt thinned with water.')).toBeInTheDocument()
+  expect(
+    screen.getByText('No coconut milk? Use Greek yogurt thinned with water.'),
+  ).toBeInTheDocument()
   expect(screen.getByText(/Your library/)).toBeInTheDocument()
 
   // The assistant is down: the manual path is explained, nothing breaks.
@@ -215,7 +222,9 @@ test('cook tonight needs 70% in stock and something urgent', async () => {
   ])
   expect(await screen.findByText('Cook tonight')).toBeInTheDocument()
   expect(
-    screen.getByText(/Uses the chicken thighs \(tomorrow\) and the cilantro \(2 days\)\. You have 5 of 6/),
+    screen.getByText(
+      /Uses the chicken thighs \(tomorrow\) and the cilantro \(2 days\)\. You have 5 of 6/,
+    ),
   ).toBeInTheDocument()
 })
 
