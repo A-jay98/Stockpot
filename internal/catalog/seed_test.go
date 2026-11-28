@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/a-jay98/stockpot/internal/catalog"
+	"github.com/a-jay98/stockpot/internal/units"
 )
 
 var seedCategories = map[string]bool{
@@ -43,6 +44,21 @@ func TestSeedFileIsConsistent(t *testing.T) {
 			}
 			names[n] = it.Slug
 		}
+	}
+	withConv := 0
+	for _, it := range items {
+		if len(it.Conversions) > 0 {
+			withConv++
+		}
+		for k, v := range it.Conversions {
+			q, u, ok := units.ParseAmount(v)
+			if !units.Valid(k) || !ok || q.Sign() <= 0 || units.DimensionOf(u) == units.Count {
+				t.Errorf("%s: bad conversion %s: %s (want a mass or volume amount)", it.Slug, k, v)
+			}
+		}
+	}
+	if withConv < 100 {
+		t.Errorf("only %d ingredients have conversions", withConv)
 	}
 	for _, it := range items {
 		seen := map[string]bool{}

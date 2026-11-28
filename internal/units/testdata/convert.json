@@ -1,0 +1,31 @@
+{
+  "_comment": "Shared by internal/units (Go) and web/src/lib/units.ts (Vitest). want is rounded to 3 places; null = no conversion. conversions are tried in order: product, ingredient, ancestors.",
+  "cases": [
+    { "name": "same unit", "qty": "2", "from": "g", "to": "g", "want": "2" },
+    { "name": "kg to g", "qty": "1.25", "from": "kg", "to": "g", "want": "1250" },
+    { "name": "g to kg", "qty": "800", "from": "g", "to": "kg", "want": "0.8" },
+    { "name": "lb to g", "qty": "2", "from": "lb", "to": "g", "want": "907.185" },
+    { "name": "oz to g", "qty": "1", "from": "oz", "to": "g", "want": "28.35" },
+    { "name": "cup to ml (metric)", "qty": "1.5", "from": "cup", "to": "ml", "want": "375" },
+    { "name": "tbsp to tsp", "qty": "2", "from": "tbsp", "to": "tsp", "want": "6" },
+    { "name": "l to cup", "qty": "1", "from": "l", "to": "cup", "want": "4" },
+    { "name": "third rounds", "qty": "1", "from": "tsp", "to": "tbsp", "want": "0.333" },
+    { "name": "half up", "qty": "0.0005", "from": "kg", "to": "kg", "want": "0.001" },
+    { "name": "mass to volume needs a conversion", "qty": "100", "from": "g", "to": "ml", "want": null },
+    { "name": "count to mass needs a conversion", "qty": "2", "from": "ea", "to": "g", "want": null },
+    { "name": "different counts need a conversion", "qty": "1", "from": "can", "to": "ea", "want": null },
+    { "name": "unknown unit", "qty": "1", "from": "handful", "to": "g", "want": null },
+    { "name": "onions each to g", "qty": "2", "from": "ea", "to": "g", "conversions": [{}, { "ea": "110 g" }], "want": "220" },
+    { "name": "g back to each", "qty": "330", "from": "g", "to": "ea", "conversions": [{ "ea": "110 g" }], "want": "3" },
+    { "name": "each to kg", "qty": "3", "from": "ea", "to": "kg", "conversions": [{ "ea": "110 g" }], "want": "0.33" },
+    { "name": "product beats ingredient", "qty": "1", "from": "ea", "to": "g", "conversions": [{ "ea": "200 g" }, { "ea": "110 g" }], "want": "200" },
+    { "name": "falls through to ancestor", "qty": "1", "from": "clove", "to": "g", "conversions": [{}, { "ea": "50 g" }, { "clove": "5 g" }], "want": "5" },
+    { "name": "volume via cup density", "qty": "2", "from": "tbsp", "to": "g", "conversions": [{ "cup": "185 g" }], "want": "22.2" },
+    { "name": "mass to volume via density", "qty": "370", "from": "g", "to": "cup", "conversions": [{ "cup": "185 g" }], "want": "2" },
+    { "name": "can to g through ml and density", "qty": "1", "from": "can", "to": "g", "conversions": [{ "can": "400 ml" }, { "cup": "240 g" }], "want": "384" },
+    { "name": "bunch to each through mass", "qty": "1", "from": "bunch", "to": "ea", "conversions": [{ "bunch": "60 g" }, { "ea": "20 g" }], "want": "3" },
+    { "name": "bad value is ignored", "qty": "1", "from": "ea", "to": "g", "conversions": [{ "ea": "lots" }, { "ea": "100 g" }], "want": "100" },
+    { "name": "self conversion is ignored", "qty": "1", "from": "ea", "to": "g", "conversions": [{ "ea": "2 ea" }], "want": null },
+    { "name": "head of garlic in cloves", "qty": "1", "from": "head", "to": "clove", "conversions": [{ "head": "50 g", "clove": "5 g" }], "want": "10" }
+  ]
+}

@@ -112,6 +112,7 @@ func Register(r *commands.Registry, res Resolver) {
 	commands.Register(r, "catalog.product.update", h.productUpdate)
 	commands.Register(r, "catalog.product.delete", softDelete("product", func(p IDPayload) uuid.UUID { return p.ID }, nil))
 	commands.Register(r, "catalog.product.set_ingredient", h.productSetIngredient)
+	commands.Register(r, "catalog.product.set_conversion", h.productSetConversion)
 	commands.Register(r, "catalog.store.create", h.storeCreate)
 	commands.Register(r, "catalog.store.update", h.storeUpdate)
 	commands.Register(r, "catalog.store.delete", softDelete("store", func(p IDPayload) uuid.UUID { return p.ID }, releaseStore))

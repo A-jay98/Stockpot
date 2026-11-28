@@ -26,6 +26,8 @@ type SeedIngredient struct {
 	Aliases     []string       `json:"aliases"`
 	ShelfLife   map[string]int `json:"shelf_life"`
 	DefaultUnit *string        `json:"default_unit"`
+	// Conversions bridge dimensions for recipes ("ea": "150 g"); see units.Convert.
+	Conversions map[string]string `json:"conversions"`
 }
 
 // SeedIngredients returns the embedded global ingredient seed.
@@ -80,16 +82,22 @@ func seedTx(ctx context.Context, tx pgx.Tx, items []SeedIngredient) error {
 	for _, it := range items {
 		shelf, _ := json.Marshal(it.ShelfLife)
 		aliases := normalizedAliases(it.Aliases)
+		conv := it.Conversions
+		if conv == nil {
+			conv = map[string]string{}
+		}
+		convJSON, _ := json.Marshal(conv)
 		_, err := tx.Exec(ctx, `
-			INSERT INTO ingredient (household_id, slug, name, plural, category_id, icon, aliases, shelf_life, default_unit, source)
-			VALUES (NULL, $1, $2, $3, (SELECT id FROM category WHERE household_id IS NULL AND slug = $4), $5, $6, $7, $8, 'seed')
+			INSERT INTO ingredient (household_id, slug, name, plural, category_id, icon, aliases, shelf_life, default_unit, conversions, source)
+			VALUES (NULL, $1, $2, $3, (SELECT id FROM category WHERE household_id IS NULL AND slug = $4), $5, $6, $7, $8, $9, 'seed')
 			ON CONFLICT ((coalesce(household_id, `+zeroUUID+`)), slug) DO UPDATE
 			SET name = EXCLUDED.name, plural = EXCLUDED.plural, category_id = EXCLUDED.category_id, icon = EXCLUDED.icon,
-			    aliases = EXCLUDED.aliases, shelf_life = EXCLUDED.shelf_life, default_unit = EXCLUDED.default_unit
+			    aliases = EXCLUDED.aliases, shelf_life = EXCLUDED.shelf_life, default_unit = EXCLUDED.default_unit,
+			    conversions = EXCLUDED.conversions
 			WHERE ingredient.source = 'seed' AND ingredient.deleted_at IS NULL
-			  AND (ingredient.name, ingredient.plural, ingredient.category_id, ingredient.icon, ingredient.aliases, ingredient.shelf_life, ingredient.default_unit)
-			      IS DISTINCT FROM (EXCLUDED.name, EXCLUDED.plural, EXCLUDED.category_id, EXCLUDED.icon, EXCLUDED.aliases, EXCLUDED.shelf_life, EXCLUDED.default_unit)`,
-			it.Slug, it.Name, it.Plural, it.Category, it.Icon, aliases, shelf, it.DefaultUnit)
+			  AND (ingredient.name, ingredient.plural, ingredient.category_id, ingredient.icon, ingredient.aliases, ingredient.shelf_life, ingredient.default_unit, ingredient.conversions)
+			      IS DISTINCT FROM (EXCLUDED.name, EXCLUDED.plural, EXCLUDED.category_id, EXCLUDED.icon, EXCLUDED.aliases, EXCLUDED.shelf_life, EXCLUDED.default_unit, EXCLUDED.conversions)`,
+			it.Slug, it.Name, it.Plural, it.Category, it.Icon, aliases, shelf, it.DefaultUnit, convJSON)
 		if err != nil {
 			return fmt.Errorf("seed ingredient %s: %w", it.Slug, err)
 		}
