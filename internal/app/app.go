@@ -40,6 +40,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/logging"
 	"github.com/a-jay98/stockpot/internal/media"
 	"github.com/a-jay98/stockpot/internal/recipes"
+	"github.com/a-jay98/stockpot/internal/recipes/chat"
 	"github.com/a-jay98/stockpot/internal/settings"
 	"github.com/a-jay98/stockpot/internal/shopping"
 	"github.com/a-jay98/stockpot/internal/syncdb"
@@ -148,7 +149,8 @@ func Serve(ctx context.Context, cfg config.Config) error {
 		return shopping.RecordPurchase(ctx, tx, hh, product, store, uuid.Nil, at, qty, unit)
 	})
 	shopping.Register(cmdRegistry, resolve.Resolver{})
-	recipes.Register(cmdRegistry, resolve.Resolver{})
+	recipeCmds := recipes.Register(cmdRegistry, resolve.Resolver{})
+	recipeCmds.OnChatVersion = chat.MarkSaved
 	cook.Register(cmdRegistry)
 	syncStore, err := syncdb.New(ctx, pool)
 	if err != nil {
@@ -225,6 +227,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Matcher:   catalog.Matcher{Pool: pool, Res: resolve.Resolver{}},
 			Alerts:    alertSvc,
 			FoodRules: inventory.NewRuleService(pool),
+			Chat:      &chat.Service{Pool: pool, LLM: gateway},
 			Blobs:     media.New(pool, blobs),
 		}),
 		httpapi.Options{

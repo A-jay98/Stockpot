@@ -58,6 +58,7 @@ export const routes: RouteObject[] = [
           { path: 'shopping', Component: ShoppingPage },
           { path: 'recipes', Component: RecipesPage },
           { path: 'recipes/import', Component: RecipesPage },
+          { path: 'recipes/new', Component: RecipeEditor },
           { path: 'recipes/:id', Component: RecipePage },
           { path: 'recipes/:id/v/:n', Component: VersionPage },
           { path: 'recipes/:id/edit', Component: RecipeEditor },

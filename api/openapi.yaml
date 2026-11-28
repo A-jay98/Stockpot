@@ -46,6 +46,8 @@ tags:
     description: Photo upload and download (content-addressed).
   - name: notifications
     description: Inbox, alert preferences and Telegram linking.
+  - name: recipes
+    description: Recipe chat (recipes themselves sync as commands).
 paths:
   /health:
     get:
@@ -395,6 +397,85 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CatalogMatch"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/recipes/{id}/chat:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      operationId: listRecipeChat
+      summary: The recipe's chat, oldest first
+      description: Not synced; online only. At most the newest 200 messages.
+      tags: [recipes]
+      x-roles: [user]
+      responses:
+        "200":
+          description: The messages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeChat"
+        default:
+          $ref: "#/components/responses/Problem"
+    post:
+      operationId: postRecipeChat
+      summary: Ask about the recipe or say what changed
+      description: |
+        Sends the text, the current version, the last 20 messages and the
+        household's cook notes to the assistant (LLM feature recipes_chat) and
+        stores the user's message and the reply. A reply may carry a proposal:
+        the changed fields, which the client applies to the current version and
+        saves with recipe.version.create (origin chat, fromMessageId). On 503 llm_unavailable nothing is stored;
+        the client offers the editor instead.
+      tags: [recipes]
+      x-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecipeChatInput"
+      responses:
+        "200":
+          description: The user's message and the reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeChat"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/recipes/{id}/chat/{messageId}/dismiss:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      - name: messageId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      operationId: dismissRecipeChatProposal
+      summary: Set a proposal aside ("Not now")
+      description: Idempotent. 409 chat_proposal_saved when the proposal is already a version.
+      tags: [recipes]
+      x-roles: [user]
+      responses:
+        "200":
+          description: The message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeChatMessage"
         default:
           $ref: "#/components/responses/Problem"
   /v1/admin/settings:
@@ -4346,6 +4427,95 @@ components:
               type: string
               format: uuid
               nullable: true
+    RecipeChatInput:
+      type: object
+      required: [text]
+      additionalProperties: false
+      properties:
+        text:
+          type: string
+          minLength: 1
+          maxLength: 2000
+    RecipeChat:
+      type: object
+      required: [messages]
+      additionalProperties: false
+      properties:
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeChatMessage"
+    RecipeChatMessage:
+      type: object
+      required: [id, recipeId, versionId, versionN, role, text, proposalState, createdAt]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        recipeId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+          description: The recipe's current version when the message was written; a proposal is based on it.
+        versionN:
+          type: integer
+        role:
+          type: string
+          enum: [user, assistant]
+        text:
+          type: string
+        proposal:
+          $ref: "#/components/schemas/RecipeChatProposal"
+        proposalState:
+          type: string
+          enum: [none, pending, saved, dismissed]
+        proposalError:
+          type: string
+          description: Why the change the reply describes could not be offered as a version.
+        savedVersionId:
+          type: string
+          format: uuid
+          description: The version a saved proposal became (absent if it was deleted).
+        savedVersionN:
+          type: integer
+        userId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+    RecipeChatProposal:
+      type: object
+      description: |
+        The fields the assistant would change; absent fields stay as they are.
+        The client applies them to the recipe's current version and sends the
+        result as recipe.version.create. ingredients and steps, when present,
+        are complete lists; notes "" clears the notes.
+      required: [changeSummary]
+      additionalProperties: false
+      properties:
+        changeSummary:
+          type: string
+          maxLength: 500
+        title:
+          type: string
+        servings:
+          type: integer
+        totalMinutes:
+          type: integer
+        ingredients:
+          type: array
+          items:
+            type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeStep"
+        notes:
+          type: string
     RecipeStep:
       type: object
       required: [text]
