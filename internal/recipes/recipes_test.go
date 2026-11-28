@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -95,6 +96,16 @@ func (e *env) create(t *testing.T, title string, ingredients ...string) (recipe,
 		"tags": []string{"Dinner", "dinner", " curry "},
 	})
 	return recipe, version
+}
+
+// uploaded records that household hh uploaded ref (as POST /v1/blobs does).
+func (e *env) uploaded(t *testing.T, hh uuid.UUID, ref string) string {
+	t.Helper()
+	if _, err := e.pool.Exec(t.Context(), `INSERT INTO blob_owner (ref, household_id, size, content_type, width, height)
+		VALUES ($1, $2, 10, 'image/jpeg', 4, 4)`, ref, hh); err != nil {
+		t.Fatal(err)
+	}
+	return ref
 }
 
 type versionRow struct {
@@ -291,7 +302,10 @@ func TestSetIngredientIsTheOnlyInPlaceChange(t *testing.T) {
 func TestUpdateDeleteAndGone(t *testing.T) {
 	e := newEnv(t)
 	r, v := e.create(t, "Salad", "1 lettuce")
-	ref := "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+	ref := e.uploaded(t, e.hh, "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+	if res := e.do(t, "recipe.update", map[string]any{"id": r, "coverBlob": strings.Repeat("e", 64)}); res.Problem == nil || res.Problem.Code != commands.CodeInvalid {
+		t.Fatalf("cover not uploaded: %+v", res)
+	}
 	e.mustDo(t, "recipe.update", map[string]any{"id": r, "tags": []string{"Quick"}, "coverBlob": ref, "subtitle": "Crunchy", "saved": false})
 	var tags []string
 	var cover, sub *string
@@ -446,5 +460,63 @@ func TestRecipeWritesTakeTheHouseholdLock(t *testing.T) {
 	}
 	if err := <-done; err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestPhotoAddRemove(t *testing.T) {
+	e := newEnv(t)
+	r, _ := e.create(t, "Curry", "1 onion")
+	ref := e.uploaded(t, e.hh, strings.Repeat("a", 64))
+	other := e.household(t)
+	theirs := e.uploaded(t, other, strings.Repeat("b", 64))
+
+	photo, cmdID := uuid.New(), uuid.New()
+	add := map[string]any{"id": photo, "recipeId": r, "blobRef": ref, "takenOn": "2026-11-27", "caption": "  Sunday  "}
+	if res := e.apply(t, cmdID, "recipe.photo.add", add); res.Status != commands.StatusApplied {
+		t.Fatalf("add: %+v %v", res, res.Problem)
+	}
+	if res := e.apply(t, cmdID, "recipe.photo.add", add); res.Status != commands.StatusDuplicate {
+		t.Fatalf("replay: %+v", res)
+	}
+	add["caption"] = "again" // same photo id under a new command id: no second row
+	e.mustDo(t, "recipe.photo.add", add)
+	var n int
+	var caption, taken string
+	_ = e.pool.QueryRow(t.Context(), `SELECT count(*), max(caption), max(taken_on)::text FROM recipe_photo WHERE recipe_id = $1`, r).Scan(&n, &caption, &taken)
+	if n != 1 || caption != "Sunday" || taken != "2026-11-27" {
+		t.Fatalf("photo rows %d %q %q", n, caption, taken)
+	}
+
+	for name, tc := range map[string]struct {
+		payload map[string]any
+		code    string
+	}{
+		"not uploaded":      {map[string]any{"id": uuid.New(), "recipeId": r, "blobRef": strings.Repeat("c", 64)}, commands.CodeInvalid},
+		"other household's": {map[string]any{"id": uuid.New(), "recipeId": r, "blobRef": theirs}, commands.CodeInvalid},
+		"bad date":          {map[string]any{"id": uuid.New(), "recipeId": r, "blobRef": ref, "takenOn": "27/11"}, commands.CodeInvalid},
+		"unknown recipe":    {map[string]any{"id": uuid.New(), "recipeId": uuid.New(), "blobRef": ref}, commands.CodeGone},
+		"unknown cook":      {map[string]any{"id": uuid.New(), "recipeId": r, "blobRef": ref, "cookSessionId": uuid.New()}, commands.CodeGone},
+	} {
+		if res := e.do(t, "recipe.photo.add", tc.payload); res.Problem == nil || res.Problem.Code != tc.code {
+			t.Errorf("%s: %+v", name, res)
+		}
+	}
+
+	removed := func() bool {
+		var d bool
+		_ = e.pool.QueryRow(t.Context(), `SELECT deleted_at IS NOT NULL FROM recipe_photo WHERE id = $1`, photo).Scan(&d)
+		return d
+	}
+	mine, mineCtx := e.hh, e.ctx
+	e.ctx, e.hh = e.as(other), other
+	e.mustDo(t, "recipe.photo.remove", map[string]any{"id": photo})
+	if removed() {
+		t.Fatal("another household removed the photo")
+	}
+	e.ctx, e.hh = mineCtx, mine
+	e.mustDo(t, "recipe.photo.remove", map[string]any{"id": photo})
+	e.mustDo(t, "recipe.photo.remove", map[string]any{"id": photo}) // idempotent
+	if !removed() {
+		t.Fatal("photo not removed")
 	}
 }

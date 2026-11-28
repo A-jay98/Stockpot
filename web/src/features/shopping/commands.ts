@@ -39,6 +39,31 @@ registerReducer('shopping.list.delete', async (db, p) => {
 
 registerReducer('shopping.item.add', async (db, p, { clientTime }) => {
   if (await db.shopping_item.get(p.id)) return
+  // A new product the item proposes (see the server's linkNewProduct) shows right away.
+  const name = p.text?.trim()
+  if (p.productId && name && !(await db.product.get(p.productId))) {
+    const ingredient = p.ingredientId ? await db.ingredient.get(p.ingredientId) : undefined
+    await applyReducer(
+      db,
+      'catalog.product.create',
+      {
+        id: p.productId,
+        name,
+        ...(ingredient
+          ? {
+              ingredientId: ingredient.id,
+              categoryId: ingredient.categoryId ?? p.categoryId ?? null,
+            }
+          : {}),
+      },
+      clientTime,
+    )
+  }
+  if (p.rememberAmount && p.productId && p.unit) {
+    const product = await db.product.get(p.productId)
+    if (product)
+      await db.product.put({ ...product, defaultUnit: p.unit, defaultQty: p.qty ?? null })
+  }
   const siblings = await db.shopping_item.where('listId').equals(p.listId).toArray()
   const row: ShoppingItem = {
     ...(await base(db, p.id, clientTime)),

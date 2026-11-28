@@ -59,6 +59,10 @@ func NewHandler(si StrictServerInterface, opts Options) (http.Handler, error) {
 	if err != nil {
 		return nil, fmt.Errorf("openapi x-roles: %w", err)
 	}
+	limits, err := ParseBodyLimits(spec)
+	if err != nil {
+		return nil, fmt.Errorf("openapi x-max-body-bytes: %w", err)
+	}
 	authz, err := authorize(spec, roles, opts.Authorizer)
 	if err != nil {
 		return nil, err
@@ -102,7 +106,7 @@ func NewHandler(si StrictServerInterface, opts Options) (http.Handler, error) {
 	r.Use(
 		sameOrigin(opts.PublicURL),
 		authz,
-		limitBody,
+		limitBody(limits),
 		nethttpmiddleware.OapiRequestValidatorWithOptions(spec, &nethttpmiddleware.Options{
 			// The server URL is relative (/api), so there is no Host to mismatch.
 			SilenceServersWarning: true,

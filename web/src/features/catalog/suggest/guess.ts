@@ -1,5 +1,6 @@
 import type { Product, ProductStat, ShoppingItem, StockItem } from '../../../offline/replica'
 import type { PickedItem } from '../ProductPicker'
+import { usualAmount } from './engine'
 
 export type GuessReason = 'overdue' | 'low' | 'finished' | 'expired'
 
@@ -62,7 +63,7 @@ export function guessList(d: GuessData, now = Date.now()): Guess[] {
       name: p.name,
       reason,
       urgency,
-      item: pickFor(p, byProduct.get(p.id)),
+      item: usualPick(p, byProduct.get(p.id)),
       icon: p.icon ?? undefined,
     })
   }
@@ -96,8 +97,8 @@ export function guessList(d: GuessData, now = Date.now()): Guess[] {
 const isEmpty = (s: StockItem) =>
   s.amountKind === 'exact' && s.quantity !== null && Number(s.quantity) <= 0
 
-/** Usual store and quantity: from the most recently bought store row, else the product defaults. */
-function pickFor(p: Product, stats: ProductStat[] | undefined): PickedItem {
+/** Usual store and amount: the most recently bought store row (else the default store), and see `usualAmount`. */
+export function usualPick(p: Product, stats: ProductStat[] | undefined): PickedItem {
   const rows = (stats ?? []).filter((s) => s.storeId)
   rows.sort((a, b) => Date.parse(b.lastBoughtAt ?? '0') - Date.parse(a.lastBoughtAt ?? '0'))
   const best = rows[0] ?? (stats ?? []).find((s) => !s.storeId)
@@ -106,9 +107,5 @@ function pickFor(p: Product, stats: ProductStat[] | undefined): PickedItem {
   if (p.ingredientId) item.ingredientId = p.ingredientId
   if (p.brand) item.brand = p.brand
   if (p.categoryId) item.categoryId = p.categoryId
-  const qty = best?.typicalQty ?? p.defaultQty
-  if (qty) item.qty = qty
-  const unit = best?.typicalUnit ?? p.defaultUnit
-  if (unit) item.unit = unit
-  return item
+  return { ...item, ...usualAmount(p, best) }
 }

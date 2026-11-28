@@ -52,9 +52,10 @@ registerReducer(
       package: null,
       defaultLocationKind: null,
       shelfLife: null,
+      // An ingredient in the payload is the user's pick (the server marks it so too).
       matchSource: p.ingredientId ? 'user' : 'none',
-      matchConfidence: null,
-      enrichState: 'pending',
+      matchConfidence: p.ingredientId ? 1 : null,
+      enrichState: p.ingredientId ? 'done' : 'pending',
       enrichAttempts: 0,
       offCode: null,
       note: null,

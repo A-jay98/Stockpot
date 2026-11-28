@@ -49,14 +49,29 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Precache the app shell only. API calls are never cached by the service worker:
-        // offline data goes through the IndexedDB replica (src/offline).
+        // Precache the app shell. API calls are not cached by the service worker (offline data
+        // goes through the IndexedDB replica, src/offline), except household photos: blobs are
+        // immutable (the URL is a content hash), so they are served cache-first for offline use.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,webmanifest,txt}'],
         // Latin fonts ship with the shell; other scripts load on demand (unicode-range).
         globIgnores: ['**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api\//, /^\/licenses\.txt$/],
         cleanupOutdatedCaches: true,
+        runtimeCaching: [
+          {
+            urlPattern: ({ url, sameOrigin }) =>
+              sameOrigin && url.pathname.startsWith('/api/v1/blobs/'),
+            method: 'GET',
+            handler: 'CacheFirst',
+            options: {
+              // Keep in sync with BLOB_CACHE in src/lib/photos.ts (cleared on sign-out).
+              cacheName: 'stockpot-blobs',
+              expiration: { maxEntries: 300, purgeOnQuotaError: true },
+              cacheableResponse: { statuses: [200] },
+            },
+          },
+        ],
       },
     }),
   ],
