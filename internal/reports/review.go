@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/rivertype"
 
@@ -316,6 +317,28 @@ func (s *Service) globalBlocked(ctx context.Context, tx pgxTx, it openReport, va
 	// is only at fault when it is what the person saw.
 	if ingUnit != "" && shownUnit(c) != ingUnit {
 		return "the unit shown came from the list item or product, not the ingredient default", nil
+	}
+	// The catalog may have moved since the report: the product rematched, or
+	// the default changed (by an admin or another report). Then the snapshot
+	// no longer says what the person saw; leave it to the admin.
+	if c.ProductID != nil {
+		var cur *uuid.UUID
+		if err := tx.QueryRow(ctx, `SELECT ingredient_id FROM product WHERE id = $1`, *c.ProductID).Scan(&cur); err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return "", err
+		}
+		if cur == nil || *cur != *c.IngredientID {
+			return "the product was matched to another ingredient since the report", nil
+		}
+	}
+	var curUnit *string
+	var changed bool
+	if err := tx.QueryRow(ctx, `SELECT i.default_unit, EXISTS (SELECT 1 FROM audit_event a WHERE a.action = $2 AND a.target_type = 'ingredient'
+			AND a.target_id = $4 AND a.time > (SELECT created_at FROM problem_report WHERE id = $3))
+		FROM ingredient i WHERE i.id = $1`, *c.IngredientID, ActionDefaultUpdate, it.id, c.IngredientID.String()).Scan(&curUnit, &changed); err != nil {
+		return "", err
+	}
+	if changed || deref(curUnit) != c.IngredientUnit {
+		return "the ingredient's default changed since the report", nil
 	}
 	var conflicts int
 	if err := tx.QueryRow(ctx, `SELECT count(*) FROM problem_report

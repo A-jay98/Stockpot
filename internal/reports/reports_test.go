@@ -392,3 +392,23 @@ func TestRejectAfterAutoApplyReverts(t *testing.T) {
 		t.Fatalf("list: %+v", o.Reports)
 	}
 }
+
+func TestGlobalWaitsWhenAdminChangedItAfterTheReport(t *testing.T) {
+	e := newEnv(t, map[string]map[string]any{"Salt": {"verdict": "approve", "value": "pack", "confidence": 0.95}}, 1000)
+	salt, _ := e.item(t, "Salt", "salt", "", nil)
+	id := e.report(t, salt, "")
+	var ing uuid.UUID
+	_ = e.pool.QueryRow(t.Context(), `SELECT id FROM ingredient WHERE slug = 'salt' AND household_id IS NULL`).Scan(&ing)
+	if err := e.svc.SetDefaultUnit(t.Context(), ing, ptr("bag")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.svc.Review(t.Context(), true); err != nil {
+		t.Fatal(err)
+	}
+	if u := e.unitOf(t, "ingredient", "id = $1", ing); u == nil || *u != "bag" {
+		t.Fatalf("admin's choice overwritten: %v", u)
+	}
+	if e.status(t, id) != "needs_admin" {
+		t.Fatalf("status %s", e.status(t, id))
+	}
+}
