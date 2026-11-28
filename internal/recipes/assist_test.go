@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"slices"
+	"strings"
 	"testing"
 	"time"
 
@@ -269,12 +271,17 @@ func TestIdeasCreateUnsavedRecipesThatExpire(t *testing.T) {
 	var sent struct {
 		InStock []string `json:"in_stock"`
 		UseSoon []string `json:"use_soon"`
+		Staples []string `json:"staples"`
 		Avoid   []string `json:"avoid"`
 		Note    string   `json:"note"`
 	}
 	_ = json.Unmarshal([]byte(fake.reqs[0].Messages[1].Text), &sent)
 	if len(sent.InStock) != 2 || len(sent.UseSoon) != 1 || sent.Avoid[0] != "Chicken curry" || sent.Note != "quick dinners" {
 		t.Fatalf("prompt %+v", sent)
+	}
+	// Only the household's staples are assumed, never oil.
+	if !slices.Equal(sent.Staples, []string{"black-pepper", "ice", "salt", "water"}) || strings.Contains(fake.reqs[0].Messages[0].Text, "pepper, oil") {
+		t.Fatalf("staples %v", sent.Staples)
 	}
 	if fake.reqs[0].Feature != recipes.FeatureIdeas {
 		t.Fatalf("feature %+v", fake.reqs[0].Feature)
@@ -302,6 +309,16 @@ func TestIdeasCreateUnsavedRecipesThatExpire(t *testing.T) {
 	e.mustDo(t, "recipe.update", map[string]any{"id": ids[0], "saved": true})
 	if n, err := recipes.ExpireIdeas(t.Context(), e.pool, now.Add(24*time.Hour)); err != nil || n != 0 {
 		t.Fatalf("early sweep: %d %v", n, err)
+	}
+	// A cooked idea stays: its cook log points at it.
+	if _, err := e.pool.Exec(t.Context(), `UPDATE recipe SET cooked_count = 1 WHERE id = $1`, ids[1]); err != nil {
+		t.Fatal(err)
+	}
+	if n, err := recipes.ExpireIdeas(t.Context(), e.pool, now.Add(8*24*time.Hour)); err != nil || n != 0 {
+		t.Fatalf("cooked sweep: %d %v", n, err)
+	}
+	if _, err := e.pool.Exec(t.Context(), `UPDATE recipe SET cooked_count = 0 WHERE id = $1`, ids[1]); err != nil {
+		t.Fatal(err)
 	}
 	n, err := recipes.ExpireIdeas(t.Context(), e.pool, now.Add(8*24*time.Hour))
 	if err != nil || n != 1 {

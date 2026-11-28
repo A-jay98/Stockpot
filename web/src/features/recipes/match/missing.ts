@@ -33,7 +33,8 @@ function satisfies(k: Kitchen, p: Product, want: string): boolean {
 /**
  * The missing lines of a recipe as shopping items: scaled by factor, matched to the household's
  * product for that ingredient (the one bought most often), and skipping lines already open on the
- * list (same product, a product of that ingredient, or the same text).
+ * list (same product, a product of that ingredient, or the same text). Two lines for the same
+ * product, ingredient or name add one item (the first line's amount).
  */
 export function missingItems(
   k: Kitchen,
@@ -47,6 +48,7 @@ export function missingItems(
   for (const s of stats) bought.set(s.productId, (bought.get(s.productId) ?? 0) + s.timesBought)
   const byId = new Map(products.map((p) => [p.id, p]))
   const out: MissingItem[] = []
+  const added = new Set<string>()
   for (const m of r.lines) {
     if (m.status !== 'missing') continue
     const want = m.line.ingredient_id
@@ -65,10 +67,15 @@ export function missingItems(
               (bought.get(b.id) ?? 0) - (bought.get(a.id) ?? 0) || a.name.localeCompare(b.name),
           )[0]
       : undefined
+    const key = product ? `p:${product.id}` : want ? `i:${want}` : `t:${norm(m.line.name)}`
+    if (added.has(key)) continue
+    added.add(key)
     const unit = m.line.unit ? unitFromWord(m.line.unit) : undefined
     const item: MissingItem = { lineId: m.line.line_id, text: product?.name ?? m.line.name }
     if (product) item.productId = product.id
     else if (want) item.ingredientId = want
+    // An amount is only useful with a unit the list knows ("1 bunch" has none): the item then
+    // goes on without a quantity rather than with a bare number.
     if (m.line.qty && unit) {
       item.qty = scaleQty(m.line.qty_max ?? m.line.qty, factor)
       item.unit = unit

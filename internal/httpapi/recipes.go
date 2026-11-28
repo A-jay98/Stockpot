@@ -18,6 +18,7 @@ const CodeLineUnmatched = "line_unmatched"
 type RecipeAssistant interface {
 	Substitute(ctx context.Context, hh, recipe uuid.UUID, version *uuid.UUID, line uuid.UUID) ([]recipes.SwapResult, error)
 	Ideas(ctx context.Context, hh uuid.UUID, user *uuid.UUID, note string) ([]uuid.UUID, error)
+	Staples(ctx context.Context, hh uuid.UUID) ([]string, error)
 }
 
 var _ RecipeAssistant = (*recipes.Assistant)(nil)
@@ -93,4 +94,20 @@ func (s *Server) CreateRecipeIdeas(ctx context.Context, req CreateRecipeIdeasReq
 		return nil, err
 	}
 	return CreateRecipeIdeas200JSONResponse(RecipeIdeas{RecipeIds: ids}), nil
+}
+
+// GetRecipeStaples serves the household's assumed staples for client-side ranking.
+func (s *Server) GetRecipeStaples(ctx context.Context, _ GetRecipeStaplesRequestObject) (GetRecipeStaplesResponseObject, error) {
+	if s.recipes == nil {
+		return GetRecipeStaples200JSONResponse(RecipeStaples{Slugs: recipes.DefaultStaples()}), nil
+	}
+	hh, err := identity.HouseholdID(ctx)
+	if err != nil {
+		return nil, err
+	}
+	slugs, err := s.recipes.Staples(ctx, hh)
+	if err != nil {
+		return nil, err
+	}
+	return GetRecipeStaples200JSONResponse(RecipeStaples{Slugs: slugs}), nil
 }

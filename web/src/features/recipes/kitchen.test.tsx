@@ -14,11 +14,14 @@ const base = {
   rev: 1,
 }
 let calls: Request[] = []
+let staples: string[] | null = null
 
 beforeEach(async () => {
   calls = []
+  staples = null
   vi.stubGlobal('fetch', async (req: Request) => {
     calls.push(req)
+    if (req.url.endsWith('/v1/recipes/staples') && staples) return jsonResponse({ slugs: staples })
     if (req.url.endsWith('/v1/recipes/ideas'))
       return jsonResponse(
         { type: 'about:blank', title: 'Service Unavailable', status: 503, code: 'llm_unavailable' },
@@ -212,6 +215,14 @@ test('kitchen tab ranks recipes with what is in stock, soon chips and the first 
   // The assistant is down: the manual path is explained, nothing breaks.
   fireEvent.click(screen.getByRole('button', { name: /More ideas/ }))
   expect(await screen.findByText(/The assistant is unavailable right now/)).toBeInTheDocument()
+})
+
+test("the household's staples are skipped, not the defaults", async () => {
+  staples = ['water', 'rice']
+  renderApp('/recipes')
+  // Rice is a staple here: 2 of 5 instead of 2 of 6.
+  expect(await screen.findByText(/^2 of 5/)).toBeInTheDocument()
+  expect((await db.meta.get('recipes.staples'))?.value).toEqual(['water', 'rice'])
 })
 
 test('cook tonight needs 70% in stock and something urgent', async () => {

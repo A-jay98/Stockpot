@@ -444,6 +444,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/recipes/staples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ingredient slugs this household assumes are always in stock
+         * @description The household's recipes.assumed_staples setting (descendants count
+         *     too). The kitchen ranking skips lines for these, like the server.
+         */
+        get: operations["getRecipeStaples"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/settings": {
         parameters: {
             query?: never;
@@ -1647,6 +1668,9 @@ export interface components {
         };
         RecipeIdeas: {
             recipeIds: string[];
+        };
+        RecipeStaples: {
+            slugs: string[];
         };
         AdminCatalog: {
             /** @description flag.catalog_enrich */
@@ -3802,6 +3826,27 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RecipeIdeas"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getRecipeStaples: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The staple slugs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeStaples"];
                 };
             };
             default: components["responses"]["Problem"];

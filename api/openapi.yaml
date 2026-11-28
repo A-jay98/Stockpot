@@ -540,6 +540,24 @@ paths:
                 $ref: "#/components/schemas/RecipeIdeas"
         default:
           $ref: "#/components/responses/Problem"
+  /v1/recipes/staples:
+    get:
+      operationId: getRecipeStaples
+      summary: Ingredient slugs this household assumes are always in stock
+      description: |
+        The household's recipes.assumed_staples setting (descendants count
+        too). The kitchen ranking skips lines for these, like the server.
+      tags: [recipes]
+      x-roles: [user]
+      responses:
+        "200":
+          description: The staple slugs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeStaples"
+        default:
+          $ref: "#/components/responses/Problem"
   /v1/admin/settings:
     get:
       operationId: listAdminSettings
@@ -2242,6 +2260,14 @@ components:
           items:
             type: string
             format: uuid
+    RecipeStaples:
+      type: object
+      required: [slugs]
+      properties:
+        slugs:
+          type: array
+          items:
+            type: string
     AdminCatalog:
       type: object
       required: [enabled, intervalMinutes, counts, headroom, runs, llmIngredients, review]

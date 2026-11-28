@@ -361,7 +361,7 @@ func addStaples(ctx context.Context, tx pgx.Tx, staples map[uuid.UUID]bool, avai
 }
 
 const ideasSystem = `You suggest dinner recipes for a home cook from what is in their kitchen.
-Give up to 3 different recipes that use mostly ingredients from "in_stock", favouring the ones listed in "use_soon" (they expire first). Common pantry staples (salt, pepper, oil, water) may be assumed.
+Give up to 3 different recipes that use mostly ingredients from "in_stock", favouring the ones listed in "use_soon" (they expire first). Only the household staples in "staples" may be assumed; anything else (oil, butter, spices) must be in "in_stock" or the recipe needs it bought.
 Do not repeat any recipe in "avoid". Follow "note" if present (diet, cuisine, time).
 Each recipe: "title" (short), "subtitle" (one line), "servings", "total_minutes", "ingredients" (one line each with amount and unit, like "2 tbsp olive oil", "800 g chicken thighs, diced"), "steps" (short imperative steps).`
 
@@ -412,7 +412,9 @@ func (a *Assistant) Ideas(ctx context.Context, hh uuid.UUID, user *uuid.UUID, no
 		return []uuid.UUID{}, nil
 	}
 	now := a.now()
-	soonBy := now.AddDate(0, 0, 4)
+	// Same window as the client's "urgent" (≤ 3 days), by calendar date.
+	y, m, d := now.Date()
+	soonBy := time.Date(y, m, d+4, 0, 0, 0, 0, time.UTC)
 	var have, soon []string
 	for _, s := range stock {
 		if len(have) == maxPromptStock {
@@ -429,12 +431,18 @@ func (a *Assistant) Ideas(ctx context.Context, hh uuid.UUID, user *uuid.UUID, no
 	if err != nil {
 		return nil, err
 	}
+	staples, err := AssumedStaples.ForHousehold(ctx, tx, hh)
+	if err != nil {
+		return nil, err
+	}
+	staples = slices.Sorted(slices.Values(staples))
 	prompt, _ := json.Marshal(struct {
 		InStock []string `json:"in_stock"`
 		UseSoon []string `json:"use_soon"`
+		Staples []string `json:"staples"`
 		Avoid   []string `json:"avoid"`
 		Note    string   `json:"note,omitempty"`
-	}{have, soon, avoid, note})
+	}{have, soon, staples, avoid, note})
 	_ = tx.Rollback(ctx)
 	resp, err := a.LLM.Complete(ctx, llm.Request{
 		Feature: FeatureIdeas, Schema: ideasSchema, SchemaName: "recipes_ideas", MaxTokens: 3000,
@@ -514,6 +522,15 @@ func (a *Assistant) Ideas(ctx context.Context, hh uuid.UUID, user *uuid.UUID, no
 	return out, tx.Commit(ctx)
 }
 
+// Staples are the household's assumed staple slugs (recipes.assumed_staples).
+func (a *Assistant) Staples(ctx context.Context, hh uuid.UUID) ([]string, error) {
+	slugs, err := AssumedStaples.ForHousehold(ctx, a.Pool, hh)
+	if slugs == nil && err == nil {
+		slugs = []string{}
+	}
+	return slugs, err
+}
+
 // clip keeps at most n non-empty trimmed strings of at most size runes.
 func clip(in []string, n, size int) []string {
 	out := make([]string, 0, min(len(in), n))
@@ -546,10 +563,11 @@ func liveTitles(ctx context.Context, tx pgx.Tx, hh uuid.UUID) ([]string, error) 
 }
 
 // ExpireIdeas tombstones unsaved ideas past their expiry, with their
-// versions and recipe-specific swaps, one household lock at a time.
+// versions and recipe-specific swaps, one household lock at a time. An idea
+// that was cooked is kept: its cook log and history point at it.
 func ExpireIdeas(ctx context.Context, pool *pgxpool.Pool, now time.Time) (int64, error) {
 	rows, err := pool.Query(ctx, `SELECT DISTINCT household_id FROM recipe
-		WHERE source_kind = 'idea' AND NOT saved AND idea_expires_at < $1 AND deleted_at IS NULL`, now)
+		WHERE source_kind = 'idea' AND NOT saved AND cooked_count = 0 AND idea_expires_at < $1 AND deleted_at IS NULL`, now)
 	if err != nil {
 		return 0, err
 	}
@@ -559,12 +577,13 @@ func ExpireIdeas(ctx context.Context, pool *pgxpool.Pool, now time.Time) (int64,
 	}
 	var n int64
 	for _, hh := range hhs {
+		var done int64
 		err := pgx.BeginFunc(ctx, pool, func(tx pgx.Tx) error {
 			if err := syncdb.LockHousehold(ctx, tx, hh); err != nil {
 				return err
 			}
 			rows, err := tx.Query(ctx, `UPDATE recipe SET deleted_at = now()
-				WHERE household_id = $1 AND source_kind = 'idea' AND NOT saved AND idea_expires_at < $2 AND deleted_at IS NULL
+				WHERE household_id = $1 AND source_kind = 'idea' AND NOT saved AND cooked_count = 0 AND idea_expires_at < $2 AND deleted_at IS NULL
 				RETURNING id`, hh, now)
 			if err != nil {
 				return err
@@ -578,12 +597,13 @@ func ExpireIdeas(ctx context.Context, pool *pgxpool.Pool, now time.Time) (int64,
 					return err
 				}
 			}
-			n += int64(len(ids))
+			done = int64(len(ids))
 			return nil
 		})
 		if err != nil {
 			return n, err
 		}
+		n += done // counted once committed
 	}
 	return n, nil
 }

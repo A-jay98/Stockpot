@@ -42,11 +42,14 @@ const (
 	defaultStaples = "water,salt,black-pepper,ice"
 )
 
+// DefaultStaples is the default of AssumedStaples.
+func DefaultStaples() []string { return strings.Split(defaultStaples, ",") }
+
 // AssumedStaples are ingredient slugs every kitchen is assumed to have: they
 // never count as missing and are never deducted. Descendants count too.
 var AssumedStaples = settings.DefineJSON(settings.JSONDef[[]string]{
 	Key:         "recipes.assumed_staples",
-	Default:     strings.Split(defaultStaples, ","),
+	Default:     DefaultStaples(),
 	Description: "Ingredient slugs assumed to be in every kitchen (never missing, never deducted).",
 	Scope:       settings.ScopeHousehold,
 	Validate: func(v []string) error {
