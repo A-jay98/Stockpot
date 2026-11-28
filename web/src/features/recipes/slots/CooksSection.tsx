@@ -20,20 +20,19 @@ export function CooksSection({ recipeId }: { recipeId: string; versionId: string
   ]
   return (
     <section aria-label="Your cooks" className="flex flex-col gap-2">
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="t-label m-0 text-ink-muted">Your cooks</h2>
-        <PhotoPicker
-          onPicked={(refs) => {
-            for (const ref of refs)
-              void dispatch('recipe.photo.add', {
-                id: v7(),
-                recipeId,
-                blobRef: ref,
-                takenOn: today(),
-              })
-          }}
-        />
-      </div>
+      <h2 className="m-0 px-0.5 text-[17px] font-semibold">Your cooks</h2>
+      <PhotoPicker
+        className="[&>button]:flex-1"
+        onPicked={(refs) => {
+          for (const ref of refs)
+            void dispatch('recipe.photo.add', {
+              id: v7(),
+              recipeId,
+              blobRef: ref,
+              takenOn: today(),
+            })
+        }}
+      />
       {cooks.length === 0 && photos.length === 0 ? (
         <p className="t-body-sm m-0 text-ink-muted">
           Cooked it? Tap “I cooked this” to update your stock and keep a photo of each cook.

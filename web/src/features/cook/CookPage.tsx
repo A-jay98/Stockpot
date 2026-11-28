@@ -376,10 +376,11 @@ function CookSheet({ data, back }: { data: CookData; back: ReactNode }) {
         aria-label="Photo and note"
         className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-card"
       >
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-semibold">Photo</span>
-          <PhotoPicker onPicked={(refs) => setPhotos((p) => [...p, ...refs].slice(0, 10))} />
-        </div>
+        <span className="font-semibold">Photo</span>
+        <PhotoPicker
+          className="[&>button]:flex-1"
+          onPicked={(refs) => setPhotos((p) => [...p, ...refs].slice(0, 10))}
+        />
         {photos.length > 0 ? (
           <div className="grid grid-cols-4 gap-2">
             {photos.map((ref) => (
