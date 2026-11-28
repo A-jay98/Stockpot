@@ -41,6 +41,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/media"
 	"github.com/a-jay98/stockpot/internal/recipes"
 	"github.com/a-jay98/stockpot/internal/recipes/chat"
+	"github.com/a-jay98/stockpot/internal/reports"
 	"github.com/a-jay98/stockpot/internal/settings"
 	"github.com/a-jay98/stockpot/internal/shopping"
 	"github.com/a-jay98/stockpot/internal/syncdb"
@@ -60,8 +61,12 @@ func Migrate(ctx context.Context, cfg config.Config) error {
 	if err := db.Migrate(ctx, pool); err != nil {
 		return err
 	}
-	// Reference data that ships with the binary; idempotent.
-	return catalog.Seed(ctx, pool)
+	// Reference data that ships with the binary; idempotent. Swaps name
+	// ingredients, so they go second.
+	if err := catalog.Seed(ctx, pool); err != nil {
+		return err
+	}
+	return recipes.SeedSubstitutionRows(ctx, pool)
 }
 
 // Serve runs the server until ctx ends, then shuts down in order: stop
@@ -185,11 +190,14 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	enricher := catalog.NewEnricher(catalog.EnrichDeps{Pool: pool, Settings: store, LLM: gateway})
 	sweepers = append(sweepers, enricher.Sweepers()...)
 	sweepers = append(sweepers, alerts.Sweepers(alertSvc)...)
+	sweepers = append(sweepers, recipes.Sweepers(pool)...)
+	reportSvc := reports.New(reports.Deps{Pool: pool, Settings: store, LLM: gateway})
+	sweepers = append(sweepers, reportSvc.Sweepers()...)
 	jobClient, err := jobs.New(jobs.Deps{
 		Pool:     pool,
 		Settings: store,
 		Sweepers: sweepers,
-		Workers:  []func(*river.Workers) error{backups.Registrar(), enricher.Registrar(), alertSvc.Registrar()},
+		Workers:  []func(*river.Workers) error{backups.Registrar(), enricher.Registrar(), alertSvc.Registrar(), reportSvc.Registrar()},
 		Periodic: []*river.PeriodicJob{alerts.PeriodicJob()},
 		Logger:   slog.Default(),
 	})
@@ -199,6 +207,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 
 	backups.Attach(jobClient)
 	enricher.Attach(jobClient)
+	reportSvc.Attach(jobClient)
 
 	adminSvc = admin.New(admin.Deps{
 		Pool:      pool,
@@ -227,6 +236,8 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Matcher:   catalog.Matcher{Pool: pool, Res: resolve.Resolver{}},
 			Alerts:    alertSvc,
 			FoodRules: inventory.NewRuleService(pool),
+			Recipes:   &recipes.Assistant{Pool: pool, LLM: gateway, W: recipeCmds.W},
+			Reports:   reportSvc,
 			Chat:      &chat.Service{Pool: pool, LLM: gateway},
 			Blobs:     media.New(pool, blobs),
 		}),

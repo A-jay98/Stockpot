@@ -1,4 +1,4 @@
-import { Check, Link2, Plus, Trash2 } from 'lucide-react'
+import { Check, Flag, Link2, Plus, Trash2 } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { v7 as uuidv7 } from 'uuid'
 import { dispatch } from '../../offline/outbox'
@@ -9,6 +9,7 @@ import { useIngredients } from '../catalog/hooks'
 import { foodIconFor, useIconLookup } from '../catalog/icons'
 import { matchState } from '../catalog/match'
 import { normalize, SCORE_TYPO, tokenScore, words } from '../catalog/suggest/text'
+import { ReportSheet } from '../reports/ReportSheet'
 import type { Row } from './items'
 
 const unitOptions = [
@@ -90,6 +91,7 @@ function Body({ row, stores, onClose }: { row: Row; stores: Store[]; onClose: ()
   const [unit, setUnit] = useState(initialUnit)
   const [note, setNote] = useState(row.note ?? '')
   const [storeIds, setStoreIds] = useState(row.storeIds)
+  const [reporting, setReporting] = useState(false)
   const [newStore, setNewStore] = useState<string | null>(null)
   const [match, setMatch] = useState<Ingredient | null | undefined>(undefined) // undefined: unchanged
   const [finding, setFinding] = useState(false)
@@ -323,6 +325,17 @@ function Body({ row, stores, onClose }: { row: Row; stores: Store[]; onClose: ()
           <Input {...p} value={note} maxLength={200} onChange={(e) => setNote(e.target.value)} />
         )}
       </Field>
+      <Button variant="ghost" className="self-start" onClick={() => setReporting(true)}>
+        <Flag aria-hidden /> Report a problem
+      </Button>
+      <ReportSheet
+        open={reporting}
+        onClose={() => setReporting(false)}
+        source="shopping_item"
+        subjectId={row.id}
+        title={row.title}
+        unit={row.unit ?? unit}
+      />
     </SheetContent>
   )
 }

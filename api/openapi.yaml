@@ -47,7 +47,9 @@ tags:
   - name: notifications
     description: Inbox, alert preferences and Telegram linking.
   - name: recipes
-    description: Recipe chat (recipes themselves sync as commands).
+    description: Recipe helpers that need the server - chat, swaps and ideas (recipes themselves sync as commands).
+  - name: reports
+    description: Problem reports from the app, reviewed by an LLM and the admin.
 paths:
   /health:
     get:
@@ -476,6 +478,201 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RecipeChatMessage"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/recipes/{id}/substitutes:
+    post:
+      operationId: findRecipeSubstitutes
+      summary: Find a swap for a missing ingredient line
+      description: |
+        Asks the LLM (feature recipes_substitute, cached 7 days on version,
+        line and in-stock set) for swaps made only from what the household has
+        in stock. Swaps are saved as household substitution rows for this
+        recipe and arrive through sync; the answer lists them. An empty list
+        means nothing in stock works. 503 llm_unavailable means swap by hand;
+        422 line_unmatched means the line needs an ingredient match first.
+      tags: [recipes]
+      x-roles: [user]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecipeSubstituteRequest"
+      responses:
+        "200":
+          description: The swaps saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeSubstitutes"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/recipes/ideas:
+    post:
+      operationId: createRecipeIdeas
+      summary: Suggest recipes from what is in stock
+      description: |
+        One LLM call (feature recipes_ideas, cached 1 day on the in-stock,
+        expiring and existing-title sets) that creates up to 3 unsaved idea
+        recipes (source idea, removed after 7 days unless saved with
+        recipe.update saved=true). They arrive through sync; the answer lists
+        their ids. 503 llm_unavailable means add a recipe by hand.
+      tags: [recipes]
+      x-roles: [user]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecipeIdeasRequest"
+      responses:
+        "200":
+          description: The ideas created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeIdeas"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/recipes/staples:
+    get:
+      operationId: getRecipeStaples
+      summary: Ingredient slugs this household assumes are always in stock
+      description: |
+        The household's recipes.assumed_staples setting (descendants count
+        too). The kitchen ranking skips lines for these, like the server.
+      tags: [recipes]
+      x-roles: [user]
+      responses:
+        "200":
+          description: The staple slugs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeStaples"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/reports:
+    post:
+      operationId: createReport
+      summary: Report a problem with an item (wrong default unit, wrong match, …)
+      description: Stores a report from the caller's household. A background job reviews it with spare LLM quota; approved default-unit corrections are applied to the catalog, the rest go to the admin.
+      tags: [reports]
+      x-roles: [user]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportInput"
+      responses:
+        "201":
+          description: Stored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportCreated"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/reports:
+    get:
+      operationId: getAdminReports
+      summary: Problem reports with the LLM's verdict and what was changed
+      tags: [admin]
+      x-roles: [admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/ReportStatus"
+        - $ref: "#/components/parameters/AdminLimit"
+      responses:
+        "200":
+          description: Reports, ones needing the admin first
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminReports"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/reports/review/run:
+    post:
+      operationId: runAdminReportReview
+      summary: Review open reports now
+      description: Queues a review run (it still defers when there is no quota above the reserve).
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "202":
+          description: Queued
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/reports/{id}/resolve:
+    parameters:
+      - $ref: "#/components/parameters/ReportID"
+    post:
+      operationId: resolveAdminReport
+      summary: Apply, reject, dismiss or reopen a report
+      tags: [admin]
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportResolveInput"
+      responses:
+        "204":
+          description: Done
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/catalog/defaults:
+    get:
+      operationId: getAdminCatalogDefaults
+      summary: Ingredients with their default (purchase) unit, and the latest default changes
+      tags: [admin]
+      x-roles: [admin]
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+        - $ref: "#/components/parameters/AdminLimit"
+      responses:
+        "200":
+          description: Defaults and history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminCatalogDefaults"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/catalog/ingredients/{id}/default-unit:
+    parameters:
+      - $ref: "#/components/parameters/IngredientID"
+    put:
+      operationId: putAdminIngredientDefaultUnit
+      summary: Set or clear an ingredient's default unit (audited)
+      tags: [admin]
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DefaultUnitInput"
+      responses:
+        "204":
+          description: Saved
         default:
           $ref: "#/components/responses/Problem"
   /v1/admin/settings:
@@ -1706,6 +1903,13 @@ components:
       schema:
         type: string
         format: uuid
+    ReportID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
     AdminJobID:
       name: id
       in: path
@@ -2136,6 +2340,58 @@ components:
           type: string
         brand:
           type: string
+    RecipeSubstituteRequest:
+      type: object
+      required: [lineId]
+      properties:
+        lineId:
+          type: string
+          format: uuid
+        versionId:
+          type: string
+          format: uuid
+          description: The version the line belongs to; default the recipe's current version.
+    RecipeSubstitutes:
+      type: object
+      required: [substitutions]
+      properties:
+        substitutions:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeSubstitute"
+    RecipeSubstitute:
+      type: object
+      required: [id, note]
+      properties:
+        id:
+          type: string
+          format: uuid
+        note:
+          type: string
+    RecipeIdeasRequest:
+      type: object
+      properties:
+        note:
+          type: string
+          maxLength: 200
+          description: Free text for the model, e.g. "vegetarian, under 30 minutes".
+    RecipeIdeas:
+      type: object
+      required: [recipeIds]
+      properties:
+        recipeIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    RecipeStaples:
+      type: object
+      required: [slugs]
+      properties:
+        slugs:
+          type: array
+          items:
+            type: string
     AdminCatalog:
       type: object
       required: [enabled, intervalMinutes, counts, headroom, runs, llmIngredients, review]
@@ -5232,3 +5488,261 @@ components:
           type: integer
         height:
           type: integer
+    ReportKind:
+      type: string
+      enum: [wrong_unit, wrong_match, wrong_icon, other]
+    ReportSource:
+      type: string
+      enum: [shopping_item, product, stock_item]
+    ReportStatus:
+      type: string
+      enum: [open, needs_admin, applied, rejected, dismissed]
+    ReportInput:
+      type: object
+      required: [kind, source, subjectId]
+      additionalProperties: false
+      properties:
+        kind:
+          $ref: "#/components/schemas/ReportKind"
+        source:
+          $ref: "#/components/schemas/ReportSource"
+        subjectId:
+          type: string
+          format: uuid
+        suggested:
+          type: string
+          maxLength: 80
+          description: What it should be; a unit code for wrong_unit.
+        note:
+          type: string
+          maxLength: 500
+    ReportCreated:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
+    ReportContext:
+      type: object
+      description: What the person saw when reporting.
+      properties:
+        itemText:
+          type: string
+        qty:
+          type: string
+        unit:
+          type: string
+        productId:
+          type: string
+          format: uuid
+        productName:
+          type: string
+        brand:
+          type: string
+        productDefaultUnit:
+          type: string
+        ingredientId:
+          type: string
+          format: uuid
+        ingredientSlug:
+          type: string
+        ingredientName:
+          type: string
+        ingredientUnit:
+          type: string
+        inheritedUnit:
+          type: string
+        global:
+          type: boolean
+        category:
+          type: string
+        icon:
+          type: string
+    ReportFieldChange:
+      type: object
+      required: [target, id, name, field]
+      properties:
+        target:
+          type: string
+          enum: [ingredient, product]
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        global:
+          type: boolean
+        field:
+          type: string
+        before:
+          type: string
+          nullable: true
+        after:
+          type: string
+          nullable: true
+    AdminReport:
+      type: object
+      required: [id, createdAt, household, kind, source, status, context, attempts]
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        household:
+          type: string
+        reporter:
+          type: string
+        kind:
+          $ref: "#/components/schemas/ReportKind"
+        source:
+          $ref: "#/components/schemas/ReportSource"
+        status:
+          $ref: "#/components/schemas/ReportStatus"
+        suggested:
+          type: string
+        note:
+          type: string
+        context:
+          $ref: "#/components/schemas/ReportContext"
+        attempts:
+          type: integer
+        llmVerdict:
+          type: string
+          enum: [approve, reject, unsure]
+        llmValue:
+          type: string
+        llmReason:
+          type: string
+        llmConfidence:
+          type: number
+          format: float
+        llmAt:
+          type: string
+          format: date-time
+        changes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportFieldChange"
+        changesReverted:
+          type: boolean
+          description: The admin overruled the report and these changes were put back.
+        resolvedBy:
+          type: string
+        resolvedAt:
+          type: string
+          format: date-time
+        adminNote:
+          type: string
+    AdminReports:
+      type: object
+      required: [enabled, autoApply, intervalMinutes, counts, headroom, reports]
+      properties:
+        enabled:
+          type: boolean
+          description: flag.report_review
+        autoApply:
+          type: boolean
+          description: flag.report_auto_apply
+        intervalMinutes:
+          type: integer
+        counts:
+          type: object
+          description: Reports by status.
+          additionalProperties:
+            type: integer
+        headroom:
+          type: boolean
+        retryAt:
+          type: string
+          format: date-time
+        reports:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminReport"
+    ReportResolveInput:
+      type: object
+      required: [action]
+      additionalProperties: false
+      properties:
+        action:
+          type: string
+          enum: [apply, reject, dismiss, reopen]
+        value:
+          type: string
+          maxLength: 80
+          description: The unit to apply (apply on wrong_unit).
+        note:
+          type: string
+          maxLength: 500
+    AdminDefaultRow:
+      type: object
+      required: [id, slug, name, source, products, openReports]
+      properties:
+        id:
+          type: string
+          format: uuid
+        slug:
+          type: string
+        name:
+          type: string
+        household:
+          type: string
+          description: Absent for global ingredients.
+        parent:
+          type: string
+        unit:
+          type: string
+        inheritedUnit:
+          type: string
+          description: The nearest ancestor's unit, which applies when unit is empty.
+        source:
+          type: string
+        products:
+          type: integer
+        openReports:
+          type: integer
+    AdminDefaultChange:
+      type: object
+      required: [time, targetType, targetId, name, actor]
+      properties:
+        time:
+          type: string
+          format: date-time
+        targetType:
+          type: string
+        targetId:
+          type: string
+        name:
+          type: string
+        before:
+          type: string
+        after:
+          type: string
+        actor:
+          type: string
+        reportId:
+          type: string
+    AdminCatalogDefaults:
+      type: object
+      required: [ingredients, history]
+      properties:
+        ingredients:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminDefaultRow"
+        history:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminDefaultChange"
+    DefaultUnitInput:
+      type: object
+      additionalProperties: false
+      properties:
+        unit:
+          type: string
+          nullable: true
+          maxLength: 20
+          description: A unit code; null or empty clears it.

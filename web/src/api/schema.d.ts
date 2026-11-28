@@ -395,6 +395,188 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/recipes/{id}/substitutes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Find a swap for a missing ingredient line
+         * @description Asks the LLM (feature recipes_substitute, cached 7 days on version,
+         *     line and in-stock set) for swaps made only from what the household has
+         *     in stock. Swaps are saved as household substitution rows for this
+         *     recipe and arrive through sync; the answer lists them. An empty list
+         *     means nothing in stock works. 503 llm_unavailable means swap by hand;
+         *     422 line_unmatched means the line needs an ingredient match first.
+         */
+        post: operations["findRecipeSubstitutes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recipes/ideas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Suggest recipes from what is in stock
+         * @description One LLM call (feature recipes_ideas, cached 1 day on the in-stock,
+         *     expiring and existing-title sets) that creates up to 3 unsaved idea
+         *     recipes (source idea, removed after 7 days unless saved with
+         *     recipe.update saved=true). They arrive through sync; the answer lists
+         *     their ids. 503 llm_unavailable means add a recipe by hand.
+         */
+        post: operations["createRecipeIdeas"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recipes/staples": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ingredient slugs this household assumes are always in stock
+         * @description The household's recipes.assumed_staples setting (descendants count
+         *     too). The kitchen ranking skips lines for these, like the server.
+         */
+        get: operations["getRecipeStaples"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Report a problem with an item (wrong default unit, wrong match, …)
+         * @description Stores a report from the caller's household. A background job reviews it with spare LLM quota; approved default-unit corrections are applied to the catalog, the rest go to the admin.
+         */
+        post: operations["createReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/reports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Problem reports with the LLM's verdict and what was changed */
+        get: operations["getAdminReports"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/reports/review/run": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Review open reports now
+         * @description Queues a review run (it still defers when there is no quota above the reserve).
+         */
+        post: operations["runAdminReportReview"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/reports/{id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["ReportID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply, reject, dismiss or reopen a report */
+        post: operations["resolveAdminReport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/catalog/defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Ingredients with their default (purchase) unit, and the latest default changes */
+        get: operations["getAdminCatalogDefaults"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/admin/catalog/ingredients/{id}/default-unit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IngredientID"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        /** Set or clear an ingredient's default unit (audited) */
+        put: operations["putAdminIngredientDefaultUnit"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/admin/settings": {
         parameters: {
             query?: never;
@@ -1574,6 +1756,33 @@ export interface components {
             id: string;
             name: string;
             brand?: string;
+        };
+        RecipeSubstituteRequest: {
+            /** Format: uuid */
+            lineId: string;
+            /**
+             * Format: uuid
+             * @description The version the line belongs to; default the recipe's current version.
+             */
+            versionId?: string;
+        };
+        RecipeSubstitutes: {
+            substitutions: components["schemas"]["RecipeSubstitute"][];
+        };
+        RecipeSubstitute: {
+            /** Format: uuid */
+            id: string;
+            note: string;
+        };
+        RecipeIdeasRequest: {
+            /** @description Free text for the model, e.g. "vegetarian, under 30 minutes". */
+            note?: string;
+        };
+        RecipeIdeas: {
+            recipeIds: string[];
+        };
+        RecipeStaples: {
+            slugs: string[];
         };
         AdminCatalog: {
             /** @description flag.catalog_enrich */
@@ -3304,6 +3513,142 @@ export interface components {
             width: number;
             height: number;
         };
+        /** @enum {string} */
+        ReportKind: "wrong_unit" | "wrong_match" | "wrong_icon" | "other";
+        /** @enum {string} */
+        ReportSource: "shopping_item" | "product" | "stock_item";
+        /** @enum {string} */
+        ReportStatus: "open" | "needs_admin" | "applied" | "rejected" | "dismissed";
+        ReportInput: {
+            kind: components["schemas"]["ReportKind"];
+            source: components["schemas"]["ReportSource"];
+            /** Format: uuid */
+            subjectId: string;
+            /** @description What it should be; a unit code for wrong_unit. */
+            suggested?: string;
+            note?: string;
+        };
+        ReportCreated: {
+            /** Format: uuid */
+            id: string;
+        };
+        /** @description What the person saw when reporting. */
+        ReportContext: {
+            itemText?: string;
+            qty?: string;
+            unit?: string;
+            /** Format: uuid */
+            productId?: string;
+            productName?: string;
+            brand?: string;
+            productDefaultUnit?: string;
+            /** Format: uuid */
+            ingredientId?: string;
+            ingredientSlug?: string;
+            ingredientName?: string;
+            ingredientUnit?: string;
+            inheritedUnit?: string;
+            global?: boolean;
+            category?: string;
+            icon?: string;
+        };
+        ReportFieldChange: {
+            /** @enum {string} */
+            target: "ingredient" | "product";
+            /** Format: uuid */
+            id: string;
+            name: string;
+            global?: boolean;
+            field: string;
+            before?: string | null;
+            after?: string | null;
+        };
+        AdminReport: {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+            household: string;
+            reporter?: string;
+            kind: components["schemas"]["ReportKind"];
+            source: components["schemas"]["ReportSource"];
+            status: components["schemas"]["ReportStatus"];
+            suggested?: string;
+            note?: string;
+            context: components["schemas"]["ReportContext"];
+            attempts: number;
+            /** @enum {string} */
+            llmVerdict?: "approve" | "reject" | "unsure";
+            llmValue?: string;
+            llmReason?: string;
+            /** Format: float */
+            llmConfidence?: number;
+            /** Format: date-time */
+            llmAt?: string;
+            changes?: components["schemas"]["ReportFieldChange"][];
+            /** @description The admin overruled the report and these changes were put back. */
+            changesReverted?: boolean;
+            resolvedBy?: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+            adminNote?: string;
+        };
+        AdminReports: {
+            /** @description flag.report_review */
+            enabled: boolean;
+            /** @description flag.report_auto_apply */
+            autoApply: boolean;
+            intervalMinutes: number;
+            /** @description Reports by status. */
+            counts: {
+                [key: string]: number;
+            };
+            headroom: boolean;
+            /** Format: date-time */
+            retryAt?: string;
+            reports: components["schemas"]["AdminReport"][];
+        };
+        ReportResolveInput: {
+            /** @enum {string} */
+            action: "apply" | "reject" | "dismiss" | "reopen";
+            /** @description The unit to apply (apply on wrong_unit). */
+            value?: string;
+            note?: string;
+        };
+        AdminDefaultRow: {
+            /** Format: uuid */
+            id: string;
+            slug: string;
+            name: string;
+            /** @description Absent for global ingredients. */
+            household?: string;
+            parent?: string;
+            unit?: string;
+            /** @description The nearest ancestor's unit, which applies when unit is empty. */
+            inheritedUnit?: string;
+            source: string;
+            products: number;
+            openReports: number;
+        };
+        AdminDefaultChange: {
+            /** Format: date-time */
+            time: string;
+            targetType: string;
+            targetId: string;
+            name: string;
+            before?: string;
+            after?: string;
+            actor: string;
+            reportId?: string;
+        };
+        AdminCatalogDefaults: {
+            ingredients: components["schemas"]["AdminDefaultRow"][];
+            history: components["schemas"]["AdminDefaultChange"][];
+        };
+        DefaultUnitInput: {
+            /** @description A unit code; null or empty clears it. */
+            unit?: string | null;
+        };
     };
     responses: {
         /** @description Signed in; the session cookie is set */
@@ -3333,6 +3678,7 @@ export interface components {
         AdminCursor: string;
         AdminLimit: number;
         IngredientID: string;
+        ReportID: string;
         AdminJobID: number;
     };
     requestBodies: never;
@@ -3809,6 +4155,221 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["RecipeChatMessage"];
                 };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    findRecipeSubstitutes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecipeSubstituteRequest"];
+            };
+        };
+        responses: {
+            /** @description The swaps saved */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeSubstitutes"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    createRecipeIdeas: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["RecipeIdeasRequest"];
+            };
+        };
+        responses: {
+            /** @description The ideas created */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeIdeas"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getRecipeStaples: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The staple slugs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeStaples"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    createReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportInput"];
+            };
+        };
+        responses: {
+            /** @description Stored */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReportCreated"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getAdminReports: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["ReportStatus"];
+                limit?: components["parameters"]["AdminLimit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Reports, ones needing the admin first */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminReports"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    runAdminReportReview: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Queued */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    resolveAdminReport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["ReportID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReportResolveInput"];
+            };
+        };
+        responses: {
+            /** @description Done */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getAdminCatalogDefaults: {
+        parameters: {
+            query?: {
+                q?: string;
+                limit?: components["parameters"]["AdminLimit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Defaults and history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AdminCatalogDefaults"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    putAdminIngredientDefaultUnit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: components["parameters"]["IngredientID"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DefaultUnitInput"];
+            };
+        };
+        responses: {
+            /** @description Saved */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             default: components["responses"]["Problem"];
         };

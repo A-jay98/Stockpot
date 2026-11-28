@@ -1,0 +1,2274 @@
+[
+ {
+  "missing": "buttermilk",
+  "uses": [
+   {
+    "slug": "milk",
+    "ratio": 1
+   },
+   {
+    "slug": "lemon",
+    "ratio": 0.0625,
+    "unit": "cup"
+   }
+  ],
+  "note": "Use the same amount of milk plus 1 tbsp lemon juice per cup; let it stand 5 minutes."
+ },
+ {
+  "missing": "buttermilk",
+  "uses": [
+   {
+    "slug": "milk",
+    "ratio": 1
+   },
+   {
+    "slug": "vinegar",
+    "ratio": 0.0625,
+    "unit": "cup"
+   }
+  ],
+  "note": "Use the same amount of milk plus 1 tbsp vinegar per cup; let it stand 5 minutes."
+ },
+ {
+  "missing": "buttermilk",
+  "uses": [
+   {
+    "slug": "plain-yogurt",
+    "ratio": 0.75
+   },
+   {
+    "slug": "milk",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use ¾ yogurt thinned with ¼ milk."
+ },
+ {
+  "missing": "buttermilk",
+  "uses": [
+   {
+    "slug": "kefir",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of kefir."
+ },
+ {
+  "missing": "coconut-milk",
+  "uses": [
+   {
+    "slug": "greek-yogurt",
+    "ratio": 0.5
+   },
+   {
+    "slug": "water",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use Greek yogurt thinned with water (2:1), stirred in off the heat."
+ },
+ {
+  "missing": "coconut-milk",
+  "uses": [
+   {
+    "slug": "cream",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of cream; the flavour is milder."
+ },
+ {
+  "missing": "coconut-milk",
+  "uses": [
+   {
+    "slug": "milk",
+    "ratio": 1
+   },
+   {
+    "slug": "shredded-coconut",
+    "ratio": 0.25,
+    "unit": "cup"
+   }
+  ],
+  "note": "Simmer milk with shredded coconut, then strain."
+ },
+ {
+  "missing": "sour-cream",
+  "uses": [
+   {
+    "slug": "greek-yogurt",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of Greek yogurt."
+ },
+ {
+  "missing": "sour-cream",
+  "uses": [
+   {
+    "slug": "plain-yogurt",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of plain yogurt."
+ },
+ {
+  "missing": "greek-yogurt",
+  "uses": [
+   {
+    "slug": "sour-cream",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of sour cream."
+ },
+ {
+  "missing": "greek-yogurt",
+  "uses": [
+   {
+    "slug": "plain-yogurt",
+    "ratio": 1.5
+   }
+  ],
+  "note": "Strain plain yogurt for an hour, or use a little more of it."
+ },
+ {
+  "missing": "plain-yogurt",
+  "uses": [
+   {
+    "slug": "greek-yogurt",
+    "ratio": 1
+   },
+   {
+    "slug": "milk",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use Greek yogurt loosened with a splash of milk."
+ },
+ {
+  "missing": "plain-yogurt",
+  "uses": [
+   {
+    "slug": "sour-cream",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of sour cream."
+ },
+ {
+  "missing": "yogurt",
+  "uses": [
+   {
+    "slug": "sour-cream",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of sour cream."
+ },
+ {
+  "missing": "cream",
+  "uses": [
+   {
+    "slug": "milk",
+    "ratio": 0.75
+   },
+   {
+    "slug": "butter",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use ¾ cup milk plus ¼ cup melted butter per cup (not for whipping)."
+ },
+ {
+  "missing": "cream",
+  "uses": [
+   {
+    "slug": "greek-yogurt",
+    "ratio": 0.5
+   },
+   {
+    "slug": "milk",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Use half Greek yogurt, half milk; add off the heat."
+ },
+ {
+  "missing": "cream",
+  "uses": [
+   {
+    "slug": "coconut-milk",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of full-fat coconut milk."
+ },
+ {
+  "missing": "cream",
+  "uses": [
+   {
+    "slug": "cream-cheese",
+    "ratio": 0.5
+   },
+   {
+    "slug": "milk",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Whisk cream cheese with milk until smooth."
+ },
+ {
+  "missing": "whipped-cream",
+  "uses": [
+   {
+    "slug": "cream",
+    "ratio": 1
+   }
+  ],
+  "note": "Whip cream with a little sugar."
+ },
+ {
+  "missing": "milk",
+  "uses": [
+   {
+    "slug": "oat-milk",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of oat milk."
+ },
+ {
+  "missing": "milk",
+  "uses": [
+   {
+    "slug": "almond-milk",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of unsweetened almond milk."
+ },
+ {
+  "missing": "milk",
+  "uses": [
+   {
+    "slug": "soy-milk",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of soy milk."
+ },
+ {
+  "missing": "milk",
+  "uses": [
+   {
+    "slug": "cream",
+    "ratio": 0.5
+   },
+   {
+    "slug": "water",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Use half cream, half water."
+ },
+ {
+  "missing": "milk",
+  "uses": [
+   {
+    "slug": "plain-yogurt",
+    "ratio": 0.5
+   },
+   {
+    "slug": "water",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Use yogurt thinned with water (1:1)."
+ },
+ {
+  "missing": "butter",
+  "uses": [
+   {
+    "slug": "olive-oil",
+    "ratio": 0.75
+   }
+  ],
+  "note": "Use ¾ the amount of olive oil (for cooking, not baking)."
+ },
+ {
+  "missing": "butter",
+  "uses": [
+   {
+    "slug": "vegetable-oil",
+    "ratio": 0.75
+   }
+  ],
+  "note": "Use ¾ the amount of vegetable oil."
+ },
+ {
+  "missing": "butter",
+  "uses": [
+   {
+    "slug": "margarine",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of margarine."
+ },
+ {
+  "missing": "butter",
+  "uses": [
+   {
+    "slug": "coconut-oil",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of coconut oil."
+ },
+ {
+  "missing": "cream-cheese",
+  "uses": [
+   {
+    "slug": "ricotta",
+    "ratio": 1
+   }
+  ],
+  "note": "Use ricotta (blend until smooth)."
+ },
+ {
+  "missing": "cream-cheese",
+  "uses": [
+   {
+    "slug": "greek-yogurt",
+    "ratio": 1
+   }
+  ],
+  "note": "Use thick Greek yogurt; best in dips."
+ },
+ {
+  "missing": "ricotta",
+  "uses": [
+   {
+    "slug": "cottage-cheese",
+    "ratio": 1
+   }
+  ],
+  "note": "Use cottage cheese, blended smooth."
+ },
+ {
+  "missing": "cottage-cheese",
+  "uses": [
+   {
+    "slug": "ricotta",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of ricotta."
+ },
+ {
+  "missing": "parmesan",
+  "uses": [
+   {
+    "slug": "cheddar",
+    "ratio": 1
+   }
+  ],
+  "note": "Use finely grated aged cheddar."
+ },
+ {
+  "missing": "feta",
+  "uses": [
+   {
+    "slug": "goat-cheese",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of goat cheese."
+ },
+ {
+  "missing": "feta",
+  "uses": [
+   {
+    "slug": "halloumi",
+    "ratio": 1
+   }
+  ],
+  "note": "Use halloumi, crumbled."
+ },
+ {
+  "missing": "goat-cheese",
+  "uses": [
+   {
+    "slug": "feta",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of feta."
+ },
+ {
+  "missing": "mozzarella",
+  "uses": [
+   {
+    "slug": "cheddar",
+    "ratio": 1
+   }
+  ],
+  "note": "Use cheddar; it melts a bit oilier."
+ },
+ {
+  "missing": "mozzarella",
+  "uses": [
+   {
+    "slug": "swiss-cheese",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of Swiss cheese."
+ },
+ {
+  "missing": "cheddar",
+  "uses": [
+   {
+    "slug": "gouda",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of gouda."
+ },
+ {
+  "missing": "gouda",
+  "uses": [
+   {
+    "slug": "cheddar",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of cheddar."
+ },
+ {
+  "missing": "swiss-cheese",
+  "uses": [
+   {
+    "slug": "gouda",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of gouda."
+ },
+ {
+  "missing": "brie",
+  "uses": [
+   {
+    "slug": "goat-cheese",
+    "ratio": 1
+   }
+  ],
+  "note": "Use soft goat cheese."
+ },
+ {
+  "missing": "doogh",
+  "uses": [
+   {
+    "slug": "plain-yogurt",
+    "ratio": 0.5
+   },
+   {
+    "slug": "water",
+    "ratio": 0.5
+   },
+   {
+    "slug": "dried-mint",
+    "ratio": 0.01,
+    "unit": "tsp"
+   }
+  ],
+  "note": "Whisk yogurt with cold water (1:1), a pinch of salt and dried mint."
+ },
+ {
+  "missing": "kefir",
+  "uses": [
+   {
+    "slug": "buttermilk",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of buttermilk."
+ },
+ {
+  "missing": "egg",
+  "uses": [
+   {
+    "slug": "flax-seeds",
+    "ratio": 1,
+    "unit": "tbsp"
+   }
+  ],
+  "note": "Per egg: 1 tbsp ground flax + 3 tbsp water, rested 5 minutes (baking)."
+ },
+ {
+  "missing": "egg",
+  "uses": [
+   {
+    "slug": "chia-seeds",
+    "ratio": 1,
+    "unit": "tbsp"
+   }
+  ],
+  "note": "Per egg: 1 tbsp chia + 3 tbsp water, rested 10 minutes (baking)."
+ },
+ {
+  "missing": "egg",
+  "uses": [
+   {
+    "slug": "banana",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Per egg: ½ mashed banana (sweet baking)."
+ },
+ {
+  "missing": "egg",
+  "uses": [
+   {
+    "slug": "plain-yogurt",
+    "ratio": 0.25,
+    "unit": "cup"
+   }
+  ],
+  "note": "Per egg: ¼ cup yogurt (cakes and muffins)."
+ },
+ {
+  "missing": "shallot",
+  "uses": [
+   {
+    "slug": "onion",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of onion, finely chopped."
+ },
+ {
+  "missing": "shallot",
+  "uses": [
+   {
+    "slug": "red-onion",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of red onion."
+ },
+ {
+  "missing": "onion",
+  "uses": [
+   {
+    "slug": "shallot",
+    "ratio": 2
+   }
+  ],
+  "note": "Use about 2 shallots per onion."
+ },
+ {
+  "missing": "onion",
+  "uses": [
+   {
+    "slug": "leek",
+    "ratio": 1
+   }
+  ],
+  "note": "Use 1 leek (white part) per onion."
+ },
+ {
+  "missing": "onion",
+  "uses": [
+   {
+    "slug": "onion-powder",
+    "ratio": 1,
+    "unit": "tbsp"
+   }
+  ],
+  "note": "Use 1 tbsp onion powder per onion."
+ },
+ {
+  "missing": "red-onion",
+  "uses": [
+   {
+    "slug": "onion",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of yellow onion."
+ },
+ {
+  "missing": "green-onion",
+  "uses": [
+   {
+    "slug": "onion",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use ¼ onion, finely diced."
+ },
+ {
+  "missing": "green-onion",
+  "uses": [
+   {
+    "slug": "chives",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of chives."
+ },
+ {
+  "missing": "green-onion",
+  "uses": [
+   {
+    "slug": "leek",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use a little leek, finely sliced."
+ },
+ {
+  "missing": "leek",
+  "uses": [
+   {
+    "slug": "onion",
+    "ratio": 1
+   }
+  ],
+  "note": "Use 1 onion per leek."
+ },
+ {
+  "missing": "chives",
+  "uses": [
+   {
+    "slug": "green-onion",
+    "ratio": 1
+   }
+  ],
+  "note": "Use green onion tops, finely sliced."
+ },
+ {
+  "missing": "garlic",
+  "uses": [
+   {
+    "slug": "garlic-powder",
+    "ratio": 0.125,
+    "unit": "tsp"
+   }
+  ],
+  "note": "Use ⅛ tsp garlic powder per clove."
+ },
+ {
+  "missing": "ginger",
+  "uses": [
+   {
+    "slug": "ginger-powder",
+    "ratio": 0.25,
+    "unit": "tsp"
+   }
+  ],
+  "note": "Use ¼ tsp ground ginger per tbsp fresh."
+ },
+ {
+  "missing": "lemon",
+  "uses": [
+   {
+    "slug": "lime",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of lime."
+ },
+ {
+  "missing": "lemon",
+  "uses": [
+   {
+    "slug": "vinegar",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Use half as much vinegar for acidity."
+ },
+ {
+  "missing": "lime",
+  "uses": [
+   {
+    "slug": "lemon",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of lemon."
+ },
+ {
+  "missing": "orange",
+  "uses": [
+   {
+    "slug": "mandarin",
+    "ratio": 2
+   }
+  ],
+  "note": "Use 2 mandarins per orange."
+ },
+ {
+  "missing": "dried-lime",
+  "uses": [
+   {
+    "slug": "lime",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the juice of 1 lime, added at the end."
+ },
+ {
+  "missing": "dried-lime",
+  "uses": [
+   {
+    "slug": "lemon",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the juice of 1 lemon, added at the end."
+ },
+ {
+  "missing": "sumac",
+  "uses": [
+   {
+    "slug": "lemon",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Use lemon zest and a squeeze of juice."
+ },
+ {
+  "missing": "tomato",
+  "uses": [
+   {
+    "slug": "canned-tomatoes",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same weight of canned tomatoes."
+ },
+ {
+  "missing": "tomato",
+  "uses": [
+   {
+    "slug": "cherry-tomato",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same weight of cherry tomatoes."
+ },
+ {
+  "missing": "canned-tomatoes",
+  "uses": [
+   {
+    "slug": "tomato",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same weight of fresh tomatoes, chopped, and cook longer."
+ },
+ {
+  "missing": "canned-tomatoes",
+  "uses": [
+   {
+    "slug": "passata",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of passata."
+ },
+ {
+  "missing": "passata",
+  "uses": [
+   {
+    "slug": "canned-tomatoes",
+    "ratio": 1
+   }
+  ],
+  "note": "Blend canned tomatoes until smooth."
+ },
+ {
+  "missing": "passata",
+  "uses": [
+   {
+    "slug": "tomato-paste",
+    "ratio": 0.25
+   },
+   {
+    "slug": "water",
+    "ratio": 0.75
+   }
+  ],
+  "note": "Use 1 part tomato paste to 3 parts water."
+ },
+ {
+  "missing": "tomato-paste",
+  "uses": [
+   {
+    "slug": "passata",
+    "ratio": 3
+   }
+  ],
+  "note": "Use 3 times as much passata and reduce it."
+ },
+ {
+  "missing": "tomato-paste",
+  "uses": [
+   {
+    "slug": "ketchup",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of ketchup; reduce any sugar."
+ },
+ {
+  "missing": "pasta-sauce",
+  "uses": [
+   {
+    "slug": "passata",
+    "ratio": 1
+   }
+  ],
+  "note": "Use passata seasoned with garlic, oregano and olive oil."
+ },
+ {
+  "missing": "cherry-tomato",
+  "uses": [
+   {
+    "slug": "tomato",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same weight of tomatoes, chopped."
+ },
+ {
+  "missing": "bell-pepper",
+  "uses": [
+   {
+    "slug": "zucchini",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of zucchini."
+ },
+ {
+  "missing": "jalapeno",
+  "uses": [
+   {
+    "slug": "chili-pepper",
+    "ratio": 1
+   }
+  ],
+  "note": "Use 1 chili per jalapeño; taste for heat."
+ },
+ {
+  "missing": "chili-pepper",
+  "uses": [
+   {
+    "slug": "chili-powder",
+    "ratio": 0.25,
+    "unit": "tsp"
+   }
+  ],
+  "note": "Use ¼ tsp chili powder per chili."
+ },
+ {
+  "missing": "chili-pepper",
+  "uses": [
+   {
+    "slug": "hot-sauce",
+    "ratio": 1,
+    "unit": "tsp"
+   }
+  ],
+  "note": "Use 1 tsp hot sauce per chili."
+ },
+ {
+  "missing": "zucchini",
+  "uses": [
+   {
+    "slug": "eggplant",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of eggplant."
+ },
+ {
+  "missing": "eggplant",
+  "uses": [
+   {
+    "slug": "zucchini",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of zucchini."
+ },
+ {
+  "missing": "spinach",
+  "uses": [
+   {
+    "slug": "kale",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of kale; cook a bit longer."
+ },
+ {
+  "missing": "spinach",
+  "uses": [
+   {
+    "slug": "swiss-chard",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of Swiss chard."
+ },
+ {
+  "missing": "kale",
+  "uses": [
+   {
+    "slug": "spinach",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of spinach; add at the end."
+ },
+ {
+  "missing": "swiss-chard",
+  "uses": [
+   {
+    "slug": "spinach",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of spinach."
+ },
+ {
+  "missing": "bok-choy",
+  "uses": [
+   {
+    "slug": "napa-cabbage",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of napa cabbage."
+ },
+ {
+  "missing": "napa-cabbage",
+  "uses": [
+   {
+    "slug": "cabbage",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of green cabbage, sliced thin."
+ },
+ {
+  "missing": "arugula",
+  "uses": [
+   {
+    "slug": "spinach",
+    "ratio": 1
+   }
+  ],
+  "note": "Use baby spinach with a little black pepper."
+ },
+ {
+  "missing": "romaine",
+  "uses": [
+   {
+    "slug": "lettuce",
+    "ratio": 1
+   }
+  ],
+  "note": "Use any lettuce."
+ },
+ {
+  "missing": "broccoli",
+  "uses": [
+   {
+    "slug": "cauliflower",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of cauliflower."
+ },
+ {
+  "missing": "cauliflower",
+  "uses": [
+   {
+    "slug": "broccoli",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of broccoli."
+ },
+ {
+  "missing": "broccolini",
+  "uses": [
+   {
+    "slug": "broccoli",
+    "ratio": 1
+   }
+  ],
+  "note": "Use broccoli cut into long florets."
+ },
+ {
+  "missing": "green-beans",
+  "uses": [
+   {
+    "slug": "snap-peas",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of snap peas."
+ },
+ {
+  "missing": "peas",
+  "uses": [
+   {
+    "slug": "edamame",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of edamame."
+ },
+ {
+  "missing": "potato",
+  "uses": [
+   {
+    "slug": "sweet-potato",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of sweet potato."
+ },
+ {
+  "missing": "sweet-potato",
+  "uses": [
+   {
+    "slug": "butternut-squash",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of butternut squash."
+ },
+ {
+  "missing": "butternut-squash",
+  "uses": [
+   {
+    "slug": "sweet-potato",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of sweet potato."
+ },
+ {
+  "missing": "butternut-squash",
+  "uses": [
+   {
+    "slug": "pumpkin",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of pumpkin."
+ },
+ {
+  "missing": "pumpkin",
+  "uses": [
+   {
+    "slug": "butternut-squash",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of butternut squash."
+ },
+ {
+  "missing": "parsnip",
+  "uses": [
+   {
+    "slug": "carrot",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of carrot."
+ },
+ {
+  "missing": "celery",
+  "uses": [
+   {
+    "slug": "fennel",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of fennel."
+ },
+ {
+  "missing": "mushroom",
+  "uses": [
+   {
+    "slug": "eggplant",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of eggplant, cubed."
+ },
+ {
+  "missing": "cremini-mushroom",
+  "uses": [
+   {
+    "slug": "white-mushroom",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of white mushrooms."
+ },
+ {
+  "missing": "shiitake",
+  "uses": [
+   {
+    "slug": "cremini-mushroom",
+    "ratio": 1
+   }
+  ],
+  "note": "Use cremini with a dash of soy sauce."
+ },
+ {
+  "missing": "cilantro",
+  "uses": [
+   {
+    "slug": "parsley",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of parsley with a squeeze of lime."
+ },
+ {
+  "missing": "parsley",
+  "uses": [
+   {
+    "slug": "cilantro",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of cilantro."
+ },
+ {
+  "missing": "basil",
+  "uses": [
+   {
+    "slug": "oregano-dried",
+    "ratio": 0.33
+   }
+  ],
+  "note": "Use ⅓ the amount of dried oregano."
+ },
+ {
+  "missing": "basil",
+  "uses": [
+   {
+    "slug": "parsley",
+    "ratio": 1
+   }
+  ],
+  "note": "Use parsley; add a little mint if you have it."
+ },
+ {
+  "missing": "mint",
+  "uses": [
+   {
+    "slug": "dried-mint",
+    "ratio": 0.33
+   }
+  ],
+  "note": "Use ⅓ the amount of dried mint."
+ },
+ {
+  "missing": "dill",
+  "uses": [
+   {
+    "slug": "parsley",
+    "ratio": 1
+   }
+  ],
+  "note": "Use parsley; the flavour is milder."
+ },
+ {
+  "missing": "oregano",
+  "uses": [
+   {
+    "slug": "oregano-dried",
+    "ratio": 0.33
+   }
+  ],
+  "note": "Use ⅓ the amount of dried oregano."
+ },
+ {
+  "missing": "thyme",
+  "uses": [
+   {
+    "slug": "dried-thyme",
+    "ratio": 0.33
+   }
+  ],
+  "note": "Use ⅓ the amount of dried thyme."
+ },
+ {
+  "missing": "rosemary",
+  "uses": [
+   {
+    "slug": "dried-thyme",
+    "ratio": 0.33
+   }
+  ],
+  "note": "Use ⅓ the amount of dried thyme."
+ },
+ {
+  "missing": "tarragon",
+  "uses": [
+   {
+    "slug": "basil",
+    "ratio": 1
+   }
+  ],
+  "note": "Use basil with a pinch of fennel."
+ },
+ {
+  "missing": "oregano-dried",
+  "uses": [
+   {
+    "slug": "oregano",
+    "ratio": 3
+   }
+  ],
+  "note": "Use 3 times as much fresh oregano."
+ },
+ {
+  "missing": "oregano-dried",
+  "uses": [
+   {
+    "slug": "italian-seasoning",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of Italian seasoning."
+ },
+ {
+  "missing": "dried-thyme",
+  "uses": [
+   {
+    "slug": "thyme",
+    "ratio": 3
+   }
+  ],
+  "note": "Use 3 times as much fresh thyme."
+ },
+ {
+  "missing": "dried-mint",
+  "uses": [
+   {
+    "slug": "mint",
+    "ratio": 3
+   }
+  ],
+  "note": "Use 3 times as much fresh mint."
+ },
+ {
+  "missing": "italian-seasoning",
+  "uses": [
+   {
+    "slug": "oregano-dried",
+    "ratio": 0.5
+   },
+   {
+    "slug": "dried-thyme",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Mix dried oregano and thyme."
+ },
+ {
+  "missing": "bay-leaves",
+  "uses": [
+   {
+    "slug": "dried-thyme",
+    "ratio": 0.25,
+    "unit": "tsp"
+   }
+  ],
+  "note": "Use ¼ tsp dried thyme per bay leaf."
+ },
+ {
+  "missing": "fenugreek-leaves",
+  "uses": [
+   {
+    "slug": "parsley",
+    "ratio": 1
+   }
+  ],
+  "note": "Use parsley with a pinch of ground fenugreek or celery leaf."
+ },
+ {
+  "missing": "saffron",
+  "uses": [
+   {
+    "slug": "turmeric",
+    "ratio": 0.25,
+    "unit": "tsp"
+   }
+  ],
+  "note": "Use a pinch of turmeric for colour (the flavour differs)."
+ },
+ {
+  "missing": "cumin",
+  "uses": [
+   {
+    "slug": "chili-powder",
+    "ratio": 1
+   }
+  ],
+  "note": "Use chili powder (it contains cumin)."
+ },
+ {
+  "missing": "curry-powder",
+  "uses": [
+   {
+    "slug": "cumin",
+    "ratio": 0.5
+   },
+   {
+    "slug": "turmeric",
+    "ratio": 0.25
+   },
+   {
+    "slug": "chili-powder",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Mix cumin, turmeric and chili powder (2:1:1)."
+ },
+ {
+  "missing": "chili-powder",
+  "uses": [
+   {
+    "slug": "paprika",
+    "ratio": 1
+   },
+   {
+    "slug": "cumin",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use paprika with a little cumin and cayenne."
+ },
+ {
+  "missing": "paprika",
+  "uses": [
+   {
+    "slug": "chili-powder",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Use half as much chili powder."
+ },
+ {
+  "missing": "cinnamon",
+  "uses": [
+   {
+    "slug": "nutmeg",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use ¼ as much nutmeg."
+ },
+ {
+  "missing": "nutmeg",
+  "uses": [
+   {
+    "slug": "cinnamon",
+    "ratio": 1
+   }
+  ],
+  "note": "Use cinnamon."
+ },
+ {
+  "missing": "cardamom",
+  "uses": [
+   {
+    "slug": "cinnamon",
+    "ratio": 0.5
+   },
+   {
+    "slug": "nutmeg",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Use cinnamon with a pinch of nutmeg."
+ },
+ {
+  "missing": "ginger-powder",
+  "uses": [
+   {
+    "slug": "ginger",
+    "ratio": 4
+   }
+  ],
+  "note": "Use 4 times as much fresh grated ginger."
+ },
+ {
+  "missing": "garlic-powder",
+  "uses": [
+   {
+    "slug": "garlic",
+    "ratio": 1
+   }
+  ],
+  "note": "Use 1 clove fresh garlic per ⅛ tsp."
+ },
+ {
+  "missing": "onion-powder",
+  "uses": [
+   {
+    "slug": "onion",
+    "ratio": 1
+   }
+  ],
+  "note": "Use 1 small onion, grated, per tbsp."
+ },
+ {
+  "missing": "vanilla",
+  "uses": [
+   {
+    "slug": "maple-syrup",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of maple syrup."
+ },
+ {
+  "missing": "sugar",
+  "uses": [
+   {
+    "slug": "honey",
+    "ratio": 0.75
+   }
+  ],
+  "note": "Use ¾ the amount of honey and a little less liquid."
+ },
+ {
+  "missing": "sugar",
+  "uses": [
+   {
+    "slug": "maple-syrup",
+    "ratio": 0.75
+   }
+  ],
+  "note": "Use ¾ the amount of maple syrup and a little less liquid."
+ },
+ {
+  "missing": "sugar",
+  "uses": [
+   {
+    "slug": "brown-sugar",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of brown sugar."
+ },
+ {
+  "missing": "brown-sugar",
+  "uses": [
+   {
+    "slug": "sugar",
+    "ratio": 1
+   },
+   {
+    "slug": "maple-syrup",
+    "ratio": 0.06
+   }
+  ],
+  "note": "Use white sugar with 1 tbsp maple syrup per cup."
+ },
+ {
+  "missing": "brown-sugar",
+  "uses": [
+   {
+    "slug": "sugar",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of white sugar."
+ },
+ {
+  "missing": "honey",
+  "uses": [
+   {
+    "slug": "maple-syrup",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of maple syrup."
+ },
+ {
+  "missing": "maple-syrup",
+  "uses": [
+   {
+    "slug": "honey",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of honey."
+ },
+ {
+  "missing": "icing-sugar",
+  "uses": [
+   {
+    "slug": "sugar",
+    "ratio": 1
+   },
+   {
+    "slug": "cornstarch",
+    "ratio": 0.06
+   }
+  ],
+  "note": "Blend sugar with 1 tbsp cornstarch per cup until fine."
+ },
+ {
+  "missing": "baking-powder",
+  "uses": [
+   {
+    "slug": "baking-soda",
+    "ratio": 0.33
+   },
+   {
+    "slug": "lemon",
+    "ratio": 0.5
+   }
+  ],
+  "note": "Use ⅓ as much baking soda plus an acid (lemon juice or yogurt)."
+ },
+ {
+  "missing": "cornstarch",
+  "uses": [
+   {
+    "slug": "flour",
+    "ratio": 2
+   }
+  ],
+  "note": "Use twice as much flour to thicken."
+ },
+ {
+  "missing": "bread-flour",
+  "uses": [
+   {
+    "slug": "flour",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of all-purpose flour."
+ },
+ {
+  "missing": "breadcrumbs",
+  "uses": [
+   {
+    "slug": "oats",
+    "ratio": 1
+   }
+  ],
+  "note": "Use rolled oats, pulsed fine."
+ },
+ {
+  "missing": "breadcrumbs",
+  "uses": [
+   {
+    "slug": "crackers",
+    "ratio": 1
+   }
+  ],
+  "note": "Use crushed crackers."
+ },
+ {
+  "missing": "basmati-rice",
+  "uses": [
+   {
+    "slug": "rice",
+    "ratio": 1
+   }
+  ],
+  "note": "Use any long-grain rice."
+ },
+ {
+  "missing": "sushi-rice",
+  "uses": [
+   {
+    "slug": "rice",
+    "ratio": 1
+   }
+  ],
+  "note": "Use short-grain rice."
+ },
+ {
+  "missing": "brown-rice",
+  "uses": [
+   {
+    "slug": "rice",
+    "ratio": 1
+   }
+  ],
+  "note": "Use white rice and cook it for less time."
+ },
+ {
+  "missing": "rice",
+  "uses": [
+   {
+    "slug": "quinoa",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of quinoa."
+ },
+ {
+  "missing": "rice",
+  "uses": [
+   {
+    "slug": "bulgur",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of bulgur."
+ },
+ {
+  "missing": "quinoa",
+  "uses": [
+   {
+    "slug": "couscous",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of couscous."
+ },
+ {
+  "missing": "couscous",
+  "uses": [
+   {
+    "slug": "bulgur",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of fine bulgur."
+ },
+ {
+  "missing": "bulgur",
+  "uses": [
+   {
+    "slug": "couscous",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of couscous."
+ },
+ {
+  "missing": "spaghetti",
+  "uses": [
+   {
+    "slug": "pasta",
+    "ratio": 1
+   }
+  ],
+  "note": "Use any pasta."
+ },
+ {
+  "missing": "penne",
+  "uses": [
+   {
+    "slug": "pasta",
+    "ratio": 1
+   }
+  ],
+  "note": "Use any short pasta."
+ },
+ {
+  "missing": "macaroni",
+  "uses": [
+   {
+    "slug": "penne",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of penne."
+ },
+ {
+  "missing": "egg-noodles",
+  "uses": [
+   {
+    "slug": "spaghetti",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of spaghetti."
+ },
+ {
+  "missing": "lasagna-sheets",
+  "uses": [
+   {
+    "slug": "penne",
+    "ratio": 1
+   }
+  ],
+  "note": "Make a baked pasta with penne instead."
+ },
+ {
+  "missing": "tortilla",
+  "uses": [
+   {
+    "slug": "pita",
+    "ratio": 1
+   }
+  ],
+  "note": "Use pita bread."
+ },
+ {
+  "missing": "pita",
+  "uses": [
+   {
+    "slug": "tortilla",
+    "ratio": 1
+   }
+  ],
+  "note": "Use tortillas."
+ },
+ {
+  "missing": "split-peas",
+  "uses": [
+   {
+    "slug": "lentils",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of lentils (cook a little less)."
+ },
+ {
+  "missing": "lentils",
+  "uses": [
+   {
+    "slug": "split-peas",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of split peas (cook longer)."
+ },
+ {
+  "missing": "chickpeas",
+  "uses": [
+   {
+    "slug": "white-beans",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of white beans."
+ },
+ {
+  "missing": "white-beans",
+  "uses": [
+   {
+    "slug": "chickpeas",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of chickpeas."
+ },
+ {
+  "missing": "kidney-beans",
+  "uses": [
+   {
+    "slug": "black-beans",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of black beans."
+ },
+ {
+  "missing": "black-beans",
+  "uses": [
+   {
+    "slug": "kidney-beans",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of kidney beans."
+ },
+ {
+  "missing": "broth",
+  "uses": [
+   {
+    "slug": "water",
+    "ratio": 1
+   },
+   {
+    "slug": "soy-sauce",
+    "ratio": 0.03
+   }
+  ],
+  "note": "Use water with a splash of soy sauce and a little extra salt."
+ },
+ {
+  "missing": "soy-sauce",
+  "uses": [
+   {
+    "slug": "worcestershire",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of Worcestershire sauce."
+ },
+ {
+  "missing": "fish-sauce",
+  "uses": [
+   {
+    "slug": "soy-sauce",
+    "ratio": 1
+   }
+  ],
+  "note": "Use soy sauce with a squeeze of lime."
+ },
+ {
+  "missing": "oyster-sauce",
+  "uses": [
+   {
+    "slug": "soy-sauce",
+    "ratio": 1
+   },
+   {
+    "slug": "sugar",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use soy sauce with a pinch of sugar."
+ },
+ {
+  "missing": "worcestershire",
+  "uses": [
+   {
+    "slug": "soy-sauce",
+    "ratio": 1
+   }
+  ],
+  "note": "Use soy sauce with a dash of vinegar."
+ },
+ {
+  "missing": "hot-sauce",
+  "uses": [
+   {
+    "slug": "chili-powder",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use a pinch of chili powder with a little vinegar."
+ },
+ {
+  "missing": "mayonnaise",
+  "uses": [
+   {
+    "slug": "greek-yogurt",
+    "ratio": 1
+   }
+  ],
+  "note": "Use Greek yogurt with a little mustard."
+ },
+ {
+  "missing": "ketchup",
+  "uses": [
+   {
+    "slug": "tomato-paste",
+    "ratio": 0.5
+   },
+   {
+    "slug": "sugar",
+    "ratio": 0.1
+   }
+  ],
+  "note": "Use tomato paste with sugar and vinegar."
+ },
+ {
+  "missing": "mustard",
+  "uses": [
+   {
+    "slug": "mayonnaise",
+    "ratio": 1
+   }
+  ],
+  "note": "Use mayonnaise with a pinch of turmeric."
+ },
+ {
+  "missing": "tahini",
+  "uses": [
+   {
+    "slug": "peanut-butter",
+    "ratio": 1
+   }
+  ],
+  "note": "Use smooth peanut butter (the flavour is stronger)."
+ },
+ {
+  "missing": "tahini",
+  "uses": [
+   {
+    "slug": "almond-butter",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of almond butter."
+ },
+ {
+  "missing": "peanut-butter",
+  "uses": [
+   {
+    "slug": "almond-butter",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of almond butter."
+ },
+ {
+  "missing": "almond-butter",
+  "uses": [
+   {
+    "slug": "peanut-butter",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of peanut butter."
+ },
+ {
+  "missing": "olive-oil",
+  "uses": [
+   {
+    "slug": "vegetable-oil",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of vegetable oil."
+ },
+ {
+  "missing": "vegetable-oil",
+  "uses": [
+   {
+    "slug": "olive-oil",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of olive oil."
+ },
+ {
+  "missing": "sesame-oil",
+  "uses": [
+   {
+    "slug": "vegetable-oil",
+    "ratio": 1
+   },
+   {
+    "slug": "sesame-seeds",
+    "ratio": 0.25
+   }
+  ],
+  "note": "Use vegetable oil and toasted sesame seeds."
+ },
+ {
+  "missing": "coconut-oil",
+  "uses": [
+   {
+    "slug": "butter",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of butter."
+ },
+ {
+  "missing": "vinegar",
+  "uses": [
+   {
+    "slug": "lemon",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of lemon juice."
+ },
+ {
+  "missing": "pine-nuts",
+  "uses": [
+   {
+    "slug": "walnuts",
+    "ratio": 1
+   }
+  ],
+  "note": "Use chopped walnuts."
+ },
+ {
+  "missing": "pine-nuts",
+  "uses": [
+   {
+    "slug": "sunflower-seeds",
+    "ratio": 1
+   }
+  ],
+  "note": "Use sunflower seeds."
+ },
+ {
+  "missing": "walnuts",
+  "uses": [
+   {
+    "slug": "pecans",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of pecans."
+ },
+ {
+  "missing": "pecans",
+  "uses": [
+   {
+    "slug": "walnuts",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of walnuts."
+ },
+ {
+  "missing": "almonds",
+  "uses": [
+   {
+    "slug": "cashews",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of cashews."
+ },
+ {
+  "missing": "cashews",
+  "uses": [
+   {
+    "slug": "almonds",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of almonds."
+ },
+ {
+  "missing": "pistachios",
+  "uses": [
+   {
+    "slug": "almonds",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of almonds."
+ },
+ {
+  "missing": "raisins",
+  "uses": [
+   {
+    "slug": "dates",
+    "ratio": 1
+   }
+  ],
+  "note": "Use chopped dates."
+ },
+ {
+  "missing": "chicken-thigh",
+  "uses": [
+   {
+    "slug": "chicken-breast",
+    "ratio": 1
+   }
+  ],
+  "note": "Use chicken breast; cook a little less."
+ },
+ {
+  "missing": "chicken-breast",
+  "uses": [
+   {
+    "slug": "chicken-thigh",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same weight of chicken thighs."
+ },
+ {
+  "missing": "ground-beef",
+  "uses": [
+   {
+    "slug": "ground-turkey",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of ground turkey."
+ },
+ {
+  "missing": "ground-beef",
+  "uses": [
+   {
+    "slug": "ground-lamb",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of ground lamb."
+ },
+ {
+  "missing": "ground-lamb",
+  "uses": [
+   {
+    "slug": "ground-beef",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of ground beef."
+ },
+ {
+  "missing": "stewing-beef",
+  "uses": [
+   {
+    "slug": "lamb",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same weight of stewing lamb."
+ },
+ {
+  "missing": "lamb",
+  "uses": [
+   {
+    "slug": "stewing-beef",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same weight of stewing beef."
+ },
+ {
+  "missing": "ground-pork",
+  "uses": [
+   {
+    "slug": "ground-chicken",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of ground chicken."
+ },
+ {
+  "missing": "ground-turkey",
+  "uses": [
+   {
+    "slug": "ground-chicken",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of ground chicken."
+ },
+ {
+  "missing": "bacon",
+  "uses": [
+   {
+    "slug": "ham",
+    "ratio": 1
+   }
+  ],
+  "note": "Use diced ham."
+ },
+ {
+  "missing": "shrimp",
+  "uses": [
+   {
+    "slug": "chicken-breast",
+    "ratio": 1
+   }
+  ],
+  "note": "Use chicken breast, cut small."
+ },
+ {
+  "missing": "cod",
+  "uses": [
+   {
+    "slug": "tilapia",
+    "ratio": 1
+   }
+  ],
+  "note": "Use any firm white fish."
+ },
+ {
+  "missing": "tilapia",
+  "uses": [
+   {
+    "slug": "cod",
+    "ratio": 1
+   }
+  ],
+  "note": "Use any firm white fish."
+ },
+ {
+  "missing": "halibut",
+  "uses": [
+   {
+    "slug": "cod",
+    "ratio": 1
+   }
+  ],
+  "note": "Use cod."
+ },
+ {
+  "missing": "salmon",
+  "uses": [
+   {
+    "slug": "trout",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same weight of trout."
+ },
+ {
+  "missing": "tofu",
+  "uses": [
+   {
+    "slug": "tempeh",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of tempeh."
+ },
+ {
+  "missing": "tofu",
+  "uses": [
+   {
+    "slug": "chickpeas",
+    "ratio": 1
+   }
+  ],
+  "note": "Use chickpeas."
+ },
+ {
+  "missing": "wine",
+  "uses": [
+   {
+    "slug": "broth",
+    "ratio": 1
+   },
+   {
+    "slug": "vinegar",
+    "ratio": 0.06
+   }
+  ],
+  "note": "Use broth with a splash of vinegar."
+ },
+ {
+  "missing": "beer",
+  "uses": [
+   {
+    "slug": "broth",
+    "ratio": 1
+   }
+  ],
+  "note": "Use the same amount of broth."
+ }
+]

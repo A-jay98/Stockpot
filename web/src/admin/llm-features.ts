@@ -13,4 +13,19 @@ export const llmFeatures: { name: string; what: string; withoutAI: string }[] = 
     what: 'Answers questions about a recipe and proposes new versions.',
     withoutAI: 'Edit the recipe by hand.',
   },
+  {
+    name: 'recipes_substitute',
+    what: '"Find a swap" for a missing ingredient, using only what is in stock.',
+    withoutAI: 'Seeded swaps still show; swap it by hand while you cook.',
+  },
+  {
+    name: 'recipes_ideas',
+    what: '"More ideas": up to 3 new recipes from what is in stock and expiring.',
+    withoutAI: 'Saved recipes are still ranked by what you have; import or add one.',
+  },
+  {
+    name: 'report_review',
+    what: 'Reviews problem reports; applies default-unit fixes it is sure about (background).',
+    withoutAI: 'Reports wait on Admin → Reports for you to apply, reject or dismiss.',
+  },
 ]
