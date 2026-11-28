@@ -1,5 +1,5 @@
 import 'fake-indexeddb/auto'
-import { render, screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { db } from '../../offline/db'
@@ -385,4 +385,53 @@ test('the item sheet adds a store inline and remembers store and unit for next t
     defaultQty: null,
     defaultStoreId: store?.id,
   })
+})
+
+test('an item is added in the unit it is bought in, and packages show as multiples', async () => {
+  const user = userEvent.setup()
+  await openList()
+  await db.ingredient.bulkPut([
+    ingredient('spice', 'Spice', { defaultUnit: 'jar' }),
+    ingredient('salt', 'Salt', { parentId: 'spice', defaultUnit: 'bag' }),
+    ingredient('sumac', 'Sumac', { parentId: 'spice' }),
+  ])
+  await user.type(await screen.findByLabelText('Item name'), 'salt{Enter}')
+  await waitFor(async () => expect(await sent('shopping.item.add')).toHaveLength(1))
+  expect((await sent('shopping.item.add'))[0]).toMatchObject({ qty: '1', unit: 'bag' })
+  // No unit of its own: the parent's.
+  await user.type(screen.getByLabelText('Item name'), '3 sumac{Enter}')
+  await waitFor(async () => expect(await sent('shopping.item.add')).toHaveLength(2))
+  expect((await sent('shopping.item.add'))[1]).toMatchObject({ qty: '3', unit: 'jar' })
+
+  await waitFor(() =>
+    expect(screen.getAllByTestId('amount').map((a) => a.textContent)).toEqual(
+      expect.arrayContaining(['bag', '3×jar']),
+    ),
+  )
+})
+
+/** Drag a row's content horizontally by dx pixels with pointer events. */
+const swipe = (el: HTMLElement, dx: number) => {
+  const target = el.closest('[data-swipe-offset]') as HTMLElement
+  fireEvent.pointerDown(target, { pointerId: 1, clientX: 200, clientY: 10, button: 0 })
+  for (let i = 1; i <= 4; i++)
+    fireEvent.pointerMove(target, { pointerId: 1, clientX: 200 + (dx * i) / 4, clientY: 10 })
+  fireEvent.pointerUp(target, { pointerId: 1, clientX: 200 + dx, clientY: 10 })
+}
+
+test('swiping right puts an item in the cart; left offers one more and remove', async () => {
+  const user = userEvent.setup()
+  await openList()
+  await user.type(await screen.findByLabelText('Item name'), 'milk{Enter}')
+  const row = await screen.findByRole('button', { name: /^Milk/ })
+
+  swipe(row, -100)
+  await user.click(await screen.findByRole('button', { name: 'One more' }))
+  await waitFor(async () => expect(await sent('shopping.item.update')).toHaveLength(1))
+  expect((await sent('shopping.item.update'))[0]).toMatchObject({ qty: '2' })
+
+  swipe(row, 150)
+  await waitFor(async () => expect(await sent('shopping.item.check')).toHaveLength(1))
+  // The drag did not open the item sheet.
+  expect(screen.queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
 })

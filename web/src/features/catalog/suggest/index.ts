@@ -20,4 +20,4 @@ export {
   usualPick,
 } from './guess'
 export { type ParsedQuery, parseQuery } from './parse'
-export { formatQty, unitFromWord } from './units'
+export { COUNT_UNITS, formatQty, isCountUnit, listQty, unitFromWord } from './units'

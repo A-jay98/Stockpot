@@ -352,6 +352,10 @@ func (h *handlers) itemAdd(ctx context.Context, tx pgx.Tx, p ItemAdd) error {
 	if tag.RowsAffected() == 0 {
 		return commands.CheckOwned(ctx, tx, "shopping_item", p.ID, hh)
 	}
+	// No unit given: the one the product is usually bought in ("salt" -> 1 bag).
+	if hasProduct && (!p.Unit.Set || p.Unit.Value == nil) {
+		return catalog.FillBuyUnits(ctx, tx, *p.ProductID.Value)
+	}
 	return nil
 }
 

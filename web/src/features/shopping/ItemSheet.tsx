@@ -1,4 +1,4 @@
-import { Check, Flag, Link2, Plus, Trash2 } from 'lucide-react'
+import { Check, Flag, Link2, Minus, Plus, Trash2 } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { v7 as uuidv7 } from 'uuid'
 import { dispatch } from '../../offline/outbox'
@@ -8,9 +8,11 @@ import { FoodIcon } from '../../ui/food-icons'
 import { useIngredients } from '../catalog/hooks'
 import { foodIconFor, useIconLookup } from '../catalog/icons'
 import { matchState } from '../catalog/match'
+import { isCountUnit } from '../catalog/suggest'
 import { normalize, SCORE_TYPO, tokenScore, words } from '../catalog/suggest/text'
 import { ReportSheet } from '../reports/ReportSheet'
-import type { Row } from './items'
+import { StoreChip } from '../stores/StoreChip'
+import { buyUnit, type Row } from './items'
 
 const unitOptions = [
   '',
@@ -29,11 +31,12 @@ const unitOptions = [
   'box',
   'bunch',
   'head',
+  'tub',
+  'carton',
 ]
 
 const chip =
   'rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] font-semibold text-ink'
-const chipOn = 'border-brand bg-brand-soft text-brand'
 
 type Props = { row: Row | null; stores: Store[]; onClose: () => void }
 
@@ -83,10 +86,7 @@ function Body({ row, stores, onClose }: { row: Row; stores: Store[]; onClose: ()
   // No unit yet: preselect the product's hand-picked one, else its ingredient's usual one.
   const [initialUnit] = useState(
     () =>
-      row.unit ??
-      product?.defaultUnit ??
-      (product?.ingredientId && icons.ingredients.get(product.ingredientId)?.defaultUnit) ??
-      '',
+      row.unit ?? product?.defaultUnit ?? buyUnit(product?.ingredientId, icons.ingredients) ?? '',
   )
   const [unit, setUnit] = useState(initialUnit)
   const [note, setNote] = useState(row.note ?? '')
@@ -97,6 +97,12 @@ function Body({ row, stores, onClose }: { row: Row; stores: Store[]; onClose: ()
   const [finding, setFinding] = useState(false)
   const [find, setFind] = useState('')
   const valid = qty === '' || /^\d+(\.\d+)?$/.test(qty)
+  // Packages and pieces step by one ("2× bag"); weights and volumes are typed.
+  const counted = unit === '' || isCountUnit(unit)
+  const step = (by: number) => {
+    const n = Math.max(1, Math.round(Number(qty) || (by > 0 ? 0 : 1)) + by)
+    setQty(String(n))
+  }
 
   const state = product ? matchState(product, icons.ingredients) : null
   const current = state && 'ingredient' in state ? state.ingredient : undefined
@@ -175,14 +181,44 @@ function Body({ row, stores, onClose }: { row: Row; stores: Store[]; onClose: ()
     >
       <div className="flex gap-2">
         <Field label="Quantity" error={valid ? undefined : 'Use a number like 2 or 1.5'}>
-          {(p) => (
-            <Input
-              {...p}
-              inputMode="decimal"
-              value={qty}
-              onChange={(e) => setQty(e.target.value)}
-            />
-          )}
+          {(p) =>
+            counted ? (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  aria-label="One less"
+                  disabled={!qty || Number(qty) <= 1}
+                  onClick={() => step(-1)}
+                >
+                  <Minus aria-hidden />
+                </Button>
+                <Input
+                  {...p}
+                  inputMode="decimal"
+                  className="w-16 text-center"
+                  value={qty}
+                  placeholder="1"
+                  onChange={(e) => setQty(e.target.value)}
+                />
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  aria-label="One more"
+                  onClick={() => step(1)}
+                >
+                  <Plus aria-hidden />
+                </Button>
+              </div>
+            ) : (
+              <Input
+                {...p}
+                inputMode="decimal"
+                value={qty}
+                onChange={(e) => setQty(e.target.value)}
+              />
+            )
+          }
         </Field>
         <Field label="Unit">
           {(p) => (
@@ -205,15 +241,12 @@ function Body({ row, stores, onClose }: { row: Row; stores: Store[]; onClose: ()
         <legend className="t-label p-0 text-ink-muted">Buy at (any of)</legend>
         <div className="flex flex-wrap gap-1.5">
           {stores.map((s) => (
-            <button
+            <StoreChip
               key={s.id}
-              type="button"
-              aria-pressed={storeIds.includes(s.id)}
+              store={s}
+              pressed={storeIds.includes(s.id)}
               onClick={() => toggle(s.id)}
-              className={cn(chip, storeIds.includes(s.id) && chipOn)}
-            >
-              {s.name}
-            </button>
+            />
           ))}
           {newStore === null && (
             <button

@@ -4,6 +4,7 @@ package units
 import (
 	"fmt"
 	"math/big"
+	"slices"
 	"strings"
 )
 
@@ -22,6 +23,7 @@ var table = map[string]Dimension{
 	"ml": Volume, "l": Volume, "tsp": Volume, "tbsp": Volume, "cup": Volume, "fl_oz": Volume,
 	"ea": Count, "pack": Count, "bag": Count, "can": Count, "jar": Count, "bottle": Count,
 	"box": Count, "bunch": Count, "head": Count, "clove": Count, "slice": Count, "portion": Count,
+	"tub": Count, "carton": Count,
 }
 
 // Valid reports whether code is a known unit.
@@ -36,6 +38,18 @@ func Codes() []string {
 	for c := range table {
 		out = append(out, c)
 	}
+	return out
+}
+
+// OfDimension lists the unit codes of one dimension, sorted.
+func OfDimension(d Dimension) []string {
+	var out []string
+	for c, dim := range table {
+		if dim == d {
+			out = append(out, c)
+		}
+	}
+	slices.Sort(out)
 	return out
 }
 

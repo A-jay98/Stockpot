@@ -432,7 +432,7 @@ func (h *handlers) productSetIngredient(ctx context.Context, tx pgx.Tx, p Produc
 	if tag.RowsAffected() == 0 {
 		return commands.Gone("product no longer exists")
 	}
-	return nil
+	return FillBuyUnits(ctx, tx, p.ID)
 }
 
 func ptrs(id *uuid.UUID) []uuid.UUID {

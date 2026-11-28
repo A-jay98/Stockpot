@@ -32,6 +32,8 @@ const units = [
   'box',
   'bunch',
   'head',
+  'tub',
+  'carton',
 ] as const
 const levels = ['full', 'most', 'half', 'low', 'almost_out'] as const
 const kindToLocation: Record<string, LocationKind> = {

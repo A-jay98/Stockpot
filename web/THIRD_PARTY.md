@@ -66,3 +66,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## Store logos
+
+`src/features/stores/marks.gen.ts` holds single-path logo glyphs copied from
+[simple-icons](https://github.com/simple-icons/simple-icons) 16.38.1 (`icons/<slug>.svg`), whose
+icon data is released under CC0-1.0. The logos are trademarks of their owners and are shown only
+to identify a store the household named; stores without a glyph get a monogram in brand colours.

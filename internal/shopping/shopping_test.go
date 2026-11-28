@@ -515,3 +515,45 @@ func deref(s *string) string {
 	}
 	return *s
 }
+
+func TestAddFillsTheBuyUnit(t *testing.T) {
+	e := newEnv(t)
+	item := func(id uuid.UUID) (qty, unit *string) {
+		t.Helper()
+		if err := e.pool.QueryRow(t.Context(), `SELECT qty::text, unit FROM shopping_item WHERE id = $1`, id).Scan(&qty, &unit); err != nil {
+			t.Fatal(err)
+		}
+		return qty, unit
+	}
+	str := func(s *string) string {
+		if s == nil {
+			return "<nil>"
+		}
+		return *s
+	}
+
+	// "salt" is bought as a bag: one bag unless a quantity was given.
+	if q, u := item(e.addItem(t, map[string]any{"text": "Salt", "productId": uuid.New()})); str(q) != "1" || str(u) != "bag" {
+		t.Fatalf("salt = %s %s", str(q), str(u))
+	}
+	if q, u := item(e.addItem(t, map[string]any{"text": "olive oil", "productId": uuid.New(), "qty": "2"})); str(q) != "2" || str(u) != "bottle" {
+		t.Fatalf("olive oil = %s %s", str(q), str(u))
+	}
+	// A unit the user gave stays; a measure unit gets no made-up quantity.
+	if q, u := item(e.addItem(t, map[string]any{"text": "rice", "productId": uuid.New(), "unit": "kg"})); q != nil || str(u) != "kg" {
+		t.Fatalf("rice = %s %s", str(q), str(u))
+	}
+	if q, u := item(e.addItem(t, map[string]any{"text": "milk", "productId": uuid.New()})); q != nil || str(u) != "l" {
+		t.Fatalf("milk = %s %s", str(q), str(u))
+	}
+	// The product's hand-picked default beats the ingredient's.
+	var p uuid.UUID
+	if err := e.pool.QueryRow(t.Context(), `SELECT product_id FROM shopping_item WHERE household_id = $1 AND text = 'Salt'`, e.hh).Scan(&p); err != nil {
+		t.Fatal(err)
+	}
+	e.mustDo(t, "catalog.product.update", map[string]any{"id": p, "defaultUnit": "kg", "defaultQty": "1"})
+	salt := e.addItem(t, map[string]any{"text": "Salt", "productId": p, "note": "second"})
+	if q, u := item(salt); str(q) != "1" || str(u) != "kg" {
+		t.Fatalf("salt again = %s %s", str(q), str(u))
+	}
+}
