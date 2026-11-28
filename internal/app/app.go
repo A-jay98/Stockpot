@@ -60,8 +60,12 @@ func Migrate(ctx context.Context, cfg config.Config) error {
 	if err := db.Migrate(ctx, pool); err != nil {
 		return err
 	}
-	// Reference data that ships with the binary; idempotent.
-	return catalog.Seed(ctx, pool)
+	// Reference data that ships with the binary; idempotent. Swaps name
+	// ingredients, so they go second.
+	if err := catalog.Seed(ctx, pool); err != nil {
+		return err
+	}
+	return recipes.SeedSubstitutionRows(ctx, pool)
 }
 
 // Serve runs the server until ctx ends, then shuts down in order: stop
@@ -184,6 +188,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	enricher := catalog.NewEnricher(catalog.EnrichDeps{Pool: pool, Settings: store, LLM: gateway})
 	sweepers = append(sweepers, enricher.Sweepers()...)
 	sweepers = append(sweepers, alerts.Sweepers(alertSvc)...)
+	sweepers = append(sweepers, recipes.Sweepers(pool)...)
 	reportSvc := reports.New(reports.Deps{Pool: pool, Settings: store, LLM: gateway})
 	sweepers = append(sweepers, reportSvc.Sweepers()...)
 	jobClient, err := jobs.New(jobs.Deps{
@@ -229,6 +234,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Matcher:   catalog.Matcher{Pool: pool, Res: resolve.Resolver{}},
 			Alerts:    alertSvc,
 			FoodRules: inventory.NewRuleService(pool),
+			Recipes:   &recipes.Assistant{Pool: pool, LLM: gateway, W: recipeCmds.W},
 			Reports:   reportSvc,
 			Chat:      &chat.Service{Pool: pool, LLM: gateway},
 			Blobs:     media.New(pool, blobs),

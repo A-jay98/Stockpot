@@ -1,0 +1,222 @@
+{
+  "today": "2026-11-27",
+  "now": "2026-11-27T18:00:00Z",
+  "ingredients": [
+    { "id": "poultry", "slug": "poultry", "parentId": null },
+    { "id": "chicken", "slug": "chicken", "parentId": "poultry" },
+    { "id": "chicken-thigh", "slug": "chicken-thigh", "parentId": "chicken" },
+    { "id": "yogurt", "slug": "yogurt", "parentId": null },
+    { "id": "greek-yogurt", "slug": "greek-yogurt", "parentId": "yogurt" },
+    { "id": "coconut-milk", "slug": "coconut-milk", "parentId": null },
+    { "id": "cilantro", "slug": "cilantro", "parentId": null },
+    { "id": "rice", "slug": "rice", "parentId": null },
+    { "id": "basmati-rice", "slug": "basmati-rice", "parentId": "rice" },
+    { "id": "onion", "slug": "onion", "parentId": null },
+    { "id": "salt", "slug": "salt", "parentId": null },
+    { "id": "water", "slug": "water", "parentId": null },
+    { "id": "lime", "slug": "lime", "parentId": null },
+    { "id": "dried-lime", "slug": "dried-lime", "parentId": null },
+    { "id": "tomato-paste", "slug": "tomato-paste", "parentId": null },
+    { "id": "milk", "slug": "milk", "parentId": null }
+  ],
+  "products": [
+    { "id": "p-thigh", "name": "Chicken thighs", "ingredientId": "chicken-thigh" },
+    { "id": "p-yog", "name": "Greek yogurt", "ingredientId": "greek-yogurt" },
+    { "id": "p-cil", "name": "Cilantro", "ingredientId": "cilantro" },
+    { "id": "p-rice", "name": "Basmati", "ingredientId": "basmati-rice" },
+    { "id": "p-onion", "name": "Onions", "ingredientId": "onion" },
+    { "id": "p-lime", "name": "Limes", "ingredientId": "lime" },
+    { "id": "p-mix", "name": "Raita kit", "ingredientId": null, "extraIngredientIds": ["milk"] }
+  ],
+  "stock": [
+    {
+      "id": "s-thigh",
+      "productId": "p-thigh",
+      "quantity": "800",
+      "unit": "g",
+      "expiresOn": "2026-11-28"
+    },
+    {
+      "id": "s-yog",
+      "productId": "p-yog",
+      "quantity": "500",
+      "unit": "g",
+      "expiresOn": "2026-12-07"
+    },
+    {
+      "id": "s-cil",
+      "productId": "p-cil",
+      "amountKind": "level",
+      "level": "half",
+      "expiresOn": "2026-11-29"
+    },
+    { "id": "s-rice", "productId": "p-rice", "quantity": "2", "unit": "kg", "expiresOn": null },
+    { "id": "s-onion", "productId": "p-onion", "quantity": "0", "unit": "ea", "expiresOn": null },
+    {
+      "id": "s-lime",
+      "productId": "p-lime",
+      "quantity": "3",
+      "unit": "ea",
+      "expiresOn": "2026-12-03"
+    },
+    {
+      "id": "s-mix",
+      "productId": "p-mix",
+      "amountKind": "portions",
+      "portions": 0,
+      "expiresOn": "2026-11-27"
+    }
+  ],
+  "substitutions": [
+    {
+      "id": "sub-coco",
+      "householdId": null,
+      "ingredientId": "coconut-milk",
+      "recipeId": null,
+      "source": "seed",
+      "uses": [
+        { "ingredient_id": "greek-yogurt", "ratio": 0.5 },
+        { "ingredient_id": "water", "ratio": 0.25 }
+      ],
+      "note": "Use Greek yogurt thinned with water (2:1), stirred in off the heat."
+    },
+    {
+      "id": "sub-coco-milk",
+      "householdId": null,
+      "ingredientId": "coconut-milk",
+      "recipeId": null,
+      "source": "seed",
+      "uses": [{ "ingredient_id": "milk", "ratio": 1 }],
+      "note": "Simmer milk with coconut."
+    },
+    {
+      "id": "sub-lime",
+      "householdId": null,
+      "ingredientId": "dried-lime",
+      "recipeId": null,
+      "source": "seed",
+      "uses": [{ "ingredient_id": "lime", "ratio": 1 }],
+      "note": "Use the juice of 1 lime, added at the end."
+    },
+    {
+      "id": "sub-other-recipe",
+      "householdId": "hh",
+      "ingredientId": "tomato-paste",
+      "recipeId": "someone-else",
+      "source": "llm",
+      "uses": [{ "ingredient_id": "rice", "ratio": 1 }],
+      "note": "Not for these recipes."
+    }
+  ],
+  "recipes": [
+    {
+      "id": "curry",
+      "title": "Chicken curry",
+      "saved": true,
+      "cookedCount": 3,
+      "lastCookedAt": "2026-11-01T18:00:00Z",
+      "lines": [
+        { "name": "chicken", "ingredient_id": "chicken" },
+        { "name": "coconut milk", "ingredient_id": "coconut-milk" },
+        { "name": "cilantro", "ingredient_id": "cilantro" },
+        { "name": "basmati rice", "ingredient_id": "basmati-rice" },
+        { "name": "onion", "ingredient_id": "onion" },
+        { "name": "salt", "ingredient_id": "salt", "staple": true },
+        { "name": "fresh chili", "optional": true }
+      ]
+    },
+    {
+      "id": "gheymeh",
+      "title": "Khoresh gheymeh",
+      "saved": true,
+      "lines": [
+        { "name": "dried limes", "ingredient_id": "dried-lime" },
+        { "name": "tomato paste", "ingredient_id": "tomato-paste" },
+        { "name": "onion", "ingredient_id": "onion" }
+      ]
+    },
+    {
+      "id": "yogurt-rice",
+      "title": "Yogurt rice",
+      "saved": true,
+      "cookedCount": 0,
+      "lastCookedAt": "2026-11-20T18:00:00Z",
+      "lines": [
+        { "name": "greek yogurt", "ingredient_id": "greek-yogurt" },
+        { "name": "rice", "ingredient_id": "rice" },
+        { "name": "water", "ingredient_id": "water" }
+      ]
+    },
+    {
+      "id": "rice-yogurt",
+      "title": "Rice and yogurt",
+      "saved": true,
+      "lines": [
+        { "name": "yogurt", "ingredient_id": "yogurt" },
+        { "name": "rice", "ingredient_id": "rice" }
+      ]
+    },
+    {
+      "id": "skewers",
+      "title": "Thigh skewers",
+      "saved": false,
+      "sourceKind": "idea",
+      "ideaExpiresAt": "2026-12-04T18:00:00Z",
+      "lines": [
+        { "name": "chicken thighs", "ingredient_id": "chicken-thigh" },
+        { "name": "lime", "ingredient_id": "lime" }
+      ]
+    },
+    {
+      "id": "old-idea",
+      "title": "Old idea",
+      "saved": false,
+      "sourceKind": "idea",
+      "ideaExpiresAt": "2026-11-26T18:00:00Z",
+      "lines": [{ "name": "chicken thighs", "ingredient_id": "chicken-thigh" }]
+    },
+    {
+      "id": "imported",
+      "title": "Unsaved import",
+      "saved": false,
+      "sourceKind": "url",
+      "lines": [{ "name": "chicken thighs", "ingredient_id": "chicken-thigh" }]
+    }
+  ],
+  "expect": {
+    "order": ["skewers", "curry", "rice-yogurt", "yogurt-rice", "gheymeh"],
+    "cookTonight": "skewers",
+    "recipes": {
+      "skewers": {
+        "have": 2,
+        "sub": 0,
+        "missing": 0,
+        "required": 2,
+        "soon": ["Chicken thighs", "Limes"],
+        "score": 1.65
+      },
+      "curry": {
+        "have": 3,
+        "sub": 1,
+        "missing": 1,
+        "required": 5,
+        "soon": ["Chicken thighs", "Cilantro"],
+        "firstSub": "sub-coco",
+        "missingLines": ["onion"],
+        "score": 1.4757
+      },
+      "rice-yogurt": { "have": 2, "sub": 0, "missing": 0, "required": 2, "soon": [], "score": 1 },
+      "yogurt-rice": { "have": 2, "sub": 0, "missing": 0, "required": 2, "soon": [], "score": 1 },
+      "gheymeh": {
+        "have": 0,
+        "sub": 1,
+        "missing": 2,
+        "required": 3,
+        "soon": ["Limes"],
+        "firstSub": "sub-lime",
+        "missingLines": ["tomato paste", "onion"],
+        "score": 0.23
+      }
+    }
+  }
+}
