@@ -618,6 +618,9 @@ func (e *Enricher) applyOne(ctx context.Context, p pending, ans enrichItem) (app
 			WHERE id = $1`, p.id, v.ingredient, v.extra, conf, nilUUID(v.category), nullIfEmpty(ans.Icon), newBrand, v.shelf); err != nil {
 			return err
 		}
+		if err := FillBuyUnits(ctx, tx, p.id); err != nil {
+			return err
+		}
 		actx := reqctx.With(ctx, &reqctx.Info{HouseholdID: p.household})
 		if err := audit.Record(actx, tx, "catalog.enrich.apply", audit.Target{Type: "product", ID: p.id.String()},
 			map[string]any{"ingredient_id": oldIngredient},

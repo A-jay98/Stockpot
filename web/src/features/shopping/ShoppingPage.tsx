@@ -1,11 +1,12 @@
-import { Check, Link2, ListPlus, PackageCheck } from 'lucide-react'
+import { Check, Link2, ListPlus, PackageCheck, Plus, Trash2, Undo2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { v7 as uuidv7 } from 'uuid'
 import { Page } from '../../app/Page'
 import { dispatch } from '../../offline/outbox'
-import type { Product, ProductStat } from '../../offline/replica'
+import type { Product, ProductStat, Store } from '../../offline/replica'
 import { Button, cn, Segmented, Sheet, SheetContent, toast } from '../../ui'
 import { FoodIcon } from '../../ui/food-icons'
+import { SwipeRow } from '../../ui/swipe-row'
 import {
   useCategories,
   useLocations,
@@ -16,12 +17,13 @@ import {
 import { foodIconFor, useIconLookup } from '../catalog/icons'
 import { type MatchState, matchState, matchWorthShowing } from '../catalog/match'
 import { type PickedItem, ProductPicker } from '../catalog/ProductPicker'
-import { formatQty, guessList, usualPick } from '../catalog/suggest'
+import { guessList, isCountUnit, listQty, usualPick } from '../catalog/suggest'
 import { recipeReason, useRecipeTitles } from '../recipes/hooks'
 import { ManageList } from '../settings/ManageList'
+import { StoreBadge, StoreChip } from '../stores/StoreChip'
 import { useAllShoppingItems, useShoppingItems, useShoppingLists, useStockItems } from './hooks'
 import { ItemSheet } from './ItemSheet'
-import { groupRows, productNamed, productPick, type Row, toRows } from './items'
+import { buyUnit, groupRows, productNamed, productPick, type Row, toRows } from './items'
 import { PutAwaySheet } from './PutAwaySheet'
 
 export function ShoppingPage() {
@@ -43,6 +45,7 @@ export function ShoppingPage() {
   const [editing, setEditing] = useState<Row | null>(null)
   const [putAway, setPutAway] = useState(false)
   const [managing, setManaging] = useState(false)
+  const [swiped, setSwiped] = useState<string | null>(null)
 
   const icons = useIconLookup()
   const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products])
@@ -51,6 +54,7 @@ export function ShoppingPage() {
     for (const s of stats) m.set(s.productId, [...(m.get(s.productId) ?? []), s])
     return m
   }, [stats])
+  const storeById = useMemo(() => new Map(stores.map((s) => [s.id, s])), [stores])
   const rows = useMemo(() => toRows(items, productById), [items, productById])
   const inStore = (r: Row) =>
     !storeFilter || r.storeIds.length === 0 || r.storeIds.includes(storeFilter)
@@ -92,6 +96,11 @@ export function ShoppingPage() {
         categoryId: p.categoryId ?? usual.categoryId,
       }
     }
+    // No unit yet: how it's usually bought ("salt" is a bag), one of them unless a number was typed.
+    if (!p.unit) {
+      const unit = buyUnit(p.ingredientId ?? product?.ingredientId, icons.ingredients)
+      if (unit) p = { ...p, unit, qty: p.qty ?? (isCountUnit(unit) ? '1' : undefined) }
+    }
     const dupe = items.find(
       (i) =>
         !i.checkedAt &&
@@ -131,6 +140,54 @@ export function ShoppingPage() {
           ...(storeFilter ? { storeId: storeFilter } : {}),
           ...productPick(r, products, uuidv7),
         }))
+
+  // Swipe left: one more of it (packages and pieces only), or remove it with an undo.
+  const countable = (r: Row) => isCountUnit(r.unit ?? 'ea')
+  const bump = (r: Row) =>
+    void dispatch('shopping.item.update', {
+      id: r.id,
+      qty: String(Math.round(Number(r.qty) || 1) + 1),
+      ...(r.unit ? {} : { unit: 'ea' }),
+    })
+  const remove = (r: Row) => {
+    void dispatch('shopping.item.delete', { id: r.id })
+    toast({
+      title: `Removed ${r.title}`,
+      tone: 'info',
+      action: {
+        label: 'Undo',
+        onClick: () =>
+          void dispatch('shopping.item.add', {
+            id: uuidv7(),
+            listId: r.listId,
+            text: r.text || r.title,
+            ...(r.productId ? { productId: r.productId } : {}),
+            qty: r.qty,
+            unit: r.unit,
+            sort: r.sort,
+            ...(r.recipeId ? { recipeId: r.recipeId } : {}),
+            ...(r.categoryId ? { categoryId: r.categoryId } : {}),
+            storeIds: r.storeIds,
+            ...(r.note ? { note: r.note } : {}),
+          }),
+      },
+    })
+  }
+
+  const amount = (r: Row) => {
+    const a = listQty(r.qty, r.unit)
+    if (!a.times && !a.unit) return null
+    return (
+      <span className="flex shrink-0 items-baseline gap-1 tabular-nums" data-testid="amount">
+        {a.times && <b className="text-[15px]">{a.times}</b>}
+        {a.unit && (
+          <span className={cn(a.times ? 't-body-sm text-ink-muted' : 'font-semibold')}>
+            {a.unit}
+          </span>
+        )}
+      </span>
+    )
+  }
 
   // Items added before every item had a product fall back to the product their text names.
   const iconFor = (r: Row) => {
@@ -186,51 +243,97 @@ export function ShoppingPage() {
   }
 
   const row = (r: Row, done = false) => (
-    <li key={r.id} className={cn('flex flex-col px-3 py-2.5', done && 'opacity-70')}>
-      <div className="flex items-center gap-3">
-        {/* biome-ignore lint/a11y/useSemanticElements: a styled button; a native checkbox can't take the design */}
-        <button
-          type="button"
-          role="checkbox"
-          aria-checked={done}
-          aria-label={`${done ? 'Uncheck' : 'Check'} ${r.title}`}
-          onClick={() => toggle(r)}
-          className={cn(
-            'grid size-[26px] shrink-0 place-items-center rounded-[8px] border-2 border-border bg-surface p-0 text-on-brand',
-            done && 'border-brand bg-brand',
-          )}
-        >
-          {done && <Check aria-hidden className="size-4" strokeWidth={3} />}
-        </button>
-        <button
-          type="button"
-          onClick={() => setEditing(r)}
-          className="flex min-w-0 flex-1 items-center gap-3 border-0 bg-transparent p-0 text-left text-ink"
-        >
-          <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-surface-2">
-            <FoodIcon k={iconFor(r)} size={20} />
-          </span>
-          <span className="flex min-w-0 flex-1 flex-col">
-            <span className={cn('truncate font-semibold', done && 'line-through text-ink-muted')}>
-              {r.brand ? `${r.title} · ${r.brand}` : r.title}
-            </span>
-            {(r.storeIds.length > 0 || r.note || r.recipeId) && (
-              <span className="t-body-sm truncate text-ink-muted">
-                {[
-                  ...r.storeIds.map((id) => stores.find((s) => s.id === id)?.name),
-                  r.note,
-                  recipeReason(r.recipeId, recipeTitles),
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
+    <li key={r.id}>
+      <SwipeRow
+        open={swiped === r.id}
+        onOpenChange={(o) => setSwiped(o ? r.id : null)}
+        start={{
+          label: done ? 'Back to list' : 'In cart',
+          icon: done ? <Undo2 aria-hidden /> : <Check aria-hidden />,
+          tone: 'bg-brand text-on-brand',
+          onAction: () => toggle(r),
+        }}
+        end={
+          done || !countable(r)
+            ? [
+                {
+                  label: 'Remove',
+                  icon: <Trash2 aria-hidden />,
+                  tone: 'bg-expired text-on-brand',
+                  onAction: () => remove(r),
+                },
+              ]
+            : [
+                {
+                  label: 'One more',
+                  icon: <Plus aria-hidden />,
+                  tone: 'bg-surface-2 text-ink',
+                  onAction: () => bump(r),
+                },
+                {
+                  label: 'Remove',
+                  icon: <Trash2 aria-hidden />,
+                  tone: 'bg-expired text-on-brand',
+                  onAction: () => remove(r),
+                },
+              ]
+        }
+      >
+        <div className={cn('flex flex-col px-3 py-2.5', done && 'opacity-70')}>
+          <div className="flex items-center gap-3">
+            {/* biome-ignore lint/a11y/useSemanticElements: a styled button; a native checkbox can't take the design */}
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={done}
+              aria-label={`${done ? 'Uncheck' : 'Check'} ${r.title}`}
+              onClick={() => toggle(r)}
+              className={cn(
+                'grid size-[26px] shrink-0 place-items-center rounded-[8px] border-2 border-border bg-surface p-0 text-on-brand',
+                done && 'border-brand bg-brand',
+              )}
+            >
+              {done && <Check aria-hidden className="size-4" strokeWidth={3} />}
+            </button>
+            <button
+              type="button"
+              onClick={() => setEditing(r)}
+              className="flex min-w-0 flex-1 items-center gap-3 border-0 bg-transparent p-0 text-left text-ink"
+            >
+              <span className="grid size-9 shrink-0 place-items-center rounded-[10px] bg-surface-2">
+                <FoodIcon k={iconFor(r)} size={20} />
               </span>
-            )}
-            {matchLine(r, done)}
-          </span>
-          <span className="font-semibold tabular-nums">{formatQty(r.qty, r.unit)}</span>
-        </button>
-      </div>
-      {confirmBar(r, done)}
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span
+                  className={cn('truncate font-semibold', done && 'line-through text-ink-muted')}
+                >
+                  {r.brand ? `${r.title} · ${r.brand}` : r.title}
+                </span>
+                {(r.storeIds.length > 0 || r.note || r.recipeId) && (
+                  <span className="t-body-sm flex min-w-0 items-center gap-1 text-ink-muted">
+                    {r.storeIds.map((id) => {
+                      const s = storeById.get(id)
+                      return s && <StoreBadge key={id} store={s} size={16} />
+                    })}
+                    <span className="truncate">
+                      {[
+                        ...r.storeIds.map((id) => storeById.get(id)?.name),
+                        r.note,
+                        recipeReason(r.recipeId, recipeTitles),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </span>
+                  </span>
+                )}
+                {matchLine(r, done)}
+              </span>
+              {amount(r)}
+            </button>
+          </div>
+          {confirmBar(r, done)}
+        </div>
+      </SwipeRow>
     </li>
   )
 
@@ -286,19 +389,24 @@ export function ShoppingPage() {
       />
       {stores.length > 0 && (
         <fieldset className="m-0 flex flex-wrap gap-1.5 border-0 p-0" aria-label="Store filter">
-          {[{ id: null, name: 'All stores' }, ...stores].map((s) => (
-            <button
-              key={s.id ?? 'all'}
-              type="button"
-              aria-pressed={storeFilter === s.id}
+          <button
+            type="button"
+            aria-pressed={storeFilter === null}
+            onClick={() => setStoreFilter(null)}
+            className={cn(
+              'rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] font-semibold text-ink-muted',
+              storeFilter === null && 'border-brand bg-brand-soft text-brand',
+            )}
+          >
+            All stores
+          </button>
+          {stores.map((s) => (
+            <StoreChip
+              key={s.id}
+              store={s}
+              pressed={storeFilter === s.id}
               onClick={() => setStoreFilter(s.id)}
-              className={cn(
-                'rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] font-semibold text-ink-muted',
-                storeFilter === s.id && 'border-brand bg-brand-soft text-brand',
-              )}
-            >
-              {s.name}
-            </button>
+            />
           ))}
         </fieldset>
       )}
@@ -321,8 +429,13 @@ export function ShoppingPage() {
       )}
       {groups.map((g) => (
         <section key={g.key} className="flex flex-col gap-1.5">
-          <h3 className="t-label m-0 px-0.5 tracking-wide text-ink-muted uppercase">{g.title}</h3>
-          <ul className="m-0 list-none rounded-lg bg-surface p-0 py-1 shadow-card [&>li+li]:border-t [&>li+li]:border-border">
+          <h3 className="t-label m-0 flex items-center gap-1.5 px-0.5 tracking-wide text-ink-muted uppercase">
+            {by === 'store' && storeById.get(g.key) && (
+              <StoreBadge store={storeById.get(g.key) as Store} size={18} />
+            )}
+            {g.title}
+          </h3>
+          <ul className="m-0 list-none overflow-hidden rounded-lg bg-surface p-0 py-1 shadow-card [&>li+li]:border-t [&>li+li]:border-border">
             {g.rows.map((r) => row(r))}
           </ul>
         </section>
@@ -330,7 +443,7 @@ export function ShoppingPage() {
       {cart.length > 0 && (
         <section className="flex flex-col gap-1.5">
           <h3 className="t-label m-0 px-0.5 tracking-wide text-ink-muted uppercase">In cart</h3>
-          <ul className="m-0 list-none rounded-lg bg-surface p-0 py-1 shadow-card [&>li+li]:border-t [&>li+li]:border-border">
+          <ul className="m-0 list-none overflow-hidden rounded-lg bg-surface p-0 py-1 shadow-card [&>li+li]:border-t [&>li+li]:border-border">
             {cart.map((r) => row(r, true))}
           </ul>
         </section>

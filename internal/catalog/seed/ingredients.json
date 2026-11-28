@@ -339,7 +339,7 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "150 g"
   }
@@ -360,7 +360,7 @@
    "fridge": 5,
    "freezer": 300
   },
-  "default_unit": "g",
+  "default_unit": "box",
   "conversions": {
    "cup": "150 g",
    "ea": "12 g"
@@ -382,7 +382,7 @@
    "fridge": 10,
    "freezer": 300
   },
-  "default_unit": "g",
+  "default_unit": "box",
   "conversions": {
    "cup": "150 g"
   }
@@ -402,7 +402,7 @@
    "fridge": 4,
    "freezer": 300
   },
-  "default_unit": "g",
+  "default_unit": "box",
   "conversions": {
    "cup": "125 g"
   }
@@ -422,7 +422,7 @@
    "fridge": 5,
    "freezer": 300
   },
-  "default_unit": "g"
+  "default_unit": "box"
  },
  {
   "slug": "cranberry",
@@ -438,7 +438,7 @@
    "fridge": 30,
    "freezer": 365
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "berries",
@@ -455,7 +455,7 @@
    "fridge": 5,
    "freezer": 300
   },
-  "default_unit": "g"
+  "default_unit": "box"
  },
  {
   "slug": "cherry",
@@ -472,7 +472,7 @@
    "fridge": 7,
    "freezer": 300
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "peach",
@@ -728,7 +728,7 @@
    "fridge": 60,
    "pantry": 365
   },
-  "default_unit": "g",
+  "default_unit": "box",
   "conversions": {
    "ea": "8 g",
    "cup": "150 g"
@@ -791,7 +791,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "persimmon",
@@ -853,7 +853,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g"
+  "default_unit": "bunch"
  },
  {
   "slug": "raisins",
@@ -869,7 +869,7 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "150 g"
   }
@@ -885,7 +885,7 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "vegetable",
@@ -934,7 +934,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g",
+  "default_unit": "box",
   "conversions": {
    "ea": "15 g",
    "cup": "150 g"
@@ -1017,7 +1017,7 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "ea": "40 g"
   }
@@ -1156,7 +1156,7 @@
    "fridge": 21,
    "freezer": 180
   },
-  "default_unit": "g",
+  "default_unit": "ea",
   "conversions": {
    "tbsp": "6 g",
    "cup": "100 g"
@@ -1195,7 +1195,7 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "celery",
@@ -1558,7 +1558,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "kale",
@@ -1802,7 +1802,7 @@
    "fridge": 7,
    "freezer": 300
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "110 g"
   }
@@ -1823,7 +1823,7 @@
    "fridge": 7,
    "freezer": 300
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "peas",
@@ -1841,7 +1841,7 @@
    "fridge": 5,
    "freezer": 300
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "145 g"
   }
@@ -1884,7 +1884,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "ea": "18 g",
    "cup": "70 g"
@@ -1904,7 +1904,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "cremini-mushroom",
@@ -1921,7 +1921,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "portobello",
@@ -1957,7 +1957,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "radish",
@@ -2085,7 +2085,7 @@
    "fridge": 5,
    "freezer": 300
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "avocado-oil",
@@ -2653,7 +2653,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "ml",
+  "default_unit": "carton",
   "conversions": {
    "cup": "240 g"
   }
@@ -2671,7 +2671,7 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "g",
+  "default_unit": "tub",
   "conversions": {
    "cup": "240 g",
    "tbsp": "15 g"
@@ -2692,7 +2692,7 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "g",
+  "default_unit": "tub",
   "conversions": {
    "cup": "230 g",
    "tbsp": "15 g"
@@ -2715,7 +2715,7 @@
    "fridge": 60,
    "freezer": 270
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "cup": "227 g",
    "tbsp": "14 g"
@@ -2735,7 +2735,7 @@
   "shelf_life": {
    "fridge": 60
   },
-  "default_unit": "g"
+  "default_unit": "tub"
  },
  {
   "slug": "yogurt",
@@ -2754,7 +2754,7 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "g",
+  "default_unit": "tub",
   "conversions": {
    "cup": "245 g",
    "tbsp": "15 g"
@@ -2777,7 +2777,7 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "g",
+  "default_unit": "tub",
   "conversions": {
    "cup": "250 g"
   }
@@ -2796,7 +2796,7 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "g"
+  "default_unit": "tub"
  },
  {
   "slug": "kefir",
@@ -2809,7 +2809,7 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "ml"
+  "default_unit": "bottle"
  },
  {
   "slug": "doogh",
@@ -2825,7 +2825,7 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "ml"
+  "default_unit": "bottle"
  },
  {
   "slug": "cheese",
@@ -2842,7 +2842,7 @@
   "shelf_life": {
    "fridge": 30
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "cup": "110 g"
   }
@@ -2865,7 +2865,7 @@
    "fridge": 60,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "mozzarella",
@@ -2884,7 +2884,7 @@
    "fridge": 21,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "parmesan",
@@ -2903,7 +2903,7 @@
    "fridge": 90,
    "freezer": 180
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "cup": "90 g",
    "tbsp": "5 g"
@@ -2926,7 +2926,7 @@
   "shelf_life": {
    "fridge": 30
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "cup": "150 g"
   }
@@ -2945,7 +2945,7 @@
   "shelf_life": {
    "fridge": 45
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "gouda",
@@ -2960,7 +2960,7 @@
   "shelf_life": {
    "fridge": 45
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "brie",
@@ -2975,7 +2975,7 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "cottage-cheese",
@@ -2990,7 +2990,7 @@
   "shelf_life": {
    "fridge": 10
   },
-  "default_unit": "g",
+  "default_unit": "tub",
   "conversions": {
    "cup": "225 g"
   }
@@ -3008,7 +3008,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g",
+  "default_unit": "tub",
   "conversions": {
    "cup": "250 g"
   }
@@ -3027,7 +3027,7 @@
   "shelf_life": {
    "fridge": 21
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "halloumi",
@@ -3043,7 +3043,7 @@
   "shelf_life": {
    "fridge": 60
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "cheese-slices",
@@ -3119,7 +3119,7 @@
   "shelf_life": {
    "fridge": 10
   },
-  "default_unit": "ml"
+  "default_unit": "carton"
  },
  {
   "slug": "whipped-cream",
@@ -3135,7 +3135,7 @@
   "shelf_life": {
    "fridge": 14
   },
-  "default_unit": "g"
+  "default_unit": "can"
  },
  {
   "slug": "meat",
@@ -3160,7 +3160,7 @@
    "fridge": 2,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "chicken",
@@ -3179,7 +3179,7 @@
    "fridge": 2,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "chicken-breast",
@@ -3197,7 +3197,7 @@
    "fridge": 2,
    "freezer": 270
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "ea": "200 g"
   }
@@ -3217,7 +3217,7 @@
    "fridge": 2,
    "freezer": 270
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "ea": "110 g"
   }
@@ -3238,7 +3238,7 @@
    "fridge": 2,
    "freezer": 270
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "ea": "110 g"
   }
@@ -3259,7 +3259,7 @@
    "fridge": 2,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "ground-chicken",
@@ -3275,7 +3275,7 @@
    "fridge": 2,
    "freezer": 120
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "turkey",
@@ -3291,7 +3291,7 @@
    "fridge": 2,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "ground-turkey",
@@ -3307,7 +3307,7 @@
    "fridge": 2,
    "freezer": 120
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "beef",
@@ -3323,7 +3323,7 @@
    "fridge": 3,
    "freezer": 365
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "ground-beef",
@@ -3345,7 +3345,7 @@
    "fridge": 2,
    "freezer": 120
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "steak",
@@ -3368,7 +3368,7 @@
    "fridge": 3,
    "freezer": 365
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "beef-roast",
@@ -3387,7 +3387,7 @@
    "fridge": 4,
    "freezer": 365
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "stewing-beef",
@@ -3405,7 +3405,7 @@
    "fridge": 3,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "ribs",
@@ -3424,7 +3424,7 @@
    "fridge": 4,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "pork",
@@ -3440,7 +3440,7 @@
    "fridge": 3,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "pork-chop",
@@ -3454,7 +3454,7 @@
    "fridge": 3,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "pork-tenderloin",
@@ -3470,7 +3470,7 @@
    "fridge": 3,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "ground-pork",
@@ -3486,7 +3486,7 @@
    "fridge": 2,
    "freezer": 120
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "bacon",
@@ -3527,7 +3527,7 @@
    "fridge": 7,
    "freezer": 60
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "sausage",
@@ -3586,7 +3586,7 @@
    "fridge": 3,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "ground-lamb",
@@ -3602,7 +3602,7 @@
    "fridge": 2,
    "freezer": 120
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "lamb-shank",
@@ -3619,7 +3619,7 @@
    "fridge": 3,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "veal",
@@ -3633,7 +3633,7 @@
    "fridge": 3,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "duck",
@@ -3649,7 +3649,7 @@
    "fridge": 3,
    "freezer": 270
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "liver",
@@ -3667,7 +3667,7 @@
    "fridge": 2,
    "freezer": 120
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "seafood",
@@ -3681,7 +3681,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "fish",
@@ -3699,7 +3699,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "salmon",
@@ -3718,7 +3718,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "tuna",
@@ -3735,7 +3735,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "cod",
@@ -3751,7 +3751,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "tilapia",
@@ -3767,7 +3767,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "trout",
@@ -3784,7 +3784,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "halibut",
@@ -3798,7 +3798,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "sea-bass",
@@ -3816,7 +3816,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "shrimp",
@@ -3836,7 +3836,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "ea": "15 g"
   }
@@ -3855,7 +3855,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "crab",
@@ -3873,7 +3873,7 @@
    "fridge": 3,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "ea"
  },
  {
   "slug": "lobster",
@@ -3904,7 +3904,7 @@
   "shelf_life": {
    "fridge": 2
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "oysters",
@@ -3935,7 +3935,7 @@
    "fridge": 2,
    "freezer": 180
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "smoked-salmon",
@@ -3951,7 +3951,7 @@
    "fridge": 14,
    "freezer": 60
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "canned-tuna",
@@ -4010,7 +4010,7 @@
    "fridge": 7,
    "freezer": 60
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "deli",
@@ -4038,7 +4038,7 @@
   "shelf_life": {
    "fridge": 10
   },
-  "default_unit": "g"
+  "default_unit": "tub"
  },
  {
   "slug": "tzatziki",
@@ -4054,7 +4054,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g"
+  "default_unit": "tub"
  },
  {
   "slug": "guacamole",
@@ -4069,7 +4069,7 @@
   "shelf_life": {
    "fridge": 5
   },
-  "default_unit": "g"
+  "default_unit": "tub"
  },
  {
   "slug": "salsa",
@@ -4105,7 +4105,7 @@
   "shelf_life": {
    "fridge": 7
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "pack": "450 g",
    "cup": "250 g"
@@ -4122,7 +4122,7 @@
   "shelf_life": {
    "fridge": 10
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "rotisserie-chicken",
@@ -4449,7 +4449,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "cup": "100 g"
   }
@@ -4470,7 +4470,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "penne",
@@ -4485,7 +4485,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "macaroni",
@@ -4503,7 +4503,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g"
+  "default_unit": "pack"
  },
  {
   "slug": "egg-noodles",
@@ -4553,7 +4553,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "rice",
@@ -4572,7 +4572,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "kg",
+  "default_unit": "bag",
   "conversions": {
    "cup": "185 g"
   }
@@ -4593,7 +4593,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "kg",
+  "default_unit": "bag",
   "conversions": {
    "cup": "185 g"
   }
@@ -4609,7 +4609,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "kg",
+  "default_unit": "bag",
   "conversions": {
    "cup": "190 g"
   }
@@ -4629,7 +4629,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "kg"
+  "default_unit": "bag"
  },
  {
   "slug": "quinoa",
@@ -4646,7 +4646,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "170 g"
   }
@@ -4666,7 +4666,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "175 g"
   }
@@ -4685,7 +4685,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "140 g"
   }
@@ -4708,7 +4708,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "90 g"
   }
@@ -4771,7 +4771,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "190 g"
   }
@@ -4789,7 +4789,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "chickpeas",
@@ -4892,7 +4892,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "200 g"
   }
@@ -5048,7 +5048,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "l",
+  "default_unit": "carton",
   "conversions": {
    "cup": "240 g"
   }
@@ -5213,7 +5213,7 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "140 g"
   }
@@ -5234,7 +5234,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "145 g"
   }
@@ -5254,7 +5254,7 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "cup": "115 g"
   }
@@ -5273,7 +5273,7 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "peanuts",
@@ -5290,7 +5290,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "pistachios",
@@ -5307,7 +5307,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "pecans",
@@ -5322,7 +5322,7 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "hazelnuts",
@@ -5338,7 +5338,7 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "pine-nuts",
@@ -5354,7 +5354,7 @@
   "shelf_life": {
    "pantry": 180
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "tbsp": "9 g",
    "cup": "135 g"
@@ -5374,7 +5374,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "seeds",
@@ -5387,7 +5387,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "tbsp": "9 g"
   }
@@ -5405,7 +5405,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "flax-seeds",
@@ -5422,7 +5422,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "sesame-seeds",
@@ -5438,7 +5438,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "pumpkin-seeds",
@@ -5454,7 +5454,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "flour",
@@ -5473,7 +5473,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "kg",
+  "default_unit": "bag",
   "conversions": {
    "cup": "125 g",
    "tbsp": "8 g"
@@ -5492,7 +5492,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "kg"
+  "default_unit": "bag"
  },
  {
   "slug": "sugar",
@@ -5510,7 +5510,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "kg",
+  "default_unit": "bag",
   "conversions": {
    "cup": "200 g",
    "tbsp": "12.5 g"
@@ -5529,7 +5529,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "kg",
+  "default_unit": "bag",
   "conversions": {
    "cup": "220 g"
   }
@@ -5548,7 +5548,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "kg",
+  "default_unit": "bag",
   "conversions": {
    "cup": "120 g"
   }
@@ -5567,7 +5567,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g",
+  "default_unit": "box",
   "conversions": {
    "tsp": "4 g"
   }
@@ -5588,7 +5588,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g",
+  "default_unit": "box",
   "conversions": {
    "tsp": "5 g"
   }
@@ -5609,7 +5609,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "tsp": "3 g"
   }
@@ -5629,7 +5629,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g",
+  "default_unit": "box",
   "conversions": {
    "tbsp": "8 g",
    "cup": "128 g"
@@ -5650,7 +5650,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "ml"
+  "default_unit": "bottle"
  },
  {
   "slug": "cocoa",
@@ -5667,7 +5667,7 @@
   "shelf_life": {
    "pantry": 730
   },
-  "default_unit": "g",
+  "default_unit": "box",
   "conversions": {
    "tbsp": "5 g",
    "cup": "85 g"
@@ -5724,7 +5724,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g",
+  "default_unit": "box",
   "conversions": {
    "cup": "110 g"
   }
@@ -5743,7 +5743,7 @@
   "shelf_life": {
    "pantry": 365
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "spice",
@@ -5756,7 +5756,7 @@
    "seasoning"
   ],
   "shelf_life": {},
-  "default_unit": "g",
+  "default_unit": "jar",
   "conversions": {
    "tsp": "2.5 g",
    "tbsp": "7.5 g"
@@ -5778,7 +5778,7 @@
   "shelf_life": {
    "pantry": 1825
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "tsp": "6 g"
   }
@@ -5800,7 +5800,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g",
+  "default_unit": "jar",
   "conversions": {
    "tsp": "2.3 g"
   }
@@ -5820,7 +5820,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g",
+  "default_unit": "jar",
   "conversions": {
    "tsp": "2 g"
   }
@@ -5839,7 +5839,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g",
+  "default_unit": "jar",
   "conversions": {
    "tsp": "2.3 g"
   }
@@ -5859,7 +5859,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g",
+  "default_unit": "jar",
   "conversions": {
    "tsp": "3 g"
   }
@@ -5880,7 +5880,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g",
+  "default_unit": "jar",
   "conversions": {
    "tsp": "2.6 g"
   }
@@ -5902,7 +5902,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "jar"
  },
  {
   "slug": "garlic-powder",
@@ -5918,7 +5918,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "jar"
  },
  {
   "slug": "onion-powder",
@@ -5931,7 +5931,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "jar"
  },
  {
   "slug": "oregano-dried",
@@ -5946,7 +5946,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "jar"
  },
  {
   "slug": "italian-seasoning",
@@ -5962,7 +5962,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "jar"
  },
  {
   "slug": "curry-powder",
@@ -5981,7 +5981,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "jar"
  },
  {
   "slug": "saffron",
@@ -5997,7 +5997,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g",
+  "default_unit": "pack",
   "conversions": {
    "tsp": "0.7 g"
   }
@@ -6016,7 +6016,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "cardamom",
@@ -6033,7 +6033,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "jar"
  },
  {
   "slug": "nutmeg",
@@ -6049,7 +6049,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "jar"
  },
  {
   "slug": "ginger-powder",
@@ -6064,7 +6064,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "jar"
  },
  {
   "slug": "bay-leaves",
@@ -6081,7 +6081,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "ea": "0.2 g"
   }
@@ -6097,7 +6097,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "jar"
  },
  {
   "slug": "dried-mint",
@@ -6112,7 +6112,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g"
+  "default_unit": "bag"
  },
  {
   "slug": "dried-lime",
@@ -6128,7 +6128,7 @@
   "shelf_life": {
    "pantry": 1095
   },
-  "default_unit": "g",
+  "default_unit": "bag",
   "conversions": {
    "ea": "5 g"
   }
