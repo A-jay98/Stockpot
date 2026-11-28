@@ -224,7 +224,7 @@ func TestReviewAppliesRejectsAndEscalates(t *testing.T) {
 	if e.status(t, rf) != "applied" {
 		t.Fatal("not applied")
 	}
-	if err := e.svc.Resolve(t.Context(), rf, reports.ActionApply, "nope", ""); !errors.Is(err, reports.ErrBadUnit) {
+	if err := e.svc.Resolve(t.Context(), ro, reports.ActionApply, "nope", ""); !errors.Is(err, reports.ErrBadUnit) {
 		t.Fatalf("bad unit: %v", err)
 	}
 	if err := e.svc.Resolve(t.Context(), ro, reports.ActionReopen, "", ""); err != nil || e.status(t, ro) != "open" {
@@ -300,5 +300,95 @@ func TestAdminSetDefaultUnit(t *testing.T) {
 	}
 	if u := e.unitOf(t, "ingredient", "id = $1", id); u != nil {
 		t.Fatalf("not cleared: %v", *u)
+	}
+}
+
+func (e *env) otherHousehold(t *testing.T) context.Context {
+	t.Helper()
+	var hh uuid.UUID
+	if err := e.pool.QueryRow(t.Context(), `INSERT INTO household (id, name) VALUES (gen_random_uuid(), 'Other') RETURNING id`).Scan(&hh); err != nil {
+		t.Fatal(err)
+	}
+	user := uuid.New()
+	if _, err := e.pool.Exec(t.Context(), `INSERT INTO app_user (id, display_name, status) VALUES ($1, 'Kim', 'active')`, user); err != nil {
+		t.Fatal(err)
+	}
+	return identity.WithPrincipal(t.Context(), &identity.Principal{UserID: user, Status: identity.StatusActive, HouseholdID: hh})
+}
+
+func TestGlobalWaitsWhenHouseholdsDisagree(t *testing.T) {
+	e := newEnv(t, map[string]map[string]any{"Salt": {"verdict": "approve", "value": "bag", "confidence": 0.95}}, 1000)
+	salt, saltProd := e.item(t, "Salt", "salt", "g", nil)
+	mine := e.report(t, salt, "bag")
+	// Another household asks for a different unit for the same ingredient.
+	other := e.otherHousehold(t)
+	e.hh = identity.PrincipalFrom(other).HouseholdID // item() adds to e.hh
+	osalt, _ := e.item(t, "Salt", "salt", "g", nil)
+	if _, err := e.svc.Submit(other, reports.Input{Kind: reports.KindWrongUnit, Source: reports.SourceShoppingItem, SubjectID: osalt, Suggested: "pack"}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.svc.Review(t.Context(), true); err != nil {
+		t.Fatal(err)
+	}
+	if e.status(t, mine) != "needs_admin" {
+		t.Fatalf("status %s", e.status(t, mine))
+	}
+	if u := e.unitOf(t, "ingredient", "slug = $1 AND household_id IS NULL", "salt"); u != nil {
+		t.Fatalf("global changed despite disagreement: %s", *u)
+	}
+	// The reporting household's own product is still fixed.
+	if u := e.unitOf(t, "product", "id = $1", saltProd); u == nil || *u != "bag" {
+		t.Fatalf("product unit: %v", u)
+	}
+}
+
+func TestGlobalUntouchedWhenShownUnitWasNotTheIngredients(t *testing.T) {
+	e := newEnv(t, map[string]map[string]any{"Salt": {"verdict": "approve", "value": "pack", "confidence": 0.95}}, 1000)
+	if _, err := e.pool.Exec(t.Context(), `UPDATE ingredient SET default_unit = 'bag' WHERE slug = 'salt' AND household_id IS NULL`); err != nil {
+		t.Fatal(err)
+	}
+	salt, _ := e.item(t, "Salt", "salt", "g", nil) // the row says g; the ingredient says bag
+	id := e.report(t, salt, "")
+	if _, err := e.svc.Review(t.Context(), true); err != nil {
+		t.Fatal(err)
+	}
+	if u := e.unitOf(t, "ingredient", "slug = $1 AND household_id IS NULL", "salt"); u == nil || *u != "bag" {
+		t.Fatalf("global overwritten: %v", u)
+	}
+	if e.status(t, id) != "needs_admin" {
+		t.Fatalf("status %s", e.status(t, id))
+	}
+}
+
+func TestRejectAfterAutoApplyReverts(t *testing.T) {
+	e := newEnv(t, map[string]map[string]any{"Salt": {"verdict": "approve", "value": "bag", "confidence": 0.95}}, 1000)
+	salt, saltProd := e.item(t, "Salt", "salt", "g", nil)
+	id := e.report(t, salt, "")
+	if _, err := e.svc.Review(t.Context(), true); err != nil {
+		t.Fatal(err)
+	}
+	if e.status(t, id) != "applied" {
+		t.Fatalf("status %s", e.status(t, id))
+	}
+	if err := e.svc.Resolve(t.Context(), id, reports.ActionApply, "bag", ""); !errors.Is(err, reports.ErrBadAction) {
+		t.Fatalf("apply twice: %v", err)
+	}
+	if err := e.svc.Resolve(t.Context(), id, reports.ActionReject, "", "wrong"); err != nil {
+		t.Fatal(err)
+	}
+	if u := e.unitOf(t, "ingredient", "slug = $1 AND household_id IS NULL", "salt"); u != nil {
+		t.Fatalf("ingredient not reverted: %s", *u)
+	}
+	if u := e.unitOf(t, "product", "id = $1", saltProd); u != nil {
+		t.Fatalf("product not reverted: %s", *u)
+	}
+	var reverts int
+	_ = e.pool.QueryRow(t.Context(), `SELECT count(*) FROM audit_event WHERE action = 'catalog.default.update' AND (after->>'revert')::bool`).Scan(&reverts)
+	if reverts != 2 || e.status(t, id) != "rejected" {
+		t.Fatalf("reverts %d, status %s", reverts, e.status(t, id))
+	}
+	o, _ := e.svc.List(t.Context(), "rejected", 0)
+	if len(o.Reports) != 1 || o.Reports[0].Applied == nil || !o.Reports[0].Applied.Reverted {
+		t.Fatalf("list: %+v", o.Reports)
 	}
 }

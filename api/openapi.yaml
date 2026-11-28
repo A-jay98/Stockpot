@@ -5265,6 +5265,9 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/ReportFieldChange"
+        changesReverted:
+          type: boolean
+          description: The admin overruled the report and these changes were put back.
         resolvedBy:
           type: string
         resolvedAt:

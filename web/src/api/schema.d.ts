@@ -3358,6 +3358,8 @@ export interface components {
             /** Format: date-time */
             llmAt?: string;
             changes?: components["schemas"]["ReportFieldChange"][];
+            /** @description The admin overruled the report and these changes were put back. */
+            changesReverted?: boolean;
             resolvedBy?: string;
             /** Format: date-time */
             resolvedAt?: string;

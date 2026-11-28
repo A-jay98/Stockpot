@@ -156,7 +156,7 @@ function ReportCard({ r }: { r: AdminReport }) {
         )}
         {r.changes && r.changes.length > 0 && (
           <>
-            <dt>Changed</dt>
+            <dt>{r.changesReverted ? 'Changed (reverted)' : 'Changed'}</dt>
             <dd className="m-0">
               {r.changes.map((ch) => (
                 <div key={`${ch.target}-${ch.id}`}>

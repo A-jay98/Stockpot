@@ -84,8 +84,8 @@ func (s *Service) List(ctx context.Context, status string, limit int) (Overview,
 		limit = 100
 	}
 	q := `SELECT r.id, r.created_at, h.name, u.display_name, r.kind, r.source, r.status, r.suggested, r.note, r.context, r.attempts,
-		r.llm_verdict, r.llm_value, r.llm_reason, r.llm_confidence, r.llm_at, r.applied, r.resolved_by, r.resolved_at, r.admin_note
-		FROM problem_report r JOIN household h ON h.id = r.household_id LEFT JOIN app_user u ON u.id = r.reporter_id
+		r.llm_verdict, r.llm_value, r.llm_reason, r.llm_confidence, r.llm_at, r.applied, coalesce(ru.display_name, r.resolved_by), r.resolved_at, r.admin_note
+		FROM problem_report r JOIN household h ON h.id = r.household_id LEFT JOIN app_user u ON u.id = r.reporter_id LEFT JOIN app_user ru ON ru.id::text = r.resolved_by
 		WHERE ($1 = '' OR r.status = $1)
 		ORDER BY (r.status = 'needs_admin') DESC, r.created_at DESC LIMIT $2`
 	rows, err = s.d.Pool.Query(ctx, q, status, limit)
@@ -120,7 +120,8 @@ const (
 	ActionReopen  = "reopen"  // back to the LLM queue
 )
 
-// Resolve applies an admin decision and returns the report's new status.
+// Resolve applies an admin decision. Rejecting, dismissing or reopening a
+// report whose change was applied puts the old values back (audited).
 func (s *Service) Resolve(ctx context.Context, id uuid.UUID, action, value, note string) error {
 	note, ok := clean(note, maxNote)
 	if !ok {
@@ -134,47 +135,66 @@ func (s *Service) Resolve(ctx context.Context, id uuid.UUID, action, value, note
 	return s.tx(ctx, func(tx pgxTx) error {
 		var kind, status string
 		var hh uuid.UUID
-		err := tx.QueryRow(ctx, `SELECT kind, status, household_id FROM problem_report WHERE id = $1 FOR UPDATE`, id).Scan(&kind, &status, &hh)
+		var raw []byte
+		err := tx.QueryRow(ctx, `SELECT kind, status, household_id, applied FROM problem_report WHERE id = $1 FOR UPDATE`, id).Scan(&kind, &status, &hh, &raw)
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ErrNotFound
 		}
 		if err != nil {
 			return err
 		}
+		var prev *Change
+		if raw != nil {
+			var ch Change
+			if json.Unmarshal(raw, &ch) == nil && !ch.Reverted && len(ch.Changes) > 0 {
+				prev = &ch
+			}
+		}
 		var applied *Change
+		var reverted []FieldChange
 		next := ""
 		switch action {
 		case ActionApply:
-			if kind != KindWrongUnit {
+			if kind != KindWrongUnit || status == StatusApplied {
 				return ErrBadAction
 			}
 			if !units.Valid(value) {
 				return ErrBadUnit
 			}
-			ch, err := s.applyUnit(ctx, tx, id, value, by)
+			ch, _, err := s.applyUnit(ctx, tx, id, value, applyOpts{global: true})
 			if err != nil {
 				return err
 			}
-			applied, next = &ch, StatusApplied
-		case ActionReject:
-			next = StatusRejected
-		case ActionDismiss:
-			next = StatusDismissed
-		case ActionReopen:
-			if _, err := tx.Exec(ctx, `UPDATE problem_report SET status = 'open', attempts = 0, resolved_by = NULL, resolved_at = NULL,
-				admin_note = coalesce($2, admin_note), updated_at = now() WHERE id = $1`, id, nullIfEmpty(note)); err != nil {
-				return err
+			if prev != nil {
+				ch.Changes = append(prev.Changes, ch.Changes...)
 			}
-			return audit.Record(ctx, tx, "report.reopen", audit.Target{Type: "problem_report", ID: id.String()}, map[string]any{"status": status}, nil)
+			applied, next = &ch, StatusApplied
+		case ActionReject, ActionDismiss, ActionReopen:
+			if prev != nil {
+				if reverted, err = s.revert(ctx, tx, id, hh, *prev); err != nil {
+					return err
+				}
+				prev.Reverted = true
+				applied = prev
+			}
+			next = map[string]string{ActionReject: StatusRejected, ActionDismiss: StatusDismissed, ActionReopen: StatusOpen}[action]
 		default:
 			return ErrBadAction
 		}
-		if _, err := tx.Exec(ctx, `UPDATE problem_report SET status = $2, applied = coalesce($3, applied), resolved_by = $4, resolved_at = now(),
+		if next == StatusOpen {
+			if _, err := tx.Exec(ctx, `UPDATE problem_report SET status = 'open', attempts = 0, applied = coalesce($2, applied), resolved_by = NULL,
+				resolved_at = NULL, admin_note = coalesce($3, admin_note), updated_at = now() WHERE id = $1`, id, applied, nullIfEmpty(note)); err != nil {
+				return err
+			}
+		} else if _, err := tx.Exec(ctx, `UPDATE problem_report SET status = $2, applied = coalesce($3, applied), resolved_by = $4, resolved_at = now(),
 			admin_note = coalesce($5, admin_note), updated_at = now() WHERE id = $1`, id, next, applied, by, nullIfEmpty(note)); err != nil {
 			return err
 		}
-		return audit.Record(ctx, tx, "report."+action, audit.Target{Type: "problem_report", ID: id.String()},
-			map[string]any{"status": status}, map[string]any{"status": next, "value": value, "note": note})
+		after := map[string]any{"status": next, "value": value, "note": note}
+		if len(reverted) > 0 {
+			after["reverted"] = reverted
+		}
+		return audit.Record(ctx, tx, "report."+action, audit.Target{Type: "problem_report", ID: id.String()}, map[string]any{"status": status}, after)
 	})
 }
 

@@ -32,6 +32,12 @@ var (
 		Validate:    settings.Between(50, 100),
 		Description: "Least LLM confidence (percent) to apply or reject a report on its own; below it the report waits for the admin.",
 	})
+	SettingGlobalCooldownDays = settings.Define(settings.Def[int]{
+		Key:         "reports.global_cooldown_days",
+		Default:     14,
+		Validate:    settings.Between(0, 365),
+		Description: "Days after an automatic change to a global ingredient's default during which further reports on it wait for the admin.",
+	})
 	SettingRetentionDays = settings.Define(settings.Def[int]{
 		Key:         "retention.problem_report_days",
 		Default:     365,

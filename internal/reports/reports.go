@@ -149,6 +149,10 @@ func (s *Service) Submit(ctx context.Context, in Input) (uuid.UUID, error) {
 		return uuid.Nil, err
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
+	// Serialises this household's submits so the daily cap holds exactly.
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtextextended('problem_report:' || $1::text, 0))`, hh); err != nil {
+		return uuid.Nil, err
+	}
 	var today int
 	if err := tx.QueryRow(ctx, `SELECT count(*) FROM problem_report WHERE household_id = $1 AND created_at > now() - interval '1 day'`, hh).Scan(&today); err != nil {
 		return uuid.Nil, err

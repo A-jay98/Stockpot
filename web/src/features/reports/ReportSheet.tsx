@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api, unwrap } from '../../api/client'
+import { ApiError } from '../../api/problem'
 import type { components } from '../../api/schema'
 import { Button, cn, Field, Sheet, SheetContent, Textarea, toast } from '../../ui'
 
@@ -77,7 +78,11 @@ function Body({ onClose, source, subjectId, title, unit }: Props) {
     onError: (e) =>
       toast({
         title: 'Could not send the report',
-        description: navigator.onLine ? (e as Error).message : 'You are offline. Try again later.',
+        description: !navigator.onLine
+          ? 'You are offline. Try again later.'
+          : e instanceof ApiError && e.status === 404
+            ? 'This item has not synced yet. Try again in a moment.'
+            : (e as Error).message,
         tone: 'error',
       }),
   })

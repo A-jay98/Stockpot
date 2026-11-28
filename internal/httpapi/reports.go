@@ -130,6 +130,10 @@ func (s *Server) GetAdminReports(ctx context.Context, req GetAdminReportsRequest
 				chs = append(chs, fc)
 			}
 			ar.Changes = &chs
+			if r.Applied.Reverted {
+				rv := true
+				ar.ChangesReverted = &rv
+			}
 		}
 		out.Reports = append(out.Reports, ar)
 	}
