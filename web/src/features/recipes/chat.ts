@@ -65,7 +65,8 @@ export async function saveProposal(recipeId: string, m: ChatMessage): Promise<st
   const current = recipe?.currentVersionId
     ? await db.recipe_version.get(recipe.currentVersionId)
     : undefined
-  if (!p || !current) return undefined
+  if (!p) return undefined
+  if (!current) throw new Error('the recipe is not loaded yet')
   return dispatch('recipe.version.create', {
     recipeId,
     versionId: v7(),

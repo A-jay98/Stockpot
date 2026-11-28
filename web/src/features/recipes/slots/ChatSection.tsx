@@ -159,6 +159,7 @@ function ProposalActions({
   const online = useOnline()
   const [commandId, setCommandId] = useState<string>()
   const [savingN, setSavingN] = useState(nextN)
+  const [busy, setBusy] = useState(false) // set synchronously: a double tap queues one version
   const command = useCommandState(commandId)
   // Once the server applied the command, it has marked the message saved: fetch that state.
   useEffect(() => {
@@ -180,11 +181,15 @@ function ProposalActions({
   const stale = m.versionId !== currentVersionId
   const label = `Save as v${nextN}${stale ? ` (based on v${m.versionN})` : ''}`
   const onSave = async () => {
+    if (busy) return
+    setBusy(true)
     try {
       setSavingN(nextN)
       setCommandId(await saveProposal(recipeId, m))
     } catch {
       toast({ title: "Couldn't save the version", tone: 'error' })
+    } finally {
+      setBusy(false)
     }
   }
   return (
@@ -196,7 +201,7 @@ function ProposalActions({
         </span>
       ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" onClick={onSave}>
+        <Button size="sm" onClick={onSave} disabled={busy}>
           {label}
         </Button>
         {m.proposalState === 'pending' ? (
