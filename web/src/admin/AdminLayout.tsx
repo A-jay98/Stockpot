@@ -1,5 +1,6 @@
 import {
   ArrowLeft,
+  BookOpen,
   Cable,
   Carrot,
   Cpu,
@@ -33,6 +34,7 @@ export const adminSections: Section[] = [
   { to: '/admin/backups', label: 'Backups', icon: DatabaseBackup },
   { to: '/admin/food-rules', label: 'Food rules', icon: Timer },
   { to: '/admin/catalog', label: 'Catalog', icon: Carrot },
+  { to: '/admin/recipes', label: 'Recipes', icon: BookOpen },
   { to: '/admin/reports', label: 'Reports', icon: MessageSquareWarning },
   { to: '/admin/defaults', label: 'Defaults', icon: Ruler },
 ]

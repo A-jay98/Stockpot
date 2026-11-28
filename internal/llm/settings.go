@@ -41,6 +41,9 @@ type ProviderConfig struct {
 	// ResetTZ is the IANA zone whose midnight resets the provider's daily
 	// quota (Google: America/Los_Angeles).
 	ResetTZ string `json:"reset_tz"`
+	// TranscriptionModel, when set, offers speech-to-text through the
+	// provider's /audio/transcriptions endpoint with this model.
+	TranscriptionModel string `json:"transcription_model,omitempty"`
 	// TimeoutSeconds bounds one call; 0 means the default (60s).
 	TimeoutSeconds int `json:"timeout_seconds,omitempty"`
 }
@@ -81,6 +84,9 @@ func (c ProviderConfig) validate() error {
 	}
 	if c.Model == "" {
 		errs = append(errs, errors.New("model is required"))
+	}
+	if len(c.TranscriptionModel) > 100 || strings.ContainsAny(c.TranscriptionModel, " \t\r\n") {
+		errs = append(errs, errors.New("transcription_model must be a model id (no spaces, at most 100 characters)"))
 	}
 	if c.DailyRequestCap < 0 || c.DailyTokenCap < 0 {
 		errs = append(errs, errors.New("daily caps must be >= 0 (0 = no cap)"))
@@ -159,6 +165,8 @@ var DefaultProviders = []ProviderConfig{
 		DailyRequestCap: 900,
 		DailyTokenCap:   180000,
 		ResetTZ:         "UTC",
+		// Whisper on Groq's free tier (audio has its own provider-side limits).
+		TranscriptionModel: "whisper-large-v3-turbo",
 	},
 }
 

@@ -137,17 +137,8 @@ func (r *Router) Complete(ctx context.Context, req Request) (Response, error) {
 	}
 
 	now := r.now()
-	if capReq := SettingGlobalDailyRequestCap.Get(r.settings); capReq > 0 {
-		u, err := r.q.LLMUsageSince(ctx, startOfDay(now, usageLocation(r.settings)))
-		if err != nil {
-			return Response{}, fmt.Errorf("llm: read usage: %w", err)
-		}
-		if u.Requests >= int64(capReq) {
-			return Response{}, fmt.Errorf("%w: global daily cap of %d requests reached", ErrUnavailable, capReq)
-		}
-		if req.Priority == Background && !aboveReserve(int64(capReq)-u.Requests, int64(capReq), reservePct(r.settings)) {
-			return Response{}, fmt.Errorf("%w: global daily cap has %d of %d requests left", ErrDeferred, int64(capReq)-u.Requests, capReq)
-		}
+	if err := r.globalCapCheck(ctx, req.Priority, now); err != nil {
+		return Response{}, err
 	}
 
 	var (

@@ -131,6 +131,7 @@ function ProviderRow({ p }: { p: LLMProviderStatus }) {
         <code className="font-mono text-xs text-ink-muted">{c.model}</code>
         <Badge tone={tone}>{label}</Badge>
         {c.vision && <Badge tone="brand">images</Badge>}
+        {c.transcription_model && <Badge tone="brand">audio</Badge>}
       </div>
       {p.detail && p.state !== 'ready' && (
         <p className="m-0 text-[13.5px] text-ink-muted">

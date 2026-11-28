@@ -25,6 +25,12 @@ export default defineConfig({
         display: 'standalone',
         theme_color: themeColor,
         background_color: backgroundColor,
+        // Android "Share → Stockpot" opens the Import tab with the link (iOS has no share target).
+        share_target: {
+          action: '/recipes/import',
+          method: 'GET',
+          params: { title: 'title', text: 'text', url: 'url' },
+        },
         icons: [
           { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
           { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },

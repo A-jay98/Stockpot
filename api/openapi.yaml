@@ -277,6 +277,40 @@ paths:
           description: Sent
         default:
           $ref: "#/components/responses/Problem"
+  /v1/admin/recipes:
+    get:
+      operationId: getAdminRecipes
+      summary: Recipe import state
+      description: Imports by status (24 h and 14 days), recent failures, the fetch log, yt-dlp and ffmpeg availability and the import flags.
+      tags: [admin]
+      x-roles: [admin]
+      responses:
+        "200":
+          description: Recipe imports
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminRecipes"
+        default:
+          $ref: "#/components/responses/Problem"
+  /v1/admin/recipes/imports/{importId}/retry:
+    post:
+      operationId: retryAdminRecipeImport
+      summary: Queue a failed, blocked or waiting import again
+      tags: [admin]
+      x-roles: [admin]
+      parameters:
+        - name: importId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "202":
+          description: Queued
+        default:
+          $ref: "#/components/responses/Problem"
   /v1/admin/catalog:
     get:
       operationId: getAdminCatalog
@@ -2392,6 +2426,100 @@ components:
           type: array
           items:
             type: string
+    AdminRecipes:
+      type: object
+      required: [webImport, instagram, last24h, last14d, failures, fetches, tools, transcription]
+      properties:
+        webImport:
+          type: boolean
+          description: flag.recipe_web_import
+        instagram:
+          type: boolean
+          description: flag.recipe_instagram
+        last24h:
+          type: object
+          description: Imports created in the last 24 hours, by status.
+          additionalProperties:
+            type: integer
+        last14d:
+          type: object
+          description: Imports created in the last 14 days, by status.
+          additionalProperties:
+            type: integer
+        failures:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminRecipeImport"
+        fetches:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminRecipeFetch"
+        tools:
+          $ref: "#/components/schemas/AdminRecipeTools"
+        transcription:
+          type: boolean
+          description: A provider with a transcription model is ready.
+    AdminRecipeImport:
+      type: object
+      required: [id, household, kind, status, code, detail, attempts, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        household:
+          type: string
+        kind:
+          type: string
+        input:
+          type: string
+        status:
+          type: string
+        code:
+          type: string
+        detail:
+          type: string
+        attempts:
+          type: integer
+        updatedAt:
+          type: string
+          format: date-time
+    AdminRecipeFetch:
+      type: object
+      required: [at, purpose, url, bytes, durationMs]
+      properties:
+        at:
+          type: string
+          format: date-time
+        purpose:
+          type: string
+          enum: [page, image]
+        url:
+          type: string
+        finalUrl:
+          type: string
+        status:
+          type: integer
+        bytes:
+          type: integer
+          format: int64
+        durationMs:
+          type: integer
+        error:
+          type: string
+    AdminRecipeTools:
+      type: object
+      required: [ytDlp, ffmpeg]
+      properties:
+        ytDlp:
+          type: boolean
+        ytDlpVersion:
+          type: string
+        ffmpeg:
+          type: boolean
+        ffmpegVersion:
+          type: string
+        error:
+          type: string
     AdminCatalog:
       type: object
       required: [enabled, intervalMinutes, counts, headroom, runs, llmIngredients, review]
@@ -3093,6 +3221,9 @@ components:
         reset_tz:
           type: string
           description: IANA zone whose midnight resets the daily quota.
+        transcription_model:
+          type: string
+          description: Speech-to-text model on the provider's /audio/transcriptions endpoint; absent when it doesn't transcribe.
         timeout_seconds:
           type: integer
     LLMProviderStatus:
@@ -3292,6 +3423,10 @@ components:
         - $ref: "#/components/schemas/CmdRecipeLineSetIngredient"
         - $ref: "#/components/schemas/CmdRecipePhotoAdd"
         - $ref: "#/components/schemas/CmdRecipePhotoRemove"
+        - $ref: "#/components/schemas/CmdRecipeImportCreate"
+        - $ref: "#/components/schemas/CmdRecipeImportRetry"
+        - $ref: "#/components/schemas/CmdRecipeImportCancel"
+        - $ref: "#/components/schemas/CmdRecipeImportProvide"
       discriminator:
         propertyName: type
         mapping:
@@ -3338,6 +3473,10 @@ components:
           recipe.line.set_ingredient: "#/components/schemas/CmdRecipeLineSetIngredient"
           recipe.photo.add: "#/components/schemas/CmdRecipePhotoAdd"
           recipe.photo.remove: "#/components/schemas/CmdRecipePhotoRemove"
+          recipe.import.create: "#/components/schemas/CmdRecipeImportCreate"
+          recipe.import.retry: "#/components/schemas/CmdRecipeImportRetry"
+          recipe.import.cancel: "#/components/schemas/CmdRecipeImportCancel"
+          recipe.import.provide: "#/components/schemas/CmdRecipeImportProvide"
     CmdCatalogProductCreate:
       type: object
       required: [id, type, payload, clientTime]
@@ -4360,6 +4499,128 @@ components:
             id:
               type: string
               format: uuid
+    CmdRecipeImportCreate:
+      description: |
+        Queue an import: a recipe page or Instagram link (kind url; the server
+        detects Instagram), 1-4 uploaded photos (kind photo; input is an
+        optional note) or pasted text. A bulk import sends one command per
+        link with the same batchId; rows 4+ use spare AI quota only.
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.import.create]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, kind]
+          properties:
+            id:
+              type: string
+              format: uuid
+            kind:
+              type: string
+              enum: [url, instagram, photo, text]
+            input:
+              type: string
+              maxLength: 20000
+              nullable: true
+            blobRefs:
+              type: array
+              maxItems: 4
+              nullable: true
+              items:
+                type: string
+                pattern: '^[0-9a-f]{64}$'
+            batchId:
+              type: string
+              format: uuid
+              nullable: true
+    CmdRecipeImportRetry:
+      description: |
+        Queue a failed, blocked or waiting import again.
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.import.retry]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdRecipeImportCancel:
+      description: |
+        Cancel an import that isn't done (removes its row).
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.import.cancel]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id:
+              type: string
+              format: uuid
+    CmdRecipeImportProvide:
+      description: |
+        Give an import the text it needs (a reel's caption, or the recipe
+        itself after a page failed) and queue it again.
+      type: object
+      required: [id, type, payload, clientTime]
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [recipe.import.provide]
+        clientTime:
+          type: string
+          format: date-time
+        payload:
+          type: object
+          additionalProperties: false
+          required: [id, text]
+          properties:
+            id:
+              type: string
+              format: uuid
+            text:
+              type: string
+              minLength: 1
+              maxLength: 20000
     CmdRecipePhotoAdd:
       description: |
         Attach an uploaded photo (POST /v1/blobs) to a recipe, optionally to

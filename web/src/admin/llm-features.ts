@@ -14,6 +14,27 @@ export const llmFeatures: { name: string; what: string; withoutAI: string }[] = 
     withoutAI: 'Edit the recipe by hand.',
   },
   {
+    name: 'recipes_parse',
+    what: 'Reads a recipe from a page without recipe data, a reel caption and transcript, or pasted text.',
+    withoutAI:
+      'Only pages with recipe data and clearly laid-out pasted text import; the rest wait.',
+  },
+  {
+    name: 'recipes_translate',
+    what: 'Translates imported recipes into English, keeping the original.',
+    withoutAI: 'The import waits for quota, then translates.',
+  },
+  {
+    name: 'recipes_photo',
+    what: 'Reads photos of a cookbook page, card or screenshot.',
+    withoutAI: 'Paste the recipe text instead.',
+  },
+  {
+    name: 'recipes_transcribe',
+    what: 'Transcribes the spoken recipe in an Instagram reel (needs a provider with an audio model).',
+    withoutAI: 'Reels import from the caption alone.',
+  },
+  {
     name: 'recipes_substitute',
     what: '"Find a swap" for a missing ingredient, using only what is in stock.',
     withoutAI: 'Seeded swaps still show; swap it by hand while you cook.',

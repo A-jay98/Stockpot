@@ -90,6 +90,12 @@ func (s *Service) Upload(ctx context.Context, contentType string, r io.Reader) (
 	if err != nil {
 		return Info{}, err
 	}
+	return s.UploadFor(ctx, hh, contentType, r)
+}
+
+// UploadFor is Upload for household hh, for server-side work with no
+// session (a recipe import storing the page's cover image).
+func (s *Service) UploadFor(ctx context.Context, hh uuid.UUID, contentType string, r io.Reader) (Info, error) {
 	// Parameters (image/jpeg; charset=binary) don't change the type.
 	if mt, _, err := mime.ParseMediaType(contentType); err == nil {
 		contentType = mt

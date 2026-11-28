@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../offline/db'
 import type { Recipe, RecipeOriginal, RecipeVersion } from '../../offline/replica'
 import './commands' // registers the optimistic reducers
+import './imports'
 
 /** Saved recipes, most recently cooked first, then by title. */
 export const useSavedRecipes = (): Recipe[] =>
