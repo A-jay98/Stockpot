@@ -9,8 +9,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -103,6 +105,9 @@ type StoreRecord struct {
 	StockItemID uuid.UUID `json:"stock_item_id"`
 	EventID     uuid.UUID `json:"event_id"`
 	ExpiresOn   *string   `json:"expires_on,omitempty"`
+	// Skipped: no live location of that kind when the cook synced (deleted on
+	// another device), so these portions weren't stored.
+	Skipped bool `json:"skipped,omitempty"`
 }
 
 // UndoWindow is how long after cooking undo is offered and accepted.
@@ -158,12 +163,9 @@ func (h *handlers) validate(p *Cook) (time.Time, error) {
 	if stored > 0 && p.LeftoverProductID == nil {
 		return on, commands.Invalid("storing portions needs leftoverProductId")
 	}
-	seen := map[uuid.UUID]bool{}
+	// Two lines may use the same item (garlic in the marinade and the sauce):
+	// their uses apply one after another, each with its own event.
 	for _, u := range p.Uses {
-		if seen[u.StockItemID] {
-			return on, commands.Invalid("an item is used twice")
-		}
-		seen[u.StockItemID] = true
 		n := 0
 		for _, set := range []bool{u.Quantity != nil, u.Portions != nil, u.Level != nil, u.Finished} {
 			if set {
@@ -262,13 +264,23 @@ func (h *handlers) cook(ctx context.Context, tx pgx.Tx, p Cook) error {
 		}
 		leftover = &id
 		for _, s := range p.Store {
+			rec := StoreRecord{LocationID: s.LocationID, Portions: s.Portions, StockItemID: s.StockItemID, EventID: s.EventID}
+			loc, ok, err := liveLocation(ctx, tx, hh, s.LocationID)
+			if err != nil {
+				return err
+			}
+			if !ok {
+				rec.Skipped = true
+				stored = append(stored, rec)
+				continue
+			}
+			rec.LocationID = loc
 			exp, err := inventory.AddCookPortions(ctx, tx, hh, inventory.CookPortions{
-				Item: s.StockItemID, Event: s.EventID, Product: id, Location: s.LocationID, Session: p.ID, Portions: s.Portions, On: on,
+				Item: s.StockItemID, Event: s.EventID, Product: id, Location: loc, Session: p.ID, Portions: s.Portions, On: on,
 			})
 			if err != nil {
 				return err
 			}
-			rec := StoreRecord{LocationID: s.LocationID, Portions: s.Portions, StockItemID: s.StockItemID, EventID: s.EventID}
 			if exp != nil {
 				d := exp.Format(dateLayout)
 				rec.ExpiresOn = &d
@@ -314,22 +326,67 @@ func (h *handlers) use(ctx context.Context, tx pgx.Tx, hh, session, recipe uuid.
 		return UseRecord{}, err
 	}
 	rec := UseRecord{LineID: u.LineID, CookUsed: used}
-	if u.ToShopping != nil {
-		ts := u.ToShopping
-		add := shopping.ItemAdd{ID: ts.ID, ListID: ts.ListID, RecipeID: &recipe}
-		add.ProductID = commands.Opt[uuid.UUID]{Set: true, Value: &used.Product}
-		if ts.Qty != nil {
-			add.Qty = commands.Opt[string]{Set: true, Value: ts.Qty}
-		}
-		if ts.Unit != nil {
-			add.Unit = commands.Opt[string]{Set: true, Value: ts.Unit}
-		}
-		if err := shopping.AddItem(ctx, tx, add); err != nil {
-			return UseRecord{}, err
-		}
-		rec.ShoppingItemID = &ts.ID
+	if u.ToShopping == nil {
+		return rec, nil
 	}
+	ts := u.ToShopping
+	list, ok, err := liveList(ctx, tx, hh, ts.ListID)
+	if err != nil || !ok {
+		return rec, err // no list left: the stock update still stands
+	}
+	add := shopping.ItemAdd{ID: ts.ID, ListID: list, RecipeID: &recipe}
+	add.ProductID = commands.Opt[uuid.UUID]{Set: true, Value: &used.Product}
+	if ts.Qty != nil {
+		add.Qty = commands.Opt[string]{Set: true, Value: ts.Qty}
+	}
+	if ts.Unit != nil {
+		add.Unit = commands.Opt[string]{Set: true, Value: ts.Unit}
+	}
+	if err := shopping.AddItem(ctx, tx, add); err != nil {
+		return UseRecord{}, err
+	}
+	rec.ShoppingItemID = &ts.ID
 	return rec, nil
+}
+
+// liveLocation returns loc if it is live, else the household's first live
+// location of the same kind (it was deleted on another device). ok is false
+// when there is none.
+func liveLocation(ctx context.Context, tx pgx.Tx, hh, loc uuid.UUID) (uuid.UUID, bool, error) {
+	var id uuid.UUID
+	err := tx.QueryRow(ctx, `SELECT l.id FROM location l, location want
+		WHERE want.id = $1 AND want.household_id = $2 AND l.household_id = $2 AND l.deleted_at IS NULL AND l.kind = want.kind
+		ORDER BY l.id = $1 DESC, l.sort, l.id LIMIT 1`, loc, hh).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return id, false, nil
+	}
+	return id, err == nil, err
+}
+
+// liveList returns list if it is live, else the household's first live list.
+func liveList(ctx context.Context, tx pgx.Tx, hh, list uuid.UUID) (uuid.UUID, bool, error) {
+	var id uuid.UUID
+	err := tx.QueryRow(ctx, `SELECT id FROM shopping_list WHERE household_id = $2 AND deleted_at IS NULL
+		ORDER BY id = $1 DESC, sort, id LIMIT 1`, list, hh).Scan(&id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return id, false, nil
+	}
+	return id, err == nil, err
+}
+
+// LeftoverName is "Leftover chicken curry"; a title starting with an acronym
+// or proper name ("BBQ ribs") keeps its case. Mirrors leftoverName in the web
+// client (shared cases in testdata/leftover_names.json).
+func LeftoverName(title string) string {
+	r := []rune(strings.TrimSpace(title))
+	if len(r) == 0 {
+		return "Leftovers"
+	}
+	if len(r) > 1 && unicode.IsUpper(r[1]) {
+		return "Leftover " + string(r)
+	}
+	r[0] = unicode.ToLower(r[0])
+	return "Leftover " + string(r)
 }
 
 // ensureLeftover returns the recipe's leftover product ("Leftover chili",
@@ -343,10 +400,7 @@ func ensureLeftover(ctx context.Context, tx pgx.Tx, hh, recipe uuid.UUID, title 
 	if err := commands.CheckOwned(ctx, tx, "product", want, hh); err != nil {
 		return id, err
 	}
-	base := "Leftover " + strings.ToLower(title[:1]) + title[1:]
-	if r := []rune(title); len(r) > 1 && strings.ToUpper(string(r[1])) == string(r[1]) {
-		base = "Leftover " + title // an acronym or proper start ("BBQ ribs") keeps its case
-	}
+	base := LeftoverName(title)
 	// Product names are unique per household; another recipe may share the title.
 	name := base
 	for n := 2; ; n++ {
@@ -417,6 +471,9 @@ func (h *handlers) undo(ctx context.Context, tx pgx.Tx, p Undo) error {
 	if err := json.Unmarshal(storeRaw, &stored); err != nil {
 		return fmt.Errorf("cook session %s stored: %w", p.ID, err)
 	}
+	// Newest first: two uses of one item undo in reverse, so a use that
+	// finished the item brings it back before the earlier delta goes on top.
+	slices.Reverse(uses)
 	for _, u := range uses {
 		if u.Skipped {
 			continue
@@ -432,6 +489,9 @@ func (h *handlers) undo(ctx context.Context, tx pgx.Tx, p Undo) error {
 		}
 	}
 	for _, s := range stored {
+		if s.Skipped {
+			continue
+		}
 		if _, err := inventory.RemoveCookPortions(ctx, tx, hh, p.ID, s.StockItemID, s.EventID, UndoEventID(s.EventID)); err != nil {
 			return err
 		}

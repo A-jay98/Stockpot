@@ -73,7 +73,7 @@ func ApplyCookUse(ctx context.Context, tx pgx.Tx, hh uuid.UUID, u CookUse) (Cook
 			err = finish(ctx, tx, it.ID)
 		case u.Level != nil && levels[*u.Level]:
 			out.LevelAfter = u.Level
-			ev.Kind, ev.Reason = "adjust", u.Level
+			ev.Kind = "adjust" // reason stays "cook"; the new level is on the item and in level_after
 			_, err = tx.Exec(ctx, `UPDATE stock_item SET level = $2 WHERE id = $1`, it.ID, *u.Level)
 		default:
 			return out, commands.Invalid("a rough-level item takes a level or finished")

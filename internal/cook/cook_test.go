@@ -448,3 +448,104 @@ func TestUndoEventIDMatchesClient(t *testing.T) {
 		t.Fatalf("UndoEventID = %s", got)
 	}
 }
+
+func TestCookUsesOneItemTwice(t *testing.T) {
+	e := newEnv(t)
+	garlic := e.add(t, "Garlic", exact("10", "ea"))
+	chicken := e.add(t, "Chicken", exact("500", "g"))
+	p := e.cookPayload([]map[string]any{
+		use(garlic, "quantity", "3"), use(garlic, "quantity", "2"),
+		use(chicken, "quantity", "300"), use(chicken, "quantity", "400"), // the second finishes it
+	}, nil)
+	e.ok(t, "recipe.cook", p)
+	if it := e.item(t, garlic); *it.Qty != "5" {
+		t.Errorf("garlic %+v", it)
+	}
+	if it := e.item(t, chicken); !it.Deleted {
+		t.Errorf("chicken should be finished: %+v", it)
+	}
+	if s := e.session(t, p["id"]); *s.Uses[3].Quantity != "200" || !s.Uses[3].Finished {
+		t.Errorf("uses %+v", s.Uses)
+	}
+	e.ok(t, "recipe.cook.undo", map[string]any{"id": p["id"]})
+	if it := e.item(t, garlic); *it.Qty != "10" {
+		t.Errorf("garlic after undo %+v", it)
+	}
+	if it := e.item(t, chicken); it.Deleted || *it.Qty != "500" {
+		t.Errorf("chicken after undo %+v", it)
+	}
+}
+
+func TestCookSurvivesDeletedListAndLocations(t *testing.T) {
+	e := newEnv(t)
+	onions := e.add(t, "Onions", exact("2", "ea"))
+	rice := e.add(t, "Rice", exact("500", "g"))
+	var garage uuid.UUID
+	if err := e.pool.QueryRow(t.Context(), `INSERT INTO location (household_id, name, kind, sort) VALUES ($1, 'Garage fridge', 'fridge', 50) RETURNING id`, e.hh).Scan(&garage); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.pool.Exec(t.Context(), `UPDATE location SET deleted_at = now() WHERE id = ANY($1)`, []uuid.UUID{e.loc["fridge"], e.loc["freezer"]}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := e.pool.Exec(t.Context(), `UPDATE shopping_list SET deleted_at = now() WHERE id = $1`, e.list); err != nil {
+		t.Fatal(err)
+	}
+	p := e.cookPayload([]map[string]any{
+		use(onions, "finished", true, "toShopping", map[string]any{"id": uuid.New(), "listId": e.list}),
+	}, []map[string]any{
+		{"stockItemId": uuid.New(), "eventId": uuid.New(), "locationId": e.loc["fridge"], "portions": 2},
+		{"stockItemId": uuid.New(), "eventId": uuid.New(), "locationId": e.loc["freezer"], "portions": 1},
+	})
+	e.ok(t, "recipe.cook", p)
+	s := e.session(t, p["id"])
+	if !e.item(t, onions).Deleted || s.Uses[0].ShoppingItemID != nil {
+		t.Errorf("no list left: the use applies without a shopping item: %+v", s.Uses)
+	}
+	if s.Stored[0].Skipped || s.Stored[0].LocationID != garage || !s.Stored[1].Skipped {
+		t.Errorf("stored %+v", s.Stored)
+	}
+	e.ok(t, "recipe.cook.undo", map[string]any{"id": p["id"]})
+
+	// With another list, the item goes there.
+	var other uuid.UUID
+	if err := e.pool.QueryRow(t.Context(), `INSERT INTO shopping_list (household_id, name, sort) VALUES ($1, 'Costco', 1) RETURNING id`, e.hh).Scan(&other); err != nil {
+		t.Fatal(err)
+	}
+	shop := uuid.New()
+	e.ok(t, "recipe.cook", e.cookPayload([]map[string]any{
+		use(rice, "finished", true, "toShopping", map[string]any{"id": shop, "listId": e.list}),
+	}, nil))
+	var list uuid.UUID
+	if err := e.pool.QueryRow(t.Context(), `SELECT list_id FROM shopping_item WHERE id = $1`, shop).Scan(&list); err != nil || list != other {
+		t.Errorf("shopping item on %v (%v), want %v", list, err, other)
+	}
+}
+
+func TestLeftoverNames(t *testing.T) {
+	b, err := os.ReadFile("testdata/leftover_names.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var cases []struct{ Title, Name string }
+	if err := json.Unmarshal(b, &cases); err != nil {
+		t.Fatal(err)
+	}
+	for _, c := range cases {
+		if got := cook.LeftoverName(c.Title); got != c.Name {
+			t.Errorf("LeftoverName(%q) = %q, want %q", c.Title, got, c.Name)
+		}
+	}
+}
+
+func TestLeftoverNameAccentedTitle(t *testing.T) {
+	e := newEnv(t)
+	if _, err := e.pool.Exec(t.Context(), `UPDATE recipe SET title = 'Éclairs' WHERE id = $1`, e.recipe); err != nil {
+		t.Fatal(err)
+	}
+	e.ok(t, "recipe.cook", e.cookPayload(nil, []map[string]any{{"stockItemId": uuid.New(), "eventId": uuid.New(), "locationId": e.loc["fridge"], "portions": 1}}))
+	var name string
+	_ = e.pool.QueryRow(t.Context(), `SELECT name FROM product WHERE id = $1`, e.leftover).Scan(&name)
+	if name != "Leftover éclairs" {
+		t.Errorf("name %q", name)
+	}
+}
