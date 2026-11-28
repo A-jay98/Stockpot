@@ -13,4 +13,9 @@ export const llmFeatures: { name: string; what: string; withoutAI: string }[] = 
     what: 'Answers questions about a recipe and proposes new versions.',
     withoutAI: 'Edit the recipe by hand.',
   },
+  {
+    name: 'report_review',
+    what: 'Reviews problem reports; applies default-unit fixes it is sure about (background).',
+    withoutAI: 'Reports wait on Admin → Reports for you to apply, reject or dismiss.',
+  },
 ]
