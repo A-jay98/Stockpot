@@ -42,6 +42,72 @@ type LineState = {
   swapId: string | null
 }
 
+/** What the user changed on a line; everything else is suggested from stock and portions. */
+type Override = {
+  itemId?: string | null
+  /** An amount the user set, for itemId (portion changes no longer re-suggest it). */
+  take?: Take
+  toList?: boolean
+  skip?: boolean
+  swapId?: string | null
+}
+
+type PlanContext = {
+  recipeId: string
+  stock: StockItem[]
+  catalog: CookData['catalog']
+  substitutions: CookData['substitutions']
+  made: number
+  servings: number | null
+}
+
+type Resolved = {
+  swap?: ReturnType<typeof usableSwaps>[number]
+  candidates: StockItem[]
+  item: StockItem | undefined
+  state: LineState
+}
+
+/** A line's stock item and amount: the user's picks, else first-expiring stock and a suggestion. */
+function resolveLine(l: RecipeLine, o: Override | undefined, c: PlanContext): Resolved {
+  const swapId = o?.swapId ?? null
+  const swap = swapId
+    ? usableSwaps(l, c.recipeId, c.substitutions, c.stock, c.catalog).find(
+        (x) => x.sub.id === swapId,
+      )
+    : undefined
+  const candidates = swap ? swap.items : matchingItems(l.ingredient_id, c.stock, c.catalog)
+  const item = candidates.find((x) => x.id === o?.itemId) ?? candidates[0]
+  const empty: LineState = {
+    itemId: null,
+    take: null,
+    edited: false,
+    needsAmount: false,
+    toList: false,
+    skip: false,
+    swapId,
+  }
+  if (!item) return { swap, candidates, item, state: empty }
+  const own = o?.take && o.itemId === item.id ? o.take : undefined
+  const sug = own
+    ? { take: own, needsAmount: false }
+    : suggest(item, l, scaledQty(l, c.made, c.servings), c.catalog, swap?.ratio)
+  return {
+    swap,
+    candidates,
+    item,
+    state: {
+      itemId: item.id,
+      take: sug.take,
+      edited: !!own,
+      needsAmount: sug.needsAmount,
+      toList: o?.toList ?? boughtRegularly(item, c.catalog),
+      skip: o?.skip ?? false,
+      swapId,
+    },
+  }
+}
+
 const LEVELS: StockLevel[] = ['full', 'most', 'half', 'low', 'almost_out']
 
 /** Required lines (not optional, not an assumed staple) are what a cook deducts. */
@@ -105,59 +171,16 @@ function CookSheet({ data, back }: { data: CookData; back: ReactNode }) {
   const [photos, setPhotos] = useState<string[]>([])
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
-  const [state, setState] = useState<Record<string, LineState>>({})
+  const [overrides, setOverrides] = useState<Record<string, Override>>({})
 
-  const linePlan = (l: RecipeLine, s: LineState | undefined) => {
-    const swap = s?.swapId
-      ? usableSwaps(l, recipe.id, substitutions, stock, catalog).find((x) => x.sub.id === s.swapId)
-      : undefined
-    const candidates = swap ? swap.items : matchingItems(l.ingredient_id, stock, catalog)
-    const item = candidates.find((c) => c.id === s?.itemId) ?? candidates[0]
-    return { swap, candidates, item }
-  }
+  const ctx: PlanContext = { recipeId: recipe.id, stock, catalog, substitutions, made, servings }
+  const resolved = Object.fromEntries(
+    lines.map((l) => [l.line_id, resolveLine(l, overrides[l.line_id], ctx)]),
+  )
+  const state = Object.fromEntries(lines.map((l) => [l.line_id, resolved[l.line_id]?.state]))
 
-  // (Re)suggest amounts for lines the user hasn't edited when portions or stock change.
-  useEffect(() => {
-    setState((prev) => {
-      const next: Record<string, LineState> = {}
-      for (const l of lines) {
-        const s = prev[l.line_id]
-        const { swap, item } = linePlan(l, s)
-        if (!item) {
-          next[l.line_id] = {
-            itemId: null,
-            take: null,
-            edited: false,
-            needsAmount: false,
-            toList: false,
-            skip: false,
-            swapId: s?.swapId ?? null,
-          }
-          continue
-        }
-        if (s && s.edited && s.itemId === item.id && s.take) {
-          next[l.line_id] = s
-          continue
-        }
-        const sug = suggest(item, l, scaledQty(l, made, servings), catalog, swap?.ratio)
-        next[l.line_id] = {
-          itemId: item.id,
-          take: sug.take,
-          edited: false,
-          needsAmount: sug.needsAmount,
-          toList: s?.itemId === item.id ? s.toList : boughtRegularly(item, catalog),
-          skip: s?.skip ?? false,
-          swapId: s?.swapId ?? null,
-        }
-      }
-      return next
-    })
-    // linePlan reads only these inputs.
-    // biome-ignore lint/correctness/useExhaustiveDependencies: see above
-  }, [lines, made, servings, stock, catalog, substitutions])
-
-  const patch = (lineId: string, p: Partial<LineState>) =>
-    setState((prev) => ({ ...prev, [lineId]: { ...(prev[lineId] as LineState), ...p } }))
+  const patch = (lineId: string, p: Override) =>
+    setOverrides((prev) => ({ ...prev, [lineId]: { ...prev[lineId], ...p } }))
 
   const stored = fridgeN + toFreezer
   const uses = lines.flatMap((l) => {
@@ -282,7 +305,7 @@ function CookSheet({ data, back }: { data: CookData; back: ReactNode }) {
               data={data}
               made={made}
               servings={servings}
-              plan={linePlan(l, state[l.line_id])}
+              plan={resolved[l.line_id] as Resolved}
               onChange={(p) => patch(l.line_id, p)}
             />
           ))}
@@ -527,12 +550,8 @@ function UseRow({
   data: CookData
   made: number
   servings: number | null
-  plan: {
-    swap?: ReturnType<typeof usableSwaps>[number]
-    candidates: StockItem[]
-    item: StockItem | undefined
-  }
-  onChange: (p: Partial<LineState>) => void
+  plan: Resolved
+  onChange: (p: Override) => void
 }) {
   const { swap, candidates, item } = plan
   const need = scaledQty(line, made, servings)
@@ -571,7 +590,7 @@ function UseRow({
             variant="secondary"
             size="sm"
             className="self-start"
-            onClick={() => onChange({ swapId: sw.sub.id, edited: false, itemId: null })}
+            onClick={() => onChange({ swapId: sw.sub.id, itemId: null, take: undefined })}
           >
             <Replace aria-hidden />
             Swap for {data.catalog.ingredients.get(sw.ingredientId)?.name ?? 'substitute'}
@@ -581,7 +600,7 @@ function UseRow({
     )
   }
 
-  const setTake = (t: Take) => onChange({ take: t, edited: true, needsAmount: false })
+  const setTake = (t: Take) => onChange({ take: t, itemId: item.id })
   const unit = item.unit
   const step = stepFor(unit)
 
@@ -628,7 +647,7 @@ function UseRow({
           aria-label={`Stock item for ${line.name}`}
           className="h-9 rounded-md border border-border bg-surface px-2 text-[13px]"
           value={item.id}
-          onChange={(e) => onChange({ itemId: e.target.value, edited: false })}
+          onChange={(e) => onChange({ itemId: e.target.value, take: undefined })}
         >
           {candidates.map((c) => (
             <option key={c.id} value={c.id}>
@@ -667,7 +686,7 @@ function UseRow({
             <Switch
               aria-label={`Add ${line.name} to the shopping list`}
               checked={!!s?.toList}
-              onCheckedChange={(on) => onChange({ toList: on })}
+              onCheckedChange={(on) => onChange({ toList: on, itemId: item.id })}
             />
           </span>
         ) : (
@@ -685,7 +704,11 @@ function UseRow({
             in stock
           </span>
         )}
-        <Button variant="link" size="sm" onClick={() => onChange({ skip: !s?.skip })}>
+        <Button
+          variant="link"
+          size="sm"
+          onClick={() => onChange({ skip: !s?.skip, itemId: item.id })}
+        >
           {s?.skip ? 'Use it' : 'Skip'}
         </Button>
       </div>
