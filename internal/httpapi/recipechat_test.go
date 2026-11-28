@@ -29,7 +29,7 @@ func (f *fakeChat) msgs(recipe uuid.UUID) []chat.Message {
 		{ID: uuid.New(), RecipeID: recipe, VersionID: uuid.New(), VersionN: 1, Role: chat.RoleUser, Text: f.text, State: chat.StateNone, UserID: &f.user, CreatedAt: time.Now()},
 		{
 			ID: uuid.New(), RecipeID: recipe, VersionID: uuid.New(), VersionN: 1, Role: chat.RoleAssistant, Text: "ok", State: chat.StateSaved,
-			Proposal:  &chat.Proposal{ChangeSummary: "More paste", Content: recipes.Content{Title: "Stew", Steps: []recipes.Step{{Text: "Fry."}}}},
+			Proposal:  &chat.Proposal{ChangeSummary: "More paste", Steps: &[]recipes.Step{{Text: "Fry."}}},
 			CreatedAt: time.Now(), SavedVersionN: &n,
 		},
 	}
@@ -78,7 +78,7 @@ func TestRecipeChatEndpoints(t *testing.T) {
 		t.Fatalf("post called with %+v", f)
 	}
 	ai := out.Messages[1]
-	if ai.Proposal == nil || ai.Proposal.Ingredients == nil || ai.ProposalState != "saved" || *ai.SavedVersionN != 2 {
+	if ai.Proposal == nil || ai.Proposal.Ingredients != nil || ai.Proposal.Steps == nil || ai.ProposalState != "saved" || *ai.SavedVersionN != 2 {
 		t.Fatalf("reply %s", rec.Body)
 	}
 	if rec := do(h, llmRequest(t, http.MethodGet, base, "")); rec.Code != http.StatusOK {

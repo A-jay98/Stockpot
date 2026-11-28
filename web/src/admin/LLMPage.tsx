@@ -11,6 +11,7 @@ import {
   useLLMUsage,
   useSettings,
 } from './api'
+import { llmFeatures } from './llm-features'
 import { SettingEditor } from './SettingsPage'
 import { AdminPage, ErrorNote, formatTime, number, Table, Tile } from './ui'
 
@@ -75,6 +76,7 @@ export function LLMPage() {
       )}
       <TestPrompt providers={st?.providers.map((p) => p.config.id) ?? []} />
       <Usage />
+      <Features />
       <Configuration />
     </AdminPage>
   )
@@ -315,6 +317,35 @@ function Usage() {
           </tbody>
         </Table>
       )}
+    </section>
+  )
+}
+
+/** What each feature does, and its manual path when no provider can answer. */
+function Features() {
+  return (
+    <section aria-label="Features" className="flex flex-col gap-2">
+      <h2 className="t-label m-0 text-ink-muted">Features</h2>
+      <Table>
+        <thead>
+          <tr>
+            <th>Feature</th>
+            <th>What it does</th>
+            <th>Without AI</th>
+          </tr>
+        </thead>
+        <tbody>
+          {llmFeatures.map((f) => (
+            <tr key={f.name}>
+              <td>
+                <code className="font-mono text-xs">{f.name}</code>
+              </td>
+              <td>{f.what}</td>
+              <td>{f.withoutAI}</td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
     </section>
   )
 }

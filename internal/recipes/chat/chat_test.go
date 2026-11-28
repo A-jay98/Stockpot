@@ -163,6 +163,35 @@ func (e *env) post(t *testing.T, text string) []chat.Message {
 	return ms
 }
 
+// current is the recipe's current version content, as the client has it.
+func (e *env) current(t *testing.T) recipes.Content {
+	t.Helper()
+	var (
+		c        recipes.Content
+		ing, stp []byte
+	)
+	err := e.pool.QueryRow(e.ctx, `SELECT v.title, v.servings, v.total_minutes, v.ingredients, v.steps, v.notes
+		FROM recipe r JOIN recipe_version v ON v.id = r.current_version_id WHERE r.id = $1`, e.recipe).
+		Scan(&c.Title, &c.Servings, &c.TotalMinutes, &ing, &stp, &c.Notes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var ls []lines.Line
+	_ = json.Unmarshal(ing, &ls)
+	_ = json.Unmarshal(stp, &c.Steps)
+	c.Ingredients = lines.Raws(ls)
+	return c
+}
+
+// save does what "Save as vN" does: apply the proposal to the current version.
+func (e *env) save(t *testing.T, m chat.Message, id uuid.UUID) {
+	t.Helper()
+	e.apply(t, "recipe.version.create", recipes.VersionCreate{
+		RecipeID: e.recipe, VersionID: id, Origin: recipes.OriginChat,
+		FromMessageID: &m.ID, ChangeSummary: &m.Proposal.ChangeSummary, Content: m.Proposal.Apply(e.current(t)),
+	})
+}
+
 func (e *env) message(t *testing.T, id uuid.UUID) chat.Message {
 	t.Helper()
 	ms, err := e.svc.List(e.ctx, e.hh, e.recipe)
@@ -252,16 +281,14 @@ func TestProposalSavedAsNewVersion(t *testing.T) {
 	if p == nil || ms[1].State != chat.StatePending {
 		t.Fatalf("reply %+v", ms[1])
 	}
-	if p.Title != "Khoresh gheymeh" || p.Ingredients[0] != "2 tbsp tomato paste" || p.Steps[1].Minutes == nil || *p.Steps[1].Minutes != 2 ||
-		p.Steps[2].Minutes != nil || p.Notes == nil || *p.Notes != "Richer with more paste." {
-		t.Fatalf("proposal not merged onto v1: %+v", p)
+	if p.Title != nil || p.Servings != nil || p.Ingredients == nil || (*p.Ingredients)[0] != "2 tbsp tomato paste" ||
+		(*p.Steps)[1].Minutes == nil || *(*p.Steps)[1].Minutes != 2 || (*p.Steps)[2].Minutes != nil ||
+		p.Notes == nil || *p.Notes != "Richer with more paste." {
+		t.Fatalf("proposal should hold only the changes: %+v", p)
 	}
 
 	v2 := uuid.New()
-	e.apply(t, "recipe.version.create", recipes.VersionCreate{
-		RecipeID: e.recipe, VersionID: v2, Origin: recipes.OriginChat, ParentVersionID: &ms[1].VersionID,
-		FromMessageID: &ms[1].ID, ChangeSummary: &p.ChangeSummary, Content: p.Content,
-	})
+	e.save(t, ms[1], v2)
 	m := e.message(t, ms[1].ID)
 	if m.State != chat.StateSaved || m.SavedVersionID == nil || *m.SavedVersionID != v2 || *m.SavedVersionN != 2 {
 		t.Fatalf("message after save %+v", m)
@@ -308,7 +335,7 @@ func TestStaleBaseProposal(t *testing.T) {
 	e.fake.queue(map[string]any{"reply": "Serves 2 then.", "proposal": proposal(map[string]any{"change_summary": "For two", "servings": 2})})
 	ms := e.post(t, "Make it for 2")
 	p := ms[1].Proposal
-	if p == nil || *p.Servings != 2 {
+	if p == nil || *p.Servings != 2 || p.Title != nil || p.Ingredients != nil {
 		t.Fatalf("proposal %+v", p)
 	}
 	// Someone edits the recipe by hand before the proposal is saved.
@@ -317,10 +344,7 @@ func TestStaleBaseProposal(t *testing.T) {
 		Content: recipes.Content{Title: "Gheymeh", Ingredients: []string{"500 g lamb"}},
 	})
 	v3 := uuid.New()
-	e.apply(t, "recipe.version.create", recipes.VersionCreate{
-		RecipeID: e.recipe, VersionID: v3, Origin: recipes.OriginChat, ParentVersionID: &ms[1].VersionID,
-		FromMessageID: &ms[1].ID, ChangeSummary: &p.ChangeSummary, Content: p.Content,
-	})
+	e.save(t, ms[1], v3)
 	m := e.message(t, ms[1].ID)
 	if m.State != chat.StateSaved || *m.SavedVersionN != 3 || m.VersionN != 1 {
 		t.Fatalf("stale save %+v", m)
@@ -330,8 +354,8 @@ func TestStaleBaseProposal(t *testing.T) {
 	if err := e.pool.QueryRow(e.ctx, `SELECT title, servings FROM recipe WHERE id = $1`, e.recipe).Scan(&title, &servings); err != nil {
 		t.Fatal(err)
 	}
-	if title != "Khoresh gheymeh" || servings != 2 {
-		t.Fatalf("recipe now %q %d: the snapshot must win, nothing merges", title, servings)
+	if title != "Gheymeh" || servings != 2 || e.current(t).Ingredients[0] != "500 g lamb" {
+		t.Fatalf("recipe now %q %d: the proposal must apply on top of the later edit", title, servings)
 	}
 	// New messages are about the current version.
 	ms = e.post(t, "Thanks")
@@ -397,6 +421,12 @@ func TestUselessProposalsAreDropped(t *testing.T) {
 		ms := e.post(t, q)
 		if ms[1].Proposal != nil || ms[1].State != chat.StateNone {
 			t.Fatalf("%s: proposal kept %+v", q, ms[1].Proposal)
+		}
+		if q == "same?" && ms[1].ProposalError != nil {
+			t.Fatalf("no-op proposal has an error: %s", *ms[1].ProposalError)
+		}
+		if q == "for 1000" && (ms[1].ProposalError == nil || !strings.Contains(*ms[1].ProposalError, "servings")) {
+			t.Fatalf("invalid proposal has no reason: %v", ms[1].ProposalError)
 		}
 	}
 }

@@ -361,8 +361,8 @@ export interface paths {
          * @description Sends the text, the current version, the last 20 messages and the
          *     household's cook notes to the assistant (LLM feature recipes_chat) and
          *     stores the user's message and the reply. A reply may carry a proposal:
-         *     the full content of a new version, saved with recipe.version.create
-         *     (origin chat, fromMessageId). On 503 llm_unavailable nothing is stored;
+         *     the changed fields, which the client applies to the current version and
+         *     saves with recipe.version.create (origin chat, fromMessageId). On 503 llm_unavailable nothing is stored;
          *     the client offers the editor instead.
          */
         post: operations["postRecipeChat"];
@@ -2715,6 +2715,8 @@ export interface components {
             proposal?: components["schemas"]["RecipeChatProposal"];
             /** @enum {string} */
             proposalState: "none" | "pending" | "saved" | "dismissed";
+            /** @description Why the change the reply describes could not be offered as a version. */
+            proposalError?: string;
             /**
              * Format: uuid
              * @description The version a saved proposal became (absent if it was deleted).
@@ -2726,15 +2728,20 @@ export interface components {
             /** Format: date-time */
             createdAt: string;
         };
-        /** @description The full content of the proposed version (changes merged onto versionId), as recipe.version.create takes it. */
+        /**
+         * @description The fields the assistant would change; absent fields stay as they are.
+         *     The client applies them to the recipe's current version and sends the
+         *     result as recipe.version.create. ingredients and steps, when present,
+         *     are complete lists; notes "" clears the notes.
+         */
         RecipeChatProposal: {
             changeSummary: string;
-            title: string;
-            servings: number | null;
-            totalMinutes: number | null;
-            ingredients: string[];
-            steps: components["schemas"]["RecipeStep"][];
-            notes: string | null;
+            title?: string;
+            servings?: number;
+            totalMinutes?: number;
+            ingredients?: string[];
+            steps?: components["schemas"]["RecipeStep"][];
+            notes?: string;
         };
         RecipeStep: {
             text: string;

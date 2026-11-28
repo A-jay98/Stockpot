@@ -426,6 +426,7 @@ type RecipeChatMessage struct {
 	Text           string
 	Proposal       []byte
 	ProposalState  string
+	ProposalError  *string
 	SavedVersionID *uuid.UUID
 	UserID         *uuid.UUID
 	CreatedAt      time.Time

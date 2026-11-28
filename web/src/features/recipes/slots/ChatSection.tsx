@@ -1,17 +1,19 @@
 import { SendHorizontal } from 'lucide-react'
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { ApiError } from '../../../api/problem'
 import { useOnline } from '../../../pwa/useOnline'
 import { Button, cn, Input, toast } from '../../../ui'
 import {
   type ChatMessage,
+  saveProposal,
+  useCommandState,
   useDismissProposal,
   usePostChat,
   useRecipeChat,
-  useSaveProposal,
+  useRefreshChat,
 } from '../chat'
-import { useRecipeVersion, useRecipeVersions } from '../hooks'
+import { useRecipeVersions } from '../hooks'
 
 /**
  * "Ask about this recipe": a chat that answers questions and proposes new versions
@@ -121,6 +123,14 @@ function Bubble({
   return (
     <div className={cn(bubble, theirs)}>
       {m.text}
+      {m.proposalError ? (
+        <span className="mt-2 block text-[12.5px] text-ink-muted">
+          Nothing to save as a version: {m.proposalError}.{' '}
+          <Link to={`/recipes/${recipeId}/edit`} className="font-semibold text-brand">
+            Edit the recipe
+          </Link>
+        </span>
+      ) : null}
       {m.proposal ? (
         <ProposalActions
           message={m}
@@ -144,33 +154,49 @@ function ProposalActions({
   currentVersionId: string
   nextN: number
 }) {
-  const save = useSaveProposal(recipeId)
   const dismiss = useDismissProposal(recipeId)
+  const refresh = useRefreshChat(recipeId)
   const online = useOnline()
-  const [saving, setSaving] = useState(false)
-  // The replica knows the saved version's number first (the optimistic one, then the server's).
-  const saved = useRecipeVersion(m.savedVersionId)
+  const [commandId, setCommandId] = useState<string>()
+  const [savingN, setSavingN] = useState(nextN)
+  const command = useCommandState(commandId)
+  // Once the server applied the command, it has marked the message saved: fetch that state.
+  useEffect(() => {
+    if (commandId && command === 'done') void refresh()
+  }, [commandId, command, refresh])
+
   if (m.proposalState === 'saved') {
-    const n = saved?.n ?? m.savedVersionN
-    return <b className="mt-1 block">{n ? `Saved as v${n}.` : 'Saved.'}</b>
+    return (
+      <b className="mt-1 block">{m.savedVersionN ? `Saved as v${m.savedVersionN}.` : 'Saved.'}</b>
+    )
+  }
+  if (commandId && command !== 'rejected') {
+    return (
+      <span className="mt-1 block text-[12.5px] text-ink-muted" role="status">
+        {online ? `Saving as v${savingN}…` : "Saving when you're back online…"}
+      </span>
+    )
   }
   const stale = m.versionId !== currentVersionId
   const label = `Save as v${nextN}${stale ? ` (based on v${m.versionN})` : ''}`
   const onSave = async () => {
-    setSaving(true)
     try {
-      await save(m)
+      setSavingN(nextN)
+      setCommandId(await saveProposal(recipeId, m))
     } catch {
       toast({ title: "Couldn't save the version", tone: 'error' })
-    } finally {
-      setSaving(false)
     }
   }
   return (
     <div className="mt-2 flex flex-col gap-2">
       <span className="text-[12.5px] text-ink-muted">{m.proposal?.changeSummary}</span>
+      {command === 'rejected' && commandId ? (
+        <span className="text-[12.5px] text-expired" role="status">
+          The server didn't save that version.
+        </span>
+      ) : null}
       <div className="flex flex-wrap gap-2">
-        <Button size="sm" onClick={onSave} disabled={saving}>
+        <Button size="sm" onClick={onSave}>
           {label}
         </Button>
         {m.proposalState === 'pending' ? (

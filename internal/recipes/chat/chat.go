@@ -20,6 +20,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/a-jay98/stockpot/internal/audit"
+	"github.com/a-jay98/stockpot/internal/commands"
 	"github.com/a-jay98/stockpot/internal/llm"
 	"github.com/a-jay98/stockpot/internal/recipes"
 	"github.com/a-jay98/stockpot/internal/recipes/lines"
@@ -60,12 +61,45 @@ var (
 	ErrSaved = errors.New("the proposal is already saved")
 )
 
-// Proposal is the full content of a proposed version: the assistant's
-// changes merged onto the version the message was about, ready to send as
-// recipe.version.create.
+// Proposal is what the assistant would change: only the fields set change.
+// It is applied to the recipe's current version when saved (Apply), so a
+// proposal made on an older version keeps every later change it doesn't
+// touch. Ingredients and Steps, when set, are complete lists. Notes "" clears
+// the notes.
 type Proposal struct {
-	ChangeSummary string `json:"changeSummary"`
-	recipes.Content
+	ChangeSummary string          `json:"changeSummary"`
+	Title         *string         `json:"title,omitempty"`
+	Servings      *int            `json:"servings,omitempty"`
+	TotalMinutes  *int            `json:"totalMinutes,omitempty"`
+	Ingredients   *[]string       `json:"ingredients,omitempty"`
+	Steps         *[]recipes.Step `json:"steps,omitempty"`
+	Notes         *string         `json:"notes,omitempty"`
+}
+
+// Apply returns c with the proposed changes.
+func (p Proposal) Apply(c recipes.Content) recipes.Content {
+	if p.Title != nil {
+		c.Title = *p.Title
+	}
+	if p.Servings != nil {
+		c.Servings = p.Servings
+	}
+	if p.TotalMinutes != nil {
+		c.TotalMinutes = p.TotalMinutes
+	}
+	if p.Ingredients != nil {
+		c.Ingredients = *p.Ingredients
+	}
+	if p.Steps != nil {
+		c.Steps = *p.Steps
+	}
+	if p.Notes != nil {
+		c.Notes = p.Notes
+		if *p.Notes == "" {
+			c.Notes = nil
+		}
+	}
+	return c
 }
 
 // Message is one chat message.
@@ -78,6 +112,9 @@ type Message struct {
 	Text      string
 	Proposal  *Proposal
 	State     string
+	// ProposalError says why a change the assistant described could not be
+	// offered as a version (it broke a version rule).
+	ProposalError *string
 	// SavedVersionID is the version a saved proposal became (nil if that
 	// version was since deleted).
 	SavedVersionID *uuid.UUID
@@ -99,7 +136,7 @@ type Service struct {
 	LLM  Completer
 }
 
-const selectMessage = `SELECT m.id, m.recipe_id, m.version_id, v.n, m.role, m.text, m.proposal, m.proposal_state,
+const selectMessage = `SELECT m.id, m.recipe_id, m.version_id, v.n, m.role, m.text, m.proposal, m.proposal_state, m.proposal_error,
 		m.saved_version_id, sv.n, m.user_id, m.created_at
 	FROM recipe_chat_message m
 	JOIN recipe_version v ON v.id = m.version_id
@@ -110,7 +147,7 @@ func scanMessage(row pgx.Row) (Message, error) {
 		m   Message
 		raw []byte
 	)
-	err := row.Scan(&m.ID, &m.RecipeID, &m.VersionID, &m.VersionN, &m.Role, &m.Text, &raw, &m.State,
+	err := row.Scan(&m.ID, &m.RecipeID, &m.VersionID, &m.VersionN, &m.Role, &m.Text, &raw, &m.State, &m.ProposalError,
 		&m.SavedVersionID, &m.SavedVersionN, &m.UserID, &m.CreatedAt)
 	if err != nil {
 		return m, err
@@ -299,10 +336,10 @@ func (s *Service) Post(ctx context.Context, hh, user, recipe uuid.UUID, text str
 	if r.Reply == "" {
 		return nil, fmt.Errorf("%w: empty reply", llm.ErrBadOutput)
 	}
-	prop := merge(ctx, v, r.Proposal)
+	prop, propErr := merge(v, r.Proposal)
 
 	userMsg := Message{ID: uuid.Must(uuid.NewV7()), Role: RoleUser, Text: text, State: StateNone, UserID: &user}
-	aiMsg := Message{ID: uuid.Must(uuid.NewV7()), Role: RoleAssistant, Text: r.Reply, Proposal: prop, State: StateNone}
+	aiMsg := Message{ID: uuid.Must(uuid.NewV7()), Role: RoleAssistant, Text: r.Reply, Proposal: prop, State: StateNone, ProposalError: propErr}
 	if prop != nil {
 		aiMsg.State = StatePending
 	}
@@ -318,9 +355,9 @@ func (s *Service) Post(ctx context.Context, hh, user, recipe uuid.UUID, text str
 					return err
 				}
 			}
-			if _, err := tx.Exec(ctx, `INSERT INTO recipe_chat_message (id, household_id, recipe_id, version_id, role, text, proposal, proposal_state, user_id)
-				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-				m.ID, hh, recipe, v.ID, m.Role, m.Text, raw, m.State, m.UserID); err != nil {
+			if _, err := tx.Exec(ctx, `INSERT INTO recipe_chat_message (id, household_id, recipe_id, version_id, role, text, proposal, proposal_state, proposal_error, user_id)
+				VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+				m.ID, hh, recipe, v.ID, m.Role, m.Text, raw, m.State, m.ProposalError, m.UserID); err != nil {
 				return err
 			}
 		}
@@ -409,52 +446,75 @@ type proposed struct {
 	Notes         *string   `json:"notes"`
 }
 
-// merge applies the proposed changes to v. It returns nil when nothing
-// changes or the result would not be a valid version (the reply still
-// stands; the user can edit the recipe by hand).
-func merge(ctx context.Context, v version, p *proposed) *Proposal {
+// merge turns the model's changes into a Proposal (only what differs from
+// v) and checks that v with them applied is a valid version. It returns nil
+// when nothing changes, and nil plus the reason when the result would be
+// rejected, so the reply can say why there is nothing to save.
+func merge(v version, p *proposed) (*Proposal, *string) {
 	if p == nil {
-		return nil
+		return nil, nil
 	}
 	base := v.content()
-	c := base
-	if p.Title != nil && strings.TrimSpace(*p.Title) != "" {
-		c.Title = strings.TrimSpace(*p.Title)
+	out := Proposal{}
+	if p.Title != nil {
+		if t := strings.TrimSpace(*p.Title); t != "" && t != base.Title {
+			out.Title = &t
+		}
 	}
-	if p.Servings != nil {
-		c.Servings = p.Servings
+	if p.Servings != nil && !eqInt(p.Servings, base.Servings) {
+		out.Servings = p.Servings
 	}
-	if p.TotalMinutes != nil {
-		c.TotalMinutes = p.TotalMinutes
+	if p.TotalMinutes != nil && !eqInt(p.TotalMinutes, base.TotalMinutes) {
+		out.TotalMinutes = p.TotalMinutes
 	}
 	if p.Ingredients != nil {
-		c.Ingredients = clean(*p.Ingredients)
+		if ings := clean(*p.Ingredients); !slices.Equal(ings, base.Ingredients) {
+			out.Ingredients = &ings
+		}
 	}
 	if p.Steps != nil {
-		c.Steps = steps(*p.Steps, v.Steps)
+		if st := steps(*p.Steps, v.Steps); !sameSteps(st, base.Steps) {
+			out.Steps = &st
+		}
 	}
 	if p.Notes != nil {
 		n := strings.TrimSpace(*p.Notes)
-		c.Notes = &n
-		if n == "" {
-			c.Notes = nil
+		if old := deref(base.Notes); n != old {
+			out.Notes = &n
 		}
 	}
-	if same(base, c) {
-		return nil
+	if out.Title == nil && out.Servings == nil && out.TotalMinutes == nil && out.Ingredients == nil && out.Steps == nil && out.Notes == nil {
+		return nil, nil
 	}
-	if err := recipes.CheckContent(c); err != nil {
-		slog.WarnContext(ctx, "recipe chat: dropped an invalid proposal", "version", v.ID, "err", err)
-		return nil
+	if err := recipes.CheckContent(out.Apply(base)); err != nil {
+		var ce *commands.Error
+		reason := "the change breaks a recipe rule"
+		if errors.As(err, &ce) {
+			reason = ce.Detail
+		}
+		return nil, &reason
 	}
-	summary := strings.TrimSpace(p.ChangeSummary)
-	if summary == "" {
-		summary = "Changes from the chat"
+	out.ChangeSummary = strings.TrimSpace(p.ChangeSummary)
+	if out.ChangeSummary == "" {
+		out.ChangeSummary = "Changes from the chat"
 	}
-	if r := []rune(summary); len(r) > 200 {
-		summary = string(r[:200])
+	if r := []rune(out.ChangeSummary); len(r) > 200 {
+		out.ChangeSummary = string(r[:200])
 	}
-	return &Proposal{ChangeSummary: summary, Content: c}
+	return &out, nil
+}
+
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+func eqInt(x, y *int) bool { return (x == nil) == (y == nil) && (x == nil || *x == *y) }
+
+func sameSteps(a, b []recipes.Step) bool {
+	return slices.EqualFunc(a, b, func(x, y recipes.Step) bool { return x.Text == y.Text && eqInt(x.Minutes, y.Minutes) })
 }
 
 func clean(ss []string) []string {
@@ -479,12 +539,4 @@ func steps(texts []string, old []recipes.Step) []recipes.Step {
 		out = append(out, recipes.Step{Text: t, Minutes: minutes[t]})
 	}
 	return out
-}
-
-func same(a, b recipes.Content) bool {
-	eqInt := func(x, y *int) bool { return (x == nil) == (y == nil) && (x == nil || *x == *y) }
-	eqStr := func(x, y *string) bool { return (x == nil) == (y == nil) && (x == nil || *x == *y) }
-	return a.Title == b.Title && eqInt(a.Servings, b.Servings) && eqInt(a.TotalMinutes, b.TotalMinutes) &&
-		slices.Equal(a.Ingredients, b.Ingredients) && eqStr(a.Notes, b.Notes) &&
-		slices.EqualFunc(a.Steps, b.Steps, func(x, y recipes.Step) bool { return x.Text == y.Text && eqInt(x.Minutes, y.Minutes) })
 }

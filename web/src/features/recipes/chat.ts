@@ -1,8 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { v7 } from 'uuid'
 import { api, unwrap } from '../../api/client'
 import type { components } from '../../api/schema'
+import { db } from '../../offline/db'
 import { dispatch } from '../../offline/outbox'
+import { versionRawLines } from './commands'
 
 export type ChatMessage = components['schemas']['RecipeChatMessage']
 export type ChatProposal = components['schemas']['RecipeChatProposal']
@@ -52,32 +55,50 @@ export function useDismissProposal(recipeId: string) {
 }
 
 /**
- * "Save as vN": queues recipe.version.create with the proposal (a full snapshot based on the
- * message's version, so it works even if the recipe moved on). The server marks the message saved
- * when the command applies; until the next fetch the message shows as saved here.
+ * "Save as vN": applies the proposed changes to the recipe's current version (so edits made since
+ * the proposal are kept) and queues recipe.version.create. Returns the command id; the server marks
+ * the message saved when it applies the command (see useCommandSettled).
  */
-export function useSaveProposal(recipeId: string) {
+export async function saveProposal(recipeId: string, m: ChatMessage): Promise<string | undefined> {
+  const p = m.proposal
+  const recipe = await db.recipe.get(recipeId)
+  const current = recipe?.currentVersionId
+    ? await db.recipe_version.get(recipe.currentVersionId)
+    : undefined
+  if (!p || !current) return undefined
+  return dispatch('recipe.version.create', {
+    recipeId,
+    versionId: v7(),
+    origin: 'chat',
+    parentVersionId: current.id,
+    fromMessageId: m.id,
+    changeSummary: p.changeSummary,
+    title: p.title ?? current.title,
+    servings: p.servings ?? current.servings,
+    totalMinutes: p.totalMinutes ?? current.totalMinutes,
+    ingredients: p.ingredients ?? versionRawLines(current.ingredients),
+    steps: p.steps ?? current.steps,
+    notes: p.notes === undefined ? current.notes : p.notes || null,
+  })
+}
+
+/**
+ * Where a queued command stands: 'pending' while it waits in the outbox (offline included),
+ * 'rejected' if the server refused it, 'done' once it applied (the outbox drops it).
+ */
+export function useCommandState(commandId: string | undefined): 'pending' | 'rejected' | 'done' {
+  const row = useLiveQuery(
+    async () =>
+      commandId ? ((await db.outbox.where('id').equals(commandId).first()) ?? null) : null,
+    [commandId],
+  )
+  if (!commandId || row === null) return 'done'
+  if (row === undefined) return 'pending' // still loading
+  return row.status === 'rejected' ? 'rejected' : 'pending'
+}
+
+/** Refetches the chat so a saved proposal shows the server's state. */
+export function useRefreshChat(recipeId: string) {
   const qc = useQueryClient()
-  return async (m: ChatMessage) => {
-    const p = m.proposal
-    if (!p) return
-    const versionId = v7()
-    await dispatch('recipe.version.create', {
-      recipeId,
-      versionId,
-      origin: 'chat',
-      parentVersionId: m.versionId,
-      fromMessageId: m.id,
-      changeSummary: p.changeSummary,
-      title: p.title,
-      servings: p.servings,
-      totalMinutes: p.totalMinutes,
-      ingredients: p.ingredients,
-      steps: p.steps,
-      notes: p.notes,
-    })
-    qc.setQueryData<Chat>(chatKey(recipeId), (old) =>
-      replace(old, { ...m, proposalState: 'saved', savedVersionId: versionId }),
-    )
-  }
+  return () => qc.invalidateQueries({ queryKey: chatKey(recipeId) })
 }

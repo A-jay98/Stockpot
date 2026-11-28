@@ -429,8 +429,8 @@ paths:
         Sends the text, the current version, the last 20 messages and the
         household's cook notes to the assistant (LLM feature recipes_chat) and
         stores the user's message and the reply. A reply may carry a proposal:
-        the full content of a new version, saved with recipe.version.create
-        (origin chat, fromMessageId). On 503 llm_unavailable nothing is stored;
+        the changed fields, which the client applies to the current version and
+        saves with recipe.version.create (origin chat, fromMessageId). On 503 llm_unavailable nothing is stored;
         the client offers the editor instead.
       tags: [recipes]
       x-roles: [user]
@@ -4243,6 +4243,9 @@ components:
         proposalState:
           type: string
           enum: [none, pending, saved, dismissed]
+        proposalError:
+          type: string
+          description: Why the change the reply describes could not be offered as a version.
         savedVersionId:
           type: string
           format: uuid
@@ -4257,8 +4260,12 @@ components:
           format: date-time
     RecipeChatProposal:
       type: object
-      description: The full content of the proposed version (changes merged onto versionId), as recipe.version.create takes it.
-      required: [changeSummary, title, servings, totalMinutes, ingredients, steps, notes]
+      description: |
+        The fields the assistant would change; absent fields stay as they are.
+        The client applies them to the recipe's current version and sends the
+        result as recipe.version.create. ingredients and steps, when present,
+        are complete lists; notes "" clears the notes.
+      required: [changeSummary]
       additionalProperties: false
       properties:
         changeSummary:
@@ -4268,10 +4275,8 @@ components:
           type: string
         servings:
           type: integer
-          nullable: true
         totalMinutes:
           type: integer
-          nullable: true
         ingredients:
           type: array
           items:
@@ -4282,7 +4287,6 @@ components:
             $ref: "#/components/schemas/RecipeStep"
         notes:
           type: string
-          nullable: true
     RecipeStep:
       type: object
       required: [text]

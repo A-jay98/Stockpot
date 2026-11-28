@@ -38,21 +38,20 @@ func chatProblem(ctx context.Context, err error) (Problem, bool) {
 func chatMessageOut(m chat.Message) RecipeChatMessage {
 	out := RecipeChatMessage{
 		Id: m.ID, RecipeId: m.RecipeID, VersionId: m.VersionID, VersionN: m.VersionN,
-		Role: RecipeChatMessageRole(m.Role), Text: m.Text, ProposalState: RecipeChatMessageProposalState(m.State),
+		Role: RecipeChatMessageRole(m.Role), Text: m.Text, ProposalState: RecipeChatMessageProposalState(m.State), ProposalError: m.ProposalError,
 		SavedVersionId: m.SavedVersionID, SavedVersionN: m.SavedVersionN, UserId: m.UserID, CreatedAt: m.CreatedAt,
 	}
 	if p := m.Proposal; p != nil {
-		steps := make([]RecipeStep, 0, len(p.Steps))
-		for _, s := range p.Steps {
-			steps = append(steps, RecipeStep{Text: s.Text, Minutes: s.Minutes})
-		}
-		ings := p.Ingredients
-		if ings == nil {
-			ings = []string{}
-		}
 		out.Proposal = &RecipeChatProposal{
 			ChangeSummary: p.ChangeSummary, Title: p.Title, Servings: p.Servings, TotalMinutes: p.TotalMinutes,
-			Ingredients: ings, Steps: steps, Notes: p.Notes,
+			Ingredients: p.Ingredients, Notes: p.Notes,
+		}
+		if p.Steps != nil {
+			steps := make([]RecipeStep, 0, len(*p.Steps))
+			for _, s := range *p.Steps {
+				steps = append(steps, RecipeStep{Text: s.Text, Minutes: s.Minutes})
+			}
+			out.Proposal.Steps = &steps
 		}
 	}
 	return out

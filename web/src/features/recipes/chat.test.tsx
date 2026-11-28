@@ -22,15 +22,7 @@ const msg = (over: Partial<ChatMessage>): ChatMessage => ({
   ...over,
 })
 
-const proposal = {
-  changeSummary: '2 tbsp tomato paste',
-  title: 'Gheymeh',
-  servings: null,
-  totalMinutes: null,
-  ingredients: ['2 tbsp tomato paste'],
-  steps: [{ text: 'Fry the paste.' }],
-  notes: null,
-}
+const proposal = { changeSummary: '2 tbsp tomato paste', ingredients: ['2 tbsp tomato paste'] }
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -87,12 +79,13 @@ test('a question gets an answer without a proposal', async () => {
   expect(input).toHaveValue('')
 })
 
-test('Save as vN queues a chat version and shows it saved', async () => {
+test('Save as vN applies the change to the current version and waits for the server', async () => {
   const m = msg({ text: "I'd use 2 tbsp.", proposal, proposalState: 'pending' })
   chat = [msg({ role: 'user', text: 'Used 2 tbsp' }), m]
   renderApp(`/recipes/${R}`)
   await userEvent.click(await screen.findByRole('button', { name: 'Save as v2' }))
-  expect(await screen.findByText('Saved as v2.')).toBeInTheDocument()
+  expect(await screen.findByText('Saving as v2…')).toBeInTheDocument()
+  expect(screen.queryByText(/Saved as/)).not.toBeInTheDocument()
   const [cmd] = (await pendingCommands()).filter((c) => c.type === 'recipe.version.create')
   expect(cmd?.payload).toMatchObject({
     recipeId: R,
@@ -100,25 +93,61 @@ test('Save as vN queues a chat version and shows it saved', async () => {
     parentVersionId: V1,
     fromMessageId: m.id,
     changeSummary: '2 tbsp tomato paste',
+    title: 'Gheymeh',
     ingredients: ['2 tbsp tomato paste'],
+    steps: [{ text: 'Fry the paste.' }],
   })
-  expect((await db.recipe.get(R))?.currentVersionId).not.toBe(V1)
+  // The server applies it and marks the message saved.
+  chat = [chat[0] as ChatMessage, { ...m, proposalState: 'saved', savedVersionN: 2 }]
+  await db.outbox
+    .where('id')
+    .equals(cmd?.id ?? '')
+    .delete()
+  expect(await screen.findByText('Saved as v2.')).toBeInTheDocument()
 })
 
-test('a proposal on an older version says what it is based on; Not now sets it aside', async () => {
+test('a proposal on an older version applies on top of later edits; Not now sets it aside', async () => {
+  const v2 = '0190a1b2-0000-7000-8000-00000000c0a2'
   await dispatch('recipe.version.create', {
     recipeId: R,
-    versionId: '0190a1b2-0000-7000-8000-00000000c0a2',
+    versionId: v2,
     origin: 'manual',
     title: 'Gheymeh',
-    ingredients: ['1 tbsp tomato paste', '1 onion'],
+    ingredients: ['For the stew:', '1 tbsp tomato paste', '1 onion'],
     steps: [],
   })
-  chat = [msg({ text: 'Try lamb.', proposal, proposalState: 'pending' })]
+  chat = [
+    msg({
+      text: 'For two.',
+      proposal: { changeSummary: 'For two', servings: 2 },
+      proposalState: 'pending',
+    }),
+    msg({ text: 'Try lamb.', proposal, proposalState: 'pending' }),
+  ]
   renderApp(`/recipes/${R}`)
-  expect(await screen.findByRole('button', { name: 'Save as v3 (based on v1)' })).toBeEnabled()
+  const [first] = await screen.findAllByRole('button', { name: 'Save as v3 (based on v1)' })
+  await userEvent.click(first as HTMLElement)
+  const [cmd] = (await pendingCommands()).filter(
+    (c) =>
+      c.type === 'recipe.version.create' && (c.payload as { origin: string }).origin === 'chat',
+  )
+  expect(cmd?.payload).toMatchObject({
+    parentVersionId: v2,
+    servings: 2,
+    ingredients: ['For the stew:', '1 tbsp tomato paste', '1 onion'],
+  })
+  expect(await screen.findByText('Saving as v3…')).toBeInTheDocument()
   await userEvent.click(screen.getByRole('button', { name: 'Not now' }))
   expect(await screen.findByText('Not saved')).toBeInTheDocument()
+})
+
+test('a change that breaks a recipe rule says why there is nothing to save', async () => {
+  chat = [msg({ text: 'Scaled to 1000.', proposalError: 'servings must be 1-100' })]
+  renderApp(`/recipes/${R}`)
+  expect(
+    await screen.findByText(/Nothing to save as a version: servings must be 1-100/),
+  ).toBeInTheDocument()
+  expect(screen.queryByRole('button', { name: /Save as/ })).not.toBeInTheDocument()
 })
 
 test('when the assistant is unavailable it offers the editor and keeps the text', async () => {
