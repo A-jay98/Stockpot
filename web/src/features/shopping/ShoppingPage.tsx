@@ -15,6 +15,7 @@ import {
 } from '../catalog/hooks'
 import { type PickedItem, ProductPicker } from '../catalog/ProductPicker'
 import { formatQty, guessList } from '../catalog/suggest'
+import { recipeReason, useRecipeTitles } from '../recipes/hooks'
 import { ManageList } from '../settings/ManageList'
 import { useAllShoppingItems, useShoppingItems, useShoppingLists, useStockItems } from './hooks'
 import { ItemSheet } from './ItemSheet'
@@ -33,6 +34,7 @@ export function ShoppingPage() {
   const locations = useLocations()
   const categories = useCategories()
   const stock = useStockItems()
+  const recipeTitles = useRecipeTitles()
 
   const [by, setBy] = useState<'type' | 'store'>('type')
   const [storeFilter, setStoreFilter] = useState<string | null>(null)
@@ -134,9 +136,13 @@ export function ShoppingPage() {
           <span className={cn('truncate font-semibold', done && 'line-through text-ink-muted')}>
             {r.brand ? `${r.title} · ${r.brand}` : r.title}
           </span>
-          {(r.storeIds.length > 0 || r.note) && (
+          {(r.storeIds.length > 0 || r.note || r.recipeId) && (
             <span className="t-body-sm truncate text-ink-muted">
-              {[...r.storeIds.map((id) => stores.find((s) => s.id === id)?.name), r.note]
+              {[
+                ...r.storeIds.map((id) => stores.find((s) => s.id === id)?.name),
+                r.note,
+                recipeReason(r.recipeId, recipeTitles),
+              ]
                 .filter(Boolean)
                 .join(' · ')}
             </span>

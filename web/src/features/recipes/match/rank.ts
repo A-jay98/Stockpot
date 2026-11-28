@@ -145,7 +145,8 @@ export function indexKitchen(d: KitchenData): Kitchen {
       staples.add(i.id)
 
   const subsFor = new Map<string, Substitution[]>()
-  for (const s of d.substitutions) subsFor.set(s.ingredientId, [...(subsFor.get(s.ingredientId) ?? []), s])
+  for (const s of d.substitutions)
+    subsFor.set(s.ingredientId, [...(subsFor.get(s.ingredientId) ?? []), s])
   for (const list of subsFor.values()) list.sort((a, b) => subRank(a) - subRank(b))
   return { today: d.today, ingredients, stockFor, staples, subsFor }
 }

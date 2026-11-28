@@ -35,3 +35,17 @@ export const useRecipeVersions = (recipeId: string | undefined): RecipeVersion[]
     [recipeId],
     [] as RecipeVersion[],
   )
+
+/** recipe id → title, for "Recipe: Chicken curry" on shopping rows. */
+export const useRecipeTitles = (): Map<string, string> =>
+  useLiveQuery(
+    async () => new Map((await db.recipe.toArray()).map((r) => [r.id, r.title])),
+    [],
+    new Map<string, string>(),
+  )
+
+/** "Recipe: Chicken curry" for an item added from a recipe, or '' when it wasn't (or it's gone). */
+export const recipeReason = (recipeId: string | null | undefined, titles: Map<string, string>) => {
+  const t = recipeId ? titles.get(recipeId) : undefined
+  return t ? `Recipe: ${t}` : ''
+}

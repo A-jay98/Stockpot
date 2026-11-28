@@ -82,7 +82,11 @@ const stockItem = (s: Partial<StockItem> & Pick<StockItem, 'id' | 'productId'>):
 const stock = fixture.stock.map((s) => stockItem(s as Parameters<typeof stockItem>[0]))
 
 const substitutions = fixture.substitutions.map(
-  (s): Substitution => ({ ...base, ...(s as Omit<Substitution, keyof typeof base>), householdId: s.householdId }),
+  (s): Substitution => ({
+    ...base,
+    ...(s as Omit<Substitution, keyof typeof base>),
+    householdId: s.householdId,
+  }),
 )
 
 const recipes: Recipe[] = []
