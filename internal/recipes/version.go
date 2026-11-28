@@ -183,6 +183,16 @@ func (w Writer) WriteVersion(ctx context.Context, tx pgx.Tx, in VersionInput) (V
 	return v, err
 }
 
+// CheckContent reports whether c would be accepted as a new version's
+// content, with the same rejections WriteVersion gives.
+func CheckContent(c Content) error {
+	in := VersionInput{
+		Origin: OriginChat, Title: c.Title, Servings: c.Servings, TotalMinutes: c.TotalMinutes,
+		Ingredients: c.Ingredients, Steps: c.Steps, Notes: c.Notes,
+	}
+	return validate(&in)
+}
+
 func validate(in *VersionInput) error {
 	switch in.Origin {
 	case OriginImport, OriginManual, OriginChat, OriginRestore, OriginIdea:

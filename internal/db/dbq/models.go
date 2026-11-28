@@ -103,6 +103,25 @@ type BackupRun struct {
 	DeleteNote    *string
 }
 
+type BlobOwner struct {
+	Ref         string
+	HouseholdID uuid.UUID
+	UploadedBy  *uuid.UUID
+	Size        int64
+	ContentType string
+	Width       int32
+	Height      int32
+	CreatedAt   time.Time
+}
+
+type BlobVariant struct {
+	Ref        string
+	Width      int32
+	VariantRef string
+	Size       int64
+	CreatedAt  time.Time
+}
+
 type Category struct {
 	ID          uuid.UUID
 	HouseholdID *uuid.UUID
@@ -424,6 +443,21 @@ type Recipe struct {
 	CookedCount      int32
 	LastCookedAt     *time.Time
 	ImportID         *uuid.UUID
+}
+
+type RecipeChatMessage struct {
+	ID             uuid.UUID
+	HouseholdID    uuid.UUID
+	RecipeID       uuid.UUID
+	VersionID      uuid.UUID
+	Role           string
+	Text           string
+	Proposal       []byte
+	ProposalState  string
+	ProposalError  *string
+	SavedVersionID *uuid.UUID
+	UserID         *uuid.UUID
+	CreatedAt      time.Time
 }
 
 type RecipeImport struct {

@@ -341,6 +341,60 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/recipes/{id}/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        /**
+         * The recipe's chat, oldest first
+         * @description Not synced; online only. At most the newest 200 messages.
+         */
+        get: operations["listRecipeChat"];
+        put?: never;
+        /**
+         * Ask about the recipe or say what changed
+         * @description Sends the text, the current version, the last 20 messages and the
+         *     household's cook notes to the assistant (LLM feature recipes_chat) and
+         *     stores the user's message and the reply. A reply may carry a proposal:
+         *     the changed fields, which the client applies to the current version and
+         *     saves with recipe.version.create (origin chat, fromMessageId). On 503 llm_unavailable nothing is stored;
+         *     the client offers the editor instead.
+         */
+        post: operations["postRecipeChat"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recipes/{id}/chat/{messageId}/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Set a proposal aside ("Not now")
+         * @description Idempotent. 409 chat_proposal_saved when the proposal is already a version.
+         */
+        post: operations["dismissRecipeChatProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/reports": {
         parameters: {
             query?: never;
@@ -1341,6 +1395,53 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/blobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload a photo for the household
+         * @description Raw image bytes: JPEG, PNG or WebP (the type is read from the
+         *     bytes), at most 8 MB and 4096 px per side. The ref is the SHA-256 of the bytes, so clients compute it
+         *     before uploading and reference it in commands while offline.
+         *     Uploading bytes that already exist only grants this household access.
+         */
+        post: operations["uploadBlob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/blobs/{ref}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A photo the household uploaded, or a resized copy
+         * @description 404 unless the active household uploaded `ref`. `Cache-Control:
+         *     private, no-cache` with `ETag` = the ref (a content hash), so
+         *     revalidation is a cheap 304; the service worker keeps offline copies. `w` serves a JPEG at that
+         *     width, built on first request; a width at or above the original's
+         *     serves the original.
+         */
+        get: operations["getBlob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2089,7 +2190,7 @@ export interface components {
          *     UUIDv7). Fields typed nullable clear the column when sent as null;
          *     absent fields are left unchanged.
          */
-        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"] | components["schemas"]["CmdRecipeCreate"] | components["schemas"]["CmdRecipeVersionCreate"] | components["schemas"]["CmdRecipeVersionRestore"] | components["schemas"]["CmdRecipeUpdate"] | components["schemas"]["CmdRecipeDelete"] | components["schemas"]["CmdRecipeLineSetIngredient"];
+        Command: components["schemas"]["CmdCatalogProductCreate"] | components["schemas"]["CmdCatalogProductUpdate"] | components["schemas"]["CmdCatalogProductDelete"] | components["schemas"]["CmdCatalogProductSetIngredient"] | components["schemas"]["CmdCatalogStoreCreate"] | components["schemas"]["CmdCatalogStoreUpdate"] | components["schemas"]["CmdCatalogStoreDelete"] | components["schemas"]["CmdCatalogLocationCreate"] | components["schemas"]["CmdCatalogLocationUpdate"] | components["schemas"]["CmdCatalogLocationDelete"] | components["schemas"]["CmdCatalogIngredientCreate"] | components["schemas"]["CmdInventoryStockAdd"] | components["schemas"]["CmdInventoryStockConsume"] | components["schemas"]["CmdInventoryStockRestock"] | components["schemas"]["CmdInventoryStockAdjust"] | components["schemas"]["CmdInventoryStockSetLevel"] | components["schemas"]["CmdInventoryStockMarkLow"] | components["schemas"]["CmdInventoryStockUnmarkLow"] | components["schemas"]["CmdInventoryStockMove"] | components["schemas"]["CmdInventoryStockSplit"] | components["schemas"]["CmdInventoryStockOpen"] | components["schemas"]["CmdInventoryStockThaw"] | components["schemas"]["CmdInventoryStockFreeze"] | components["schemas"]["CmdInventoryStockDiscard"] | components["schemas"]["CmdInventoryStockUpdate"] | components["schemas"]["CmdShoppingListCreate"] | components["schemas"]["CmdShoppingListRename"] | components["schemas"]["CmdShoppingListDelete"] | components["schemas"]["CmdShoppingItemAdd"] | components["schemas"]["CmdShoppingItemUpdate"] | components["schemas"]["CmdShoppingItemDelete"] | components["schemas"]["CmdShoppingItemReorder"] | components["schemas"]["CmdShoppingItemCheck"] | components["schemas"]["CmdShoppingItemUncheck"] | components["schemas"]["CmdShoppingItemClearChecked"] | components["schemas"]["CmdRecipeCreate"] | components["schemas"]["CmdRecipeVersionCreate"] | components["schemas"]["CmdRecipeVersionRestore"] | components["schemas"]["CmdRecipeUpdate"] | components["schemas"]["CmdRecipeDelete"] | components["schemas"]["CmdRecipeLineSetIngredient"] | components["schemas"]["CmdRecipePhotoAdd"] | components["schemas"]["CmdRecipePhotoRemove"];
         CmdCatalogProductCreate: {
             /** Format: uuid */
             id: string;
@@ -2383,8 +2484,18 @@ export interface components {
                  */
                 recipeId?: string | null;
                 sort?: number | null;
-                /** Format: uuid */
+                /**
+                 * Format: uuid
+                 * @description A household product, or with text the client's id for a new product named text (created on apply).
+                 */
                 productId?: string | null;
+                /**
+                 * Format: uuid
+                 * @description The ingredient the user picked for a new product (sets match_source=user).
+                 */
+                ingredientId?: string | null;
+                /** @description unit/qty were chosen by hand: save them as the product's default_unit/default_qty. */
+                rememberAmount?: boolean;
                 text?: string | null;
                 /** @description Decimal string. */
                 qty?: string | null;
@@ -2632,6 +2743,48 @@ export interface components {
                 id: string;
             };
         };
+        /**
+         * @description Attach an uploaded photo (POST /v1/blobs) to a recipe, optionally to
+         *     one cook. Rejected (invalid) unless the household owns the blob.
+         */
+        CmdRecipePhotoAdd: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.photo.add";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                recipeId: string;
+                blobRef: string;
+                /** Format: uuid */
+                cookSessionId?: string | null;
+                /** Format: date */
+                takenOn?: string | null;
+                caption?: string | null;
+            };
+        };
+        CmdRecipePhotoRemove: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "recipe.photo.remove";
+            /** Format: date-time */
+            clientTime: string;
+            payload: {
+                /** Format: uuid */
+                id: string;
+            };
+        };
         CmdRecipeLineSetIngredient: {
             /** Format: uuid */
             id: string;
@@ -2650,6 +2803,57 @@ export interface components {
                 /** Format: uuid */
                 ingredientId: string | null;
             };
+        };
+        RecipeChatInput: {
+            text: string;
+        };
+        RecipeChat: {
+            messages: components["schemas"]["RecipeChatMessage"][];
+        };
+        RecipeChatMessage: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            recipeId: string;
+            /**
+             * Format: uuid
+             * @description The recipe's current version when the message was written; a proposal is based on it.
+             */
+            versionId: string;
+            versionN: number;
+            /** @enum {string} */
+            role: "user" | "assistant";
+            text: string;
+            proposal?: components["schemas"]["RecipeChatProposal"];
+            /** @enum {string} */
+            proposalState: "none" | "pending" | "saved" | "dismissed";
+            /** @description Why the change the reply describes could not be offered as a version. */
+            proposalError?: string;
+            /**
+             * Format: uuid
+             * @description The version a saved proposal became (absent if it was deleted).
+             */
+            savedVersionId?: string;
+            savedVersionN?: number;
+            /** Format: uuid */
+            userId?: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /**
+         * @description The fields the assistant would change; absent fields stay as they are.
+         *     The client applies them to the recipe's current version and sends the
+         *     result as recipe.version.create. ingredients and steps, when present,
+         *     are complete lists; notes "" clears the notes.
+         */
+        RecipeChatProposal: {
+            changeSummary: string;
+            title?: string;
+            servings?: number;
+            totalMinutes?: number;
+            ingredients?: string[];
+            steps?: components["schemas"]["RecipeStep"][];
+            notes?: string;
         };
         RecipeStep: {
             text: string;
@@ -3071,6 +3275,15 @@ export interface components {
         AdminFoodRules: {
             defaults: components["schemas"]["FoodRule"][];
             overrides: components["schemas"]["AdminFoodRule"][];
+        };
+        BlobUploaded: {
+            /** @description Lower-case hex SHA-256 of the bytes. */
+            ref: string;
+            /** Format: int64 */
+            size: number;
+            contentType: string;
+            width: number;
+            height: number;
         };
         /** @enum {string} */
         ReportKind: "wrong_unit" | "wrong_match" | "wrong_icon" | "other";
@@ -3637,6 +3850,80 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CatalogMatch"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    listRecipeChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The messages */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeChat"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    postRecipeChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecipeChatInput"];
+            };
+        };
+        responses: {
+            /** @description The user's message and the reply */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeChat"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    dismissRecipeChatProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+                messageId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The message */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecipeChatMessage"];
                 };
             };
             default: components["responses"]["Problem"];
@@ -5033,6 +5320,67 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["AdminFoodRules"];
                 };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    uploadBlob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "image/*": string;
+            };
+        };
+        responses: {
+            /** @description Stored */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BlobUploaded"];
+                };
+            };
+            default: components["responses"]["Problem"];
+        };
+    };
+    getBlob: {
+        parameters: {
+            query?: {
+                w?: 256 | 512 | 1024;
+            };
+            header?: {
+                "If-None-Match"?: string;
+            };
+            path: {
+                ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The image */
+            200: {
+                headers: {
+                    "Cache-Control"?: string;
+                    ETag?: string;
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": string;
+                };
+            };
+            /** @description Not modified (the ETag matched) */
+            304: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             default: components["responses"]["Problem"];
         };

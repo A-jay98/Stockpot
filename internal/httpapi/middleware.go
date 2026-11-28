@@ -196,10 +196,17 @@ func checkOrigin(r *http.Request, want string) error {
 }
 
 // limitBody caps request bodies so a client can't make the server buffer
-// megabytes for the validator.
-func limitBody(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.Body = http.MaxBytesReader(w, r.Body, maxBodyBytes)
-		next.ServeHTTP(w, r)
-	})
+// megabytes for the validator: maxBodyBytes, or the operation's
+// x-max-body-bytes (uploads).
+func limitBody(limits BodyLimits) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			n, ok := limits[operationID(r.Context())]
+			if !ok {
+				n = maxBodyBytes
+			}
+			r.Body = http.MaxBytesReader(w, r.Body, n)
+			next.ServeHTTP(w, r)
+		})
+	}
 }

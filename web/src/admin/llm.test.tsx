@@ -150,6 +150,10 @@ test('shows providers, quota, usage and only gateway settings', async () => {
   ).toBeInTheDocument()
   expect(screen.queryByRole('combobox', { name: 'Log level' })).not.toBeInTheDocument()
   expect(screen.queryByText('llm.api_key.gemini')).not.toBeInTheDocument()
+  const features = screen.getByRole('region', { name: 'Features' })
+  expect(
+    within(features).getByRole('cell', { name: 'Edit the recipe by hand.' }),
+  ).toBeInTheDocument()
 })
 
 test('saves a provider key write-only', async () => {

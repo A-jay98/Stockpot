@@ -37,7 +37,9 @@ import (
 	"github.com/a-jay98/stockpot/internal/llm"
 	"github.com/a-jay98/stockpot/internal/llm/openaicompat"
 	"github.com/a-jay98/stockpot/internal/logging"
+	"github.com/a-jay98/stockpot/internal/media"
 	"github.com/a-jay98/stockpot/internal/recipes"
+	"github.com/a-jay98/stockpot/internal/recipes/chat"
 	"github.com/a-jay98/stockpot/internal/reports"
 	"github.com/a-jay98/stockpot/internal/settings"
 	"github.com/a-jay98/stockpot/internal/shopping"
@@ -147,7 +149,8 @@ func Serve(ctx context.Context, cfg config.Config) error {
 		return shopping.RecordPurchase(ctx, tx, hh, product, store, uuid.Nil, at, qty, unit)
 	})
 	shopping.Register(cmdRegistry, resolve.Resolver{})
-	recipes.Register(cmdRegistry, resolve.Resolver{})
+	recipeCmds := recipes.Register(cmdRegistry, resolve.Resolver{})
+	recipeCmds.OnChatVersion = chat.MarkSaved
 	syncStore, err := syncdb.New(ctx, pool)
 	if err != nil {
 		return err
@@ -227,6 +230,8 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Alerts:    alertSvc,
 			FoodRules: inventory.NewRuleService(pool),
 			Reports:   reportSvc,
+			Chat:      &chat.Service{Pool: pool, LLM: gateway},
+			Blobs:     media.New(pool, blobs),
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,
