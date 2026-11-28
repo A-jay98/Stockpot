@@ -101,3 +101,29 @@ test('recipe page renders the current version from the replica', async () => {
   expect(screen.getByText(/Simmer for 20 minutes/)).toBeInTheDocument()
   expect(screen.getByText('Better the next day.')).toBeInTheDocument()
 })
+
+test('photo add and remove apply optimistically and declare their photo for upload', async () => {
+  const { commandBlobRefs } = await import('../../offline/reducers')
+  await dispatch('recipe.create', {
+    id: R,
+    versionId: 'v1',
+    title: 'Curry',
+    ingredients: [],
+    steps: [],
+  })
+  const ref = 'a'.repeat(64)
+  const add = { id: 'p1', recipeId: R, blobRef: ref, caption: '  Sunday ', takenOn: '2026-11-27' }
+  await dispatch('recipe.photo.add', add)
+  expect(await db.recipe_photo.get('p1')).toMatchObject({
+    recipeId: R,
+    blobRef: ref,
+    caption: 'Sunday',
+    cookSessionId: null,
+    rev: 0,
+  })
+  expect(commandBlobRefs('recipe.photo.add', add)).toEqual([ref])
+  expect(commandBlobRefs('recipe.update', { id: R, coverBlob: ref })).toEqual([ref])
+  expect(commandBlobRefs('recipe.update', { id: R, coverBlob: null })).toEqual([])
+  await dispatch('recipe.photo.remove', { id: 'p1' })
+  expect(await db.recipe_photo.get('p1')).toBeUndefined()
+})

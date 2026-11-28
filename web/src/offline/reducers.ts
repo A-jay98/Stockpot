@@ -27,10 +27,16 @@ type Options<T extends CommandType> = {
    * pull, harmlessly).
    */
   targets?: (payload: CommandPayloads[T]) => string[]
+  /**
+   * Blob refs (photos) the command references. The outbox uploads any of them still waiting in
+   * `pending_blob` before it sends the command, so the server never sees a ref it lacks.
+   */
+  blobs?: (payload: CommandPayloads[T]) => string[]
 }
 
 const reducers = new Map<string, AnyReducer>()
 const targetFns = new Map<string, (payload: never) => string[]>()
+const blobFns = new Map<string, (payload: never) => string[]>()
 
 /** Register the reducer for a command type (from the feature's `commands.ts`). */
 export function registerReducer<T extends CommandType>(
@@ -41,6 +47,13 @@ export function registerReducer<T extends CommandType>(
   reducers.set(type, fn as AnyReducer)
   if (options.targets) targetFns.set(type, options.targets as (payload: never) => string[])
   else targetFns.delete(type)
+  if (options.blobs) blobFns.set(type, options.blobs as (payload: never) => string[])
+  else blobFns.delete(type)
+}
+
+/** Blob refs a queued command references (empty when it declared none). */
+export function commandBlobRefs(type: string, payload: unknown): string[] {
+  return blobFns.get(type)?.(payload as never) ?? []
 }
 
 /** Row ids a queued command touches, or null when its reducer didn't declare any. */
