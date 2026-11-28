@@ -68,3 +68,15 @@ export const useOriginal = (version: RecipeVersion | null | undefined): RecipeOr
     [version?.id, version?.original, version?.originalVersionId],
     null,
   )
+
+/**
+ * Like `useRecipeVersion`, but `undefined` until the query for *this* id has answered (a live
+ * query keeps its previous result while new deps load), then the row or null if it isn't here.
+ */
+export function useSettledVersion(id: string | null | undefined): RecipeVersion | null | undefined {
+  const res = useLiveQuery(
+    async () => ({ id, row: id ? ((await db.recipe_version.get(id)) ?? null) : null }),
+    [id],
+  )
+  return res && res.id === id ? res.row : undefined
+}

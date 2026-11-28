@@ -5,6 +5,7 @@ import { db } from '../../offline/db'
 import { pendingCommands } from '../../offline/outbox'
 import type { Ingredient, Recipe, RecipeLine, RecipeVersion } from '../../offline/replica'
 import { renderApp } from '../../test-utils'
+import { isHeader } from './commands'
 import { diffLines } from './diff'
 import { rankIngredients } from './IngredientPicker'
 import { kitchenQty } from './parts'
@@ -387,5 +388,61 @@ test('cover photo shows on the page and can be removed in the editor', async () 
     type: 'recipe.update',
     payload: { id: R, coverBlob: null },
   })
+  // Only the changed field: tags/subtitle edited elsewhere must survive (LWW per field).
+  expect(Object.keys((await pendingCommands()).at(-1)?.payload ?? {}).sort()).toEqual([
+    'coverBlob',
+    'id',
+  ])
   expect(await db.recipe_version.where('recipeId').equals(R).count()).toBe(2)
+})
+
+test('section headers and limits match the server', () => {
+  expect(
+    ['For the rice:', '½ batch:', '۲ cups:', 'x:', ':', `${'a'.repeat(80)}:`].map(isHeader),
+  ).toEqual([true, false, false, true, false, false])
+  const d = draftOf(recipe(), null)
+  expect(validate({ ...d, ingredients: 'x'.repeat(501) }).ingredients).toMatch(/500 characters/)
+  expect(validate({ ...d, steps: [{ text: 'y'.repeat(4001) }] }).steps).toMatch(/4000 characters/)
+})
+
+test('editor keeps the version it opened: a newer synced version is never reverted silently', async () => {
+  await seed()
+  renderApp(`/recipes/${R}/edit`)
+  expect(await screen.findByDisplayValue('Khoresh gheymeh')).toBeInTheDocument()
+  // Another device's v3 syncs in mid-edit.
+  const V3 = '0190a1b2-0000-7000-8000-0000000000b3'
+  await db.recipe_version.put(
+    version(V3, 3, { origin: 'chat', steps: [{ text: 'Fry the onions.' }, { text: 'Add lamb.' }] }),
+  )
+  await db.recipe.update(R, { currentVersionId: V3 })
+  expect(await screen.findByText(/changed on another device/)).toBeInTheDocument()
+
+  // Nothing changed against what I opened (v2): no version.
+  fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+  await waitFor(async () =>
+    expect(await db.recipe_version.where('recipeId').equals(R).count()).toBe(3),
+  )
+  expect(await pendingCommands()).toEqual([])
+})
+
+test('editor based on v2 records v2 as the parent', async () => {
+  await seed()
+  renderApp(`/recipes/${R}/edit`)
+  fireEvent.change(await screen.findByLabelText('Notes'), { target: { value: 'More lime.' } })
+  const V3 = '0190a1b2-0000-7000-8000-0000000000b3'
+  await db.recipe_version.put(version(V3, 3, { origin: 'chat' }))
+  await db.recipe.update(R, { currentVersionId: V3 })
+  await screen.findByText(/changed on another device/)
+  fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+  await waitFor(async () => expect((await pendingCommands()).length).toBe(1))
+  expect((await pendingCommands())[0]).toMatchObject({
+    type: 'recipe.version.create',
+    payload: { parentVersionId: V2, notes: 'More lime.' },
+  })
+})
+
+test('editor opens even when the current version is not on this device', async () => {
+  await db.recipe.put(recipe({ currentVersionId: '0190a1b2-0000-7000-8000-0000000000ff' }))
+  renderApp(`/recipes/${R}/edit`)
+  expect(await screen.findByDisplayValue('Khoresh gheymeh')).toBeInTheDocument()
 })

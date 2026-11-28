@@ -130,7 +130,8 @@ export function VersionBody({ recipeId, version, onLine }: BodyProps) {
                       check={onLine && needsCheck(version.rev, l) ? () => onLine(l) : undefined}
                       onTap={onLine && parsed ? () => onLine(l) : undefined}
                       swap={
-                        parsed ? (
+                        // Read-only views (old versions) don't offer swaps.
+                        parsed && onLine ? (
                           <FindSwapButton
                             recipeId={recipeId}
                             versionId={version.id}

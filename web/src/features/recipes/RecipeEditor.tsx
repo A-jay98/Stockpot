@@ -3,6 +3,7 @@ import { type FormEvent, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { v7 } from 'uuid'
 import { Page } from '../../app/Page'
+import type { CommandPayloads } from '../../offline/commands'
 import { dispatch } from '../../offline/outbox'
 import type { Recipe, RecipeLine, RecipeStep, RecipeVersion } from '../../offline/replica'
 import {
@@ -19,12 +20,15 @@ import {
 import { FoodIcon } from '../../ui/food-icons'
 import { PhotoPicker } from '../photos/PhotoPicker'
 import { rawLines } from './commands'
-import { useRecipe, useRecipeVersion } from './hooks'
+import { useRecipe, useRecipeVersion, useSettledVersion } from './hooks'
 import { RecipeCover, useIngredientIcon, useRecipeIcon } from './look'
 import { amountOf, groupLines, linesToText, Section } from './parts'
 
 const MAX_LINES = 200
 const MAX_STEPS = 100
+// Mirrors internal/recipes/version.go (counted in characters).
+const MAX_LINE_LEN = 500
+const MAX_STEP_LEN = 4000
 
 export type Draft = {
   title: string
@@ -95,9 +99,14 @@ export function validate(
   const m = intOrNull(d.minutes)
   if (m !== null && !(Number.isInteger(m) && m >= 0 && m <= 10000))
     e.minutes = 'Minutes, 0 to 10000.'
-  if (ingredientList(d.ingredients).length > MAX_LINES)
-    e.ingredients = `At most ${MAX_LINES} lines.`
-  if (stepList(d.steps).length > MAX_STEPS) e.steps = `At most ${MAX_STEPS} steps.`
+  const lines = ingredientList(d.ingredients)
+  if (lines.length > MAX_LINES) e.ingredients = `At most ${MAX_LINES} lines.`
+  else if (lines.some((l) => [...l].length > MAX_LINE_LEN))
+    e.ingredients = `Each line can be at most ${MAX_LINE_LEN} characters.`
+  const steps = stepList(d.steps)
+  if (steps.length > MAX_STEPS) e.steps = `At most ${MAX_STEPS} steps.`
+  else if (steps.some((x) => [...x.text].length > MAX_STEP_LEN))
+    e.steps = `Each step can be at most ${MAX_STEP_LEN} characters.`
   return e
 }
 
@@ -124,7 +133,12 @@ export function RecipeEditor() {
   const { id } = useParams()
   const isNew = id === undefined
   const recipe = useRecipe(id)
-  const version = useRecipeVersion(recipe?.currentVersionId)
+  const version = useSettledVersion(recipe?.currentVersionId)
+  // The version this edit started from, fixed at the first settled read: a newer version syncing
+  // in later must neither remount the form nor become the base (see EditorForm).
+  const [openedFor, setOpened] = useState<{ id: string; v: RecipeVersion | null }>()
+  if (id && recipe && openedFor?.id !== id && version !== undefined) setOpened({ id, v: version })
+  const opened = openedFor && openedFor.id === id ? openedFor.v : undefined
   if (isNew) return <EditorForm recipe={null} version={null} />
   const back = (
     <Button asChild variant="secondary" size="icon" aria-label="Back to recipe">
@@ -133,8 +147,8 @@ export function RecipeEditor() {
       </Link>
     </Button>
   )
-  // Wait for the current version itself: a live query briefly keeps its previous result.
-  if (recipe === undefined || (recipe?.currentVersionId && version?.id !== recipe.currentVersionId))
+  // A current version missing from the replica (null) still opens the editor, from the recipe.
+  if (recipe === undefined || opened === undefined)
     return <Page title="Edit recipe" actions={back} />
   if (recipe === null)
     return (
@@ -142,16 +156,22 @@ export function RecipeEditor() {
         <p className="t-body-sm m-0 text-ink-muted">This recipe isn't here any more.</p>
       </Page>
     )
-  return <EditorForm key={recipe.id} recipe={recipe} version={version ?? null} />
+  return <EditorForm key={recipe.id} recipe={recipe} version={opened} />
 }
 
 function EditorForm({ recipe, version }: { recipe: Recipe | null; version: RecipeVersion | null }) {
   const navigate = useNavigate()
+  // `version` is the one this edit started from. It stays the compare base and the parent even if
+  // a newer version syncs in meanwhile, so saving never silently reverts someone else's change.
+  // Read it live only to pick up the server's parse of the same version.
+  const liveBase = useRecipeVersion(version?.id)
+  const base = liveBase && liveBase.id === version?.id ? liveBase : version
+  const movedOn = recipe !== null && base !== null && recipe.currentVersionId !== base.id
   const [draft, setDraft] = useState<Draft>(() => (recipe ? draftOf(recipe, version) : emptyDraft))
   const [cover, setCover] = useState<string | null>(recipe?.coverBlob ?? null)
   const [tried, setTried] = useState(false)
   const errors = validate(draft)
-  const icon = useRecipeIcon(version)
+  const icon = useRecipeIcon(base)
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => ({ ...d, [k]: v }))
   const backTo = recipe ? `/recipes/${recipe.id}` : '/recipes?tab=saved'
 
@@ -183,25 +203,22 @@ function EditorForm({ recipe, version }: { recipe: Recipe | null; version: Recip
       navigate(`/recipes/${rid}`, { replace: true })
       return
     }
-    if (contentChanged(draft, version)) {
+    if (contentChanged(draft, base)) {
       await dispatch('recipe.version.create', {
         recipeId: recipe.id,
         versionId: v7(),
         origin: 'manual',
-        parentVersionId: version?.id ?? null,
+        parentVersionId: base?.id ?? null,
         changeSummary: draft.changeSummary.trim() || null,
         ...content,
       })
     }
-    const coverChanged = cover !== recipe.coverBlob
-    if (coverChanged || subtitle !== recipe.subtitle || tags.join(',') !== recipe.tags.join(',')) {
-      await dispatch('recipe.update', {
-        id: recipe.id,
-        subtitle,
-        tags,
-        ...(coverChanged ? { coverBlob: cover } : {}),
-      })
-    }
+    const changes: CommandPayloads['recipe.update'] = { id: recipe.id }
+    if (cover !== recipe.coverBlob) changes.coverBlob = cover
+    if (subtitle !== recipe.subtitle) changes.subtitle = subtitle
+    if (tags.join(',') !== recipe.tags.join(',')) changes.tags = tags
+    // LWW per field: send only what changed so concurrent edits to other fields survive.
+    if (Object.keys(changes).length > 1) await dispatch('recipe.update', changes)
     navigate(backTo, { replace: true })
   }
 
@@ -250,6 +267,12 @@ function EditorForm({ recipe, version }: { recipe: Recipe | null; version: Recip
         </div>
       </section>
       <form onSubmit={save} className="flex flex-col gap-4" noValidate>
+        {movedOn ? (
+          <p role="status" className="t-body-sm m-0 rounded-lg bg-soon-bg p-3 text-soon">
+            This recipe changed on another device since you opened it. Saving adds your text as a
+            new version; the other change stays in the history.
+          </p>
+        ) : null}
         <Field label="Name" error={err('title')}>
           {(p) => (
             <Input
@@ -318,7 +341,7 @@ function EditorForm({ recipe, version }: { recipe: Recipe | null; version: Recip
               />
             )}
           </Field>
-          <LinesPreview text={draft.ingredients} version={version} />
+          <LinesPreview text={draft.ingredients} version={base} />
         </Section>
 
         <Section title="Method">
@@ -384,7 +407,7 @@ function EditorForm({ recipe, version }: { recipe: Recipe | null; version: Recip
         {recipe ? (
           <Field
             label="What changed?"
-            hint={`Shown in the history as v${(version?.n ?? 0) + 1}. Optional.`}
+            hint={`Saved as a new version based on v${base?.n ?? 0}. Optional.`}
           >
             {(p) => (
               <Input
