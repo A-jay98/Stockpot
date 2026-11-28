@@ -38,6 +38,7 @@ import (
 	"github.com/a-jay98/stockpot/internal/llm/openaicompat"
 	"github.com/a-jay98/stockpot/internal/logging"
 	"github.com/a-jay98/stockpot/internal/recipes"
+	"github.com/a-jay98/stockpot/internal/reports"
 	"github.com/a-jay98/stockpot/internal/settings"
 	"github.com/a-jay98/stockpot/internal/shopping"
 	"github.com/a-jay98/stockpot/internal/syncdb"
@@ -180,11 +181,13 @@ func Serve(ctx context.Context, cfg config.Config) error {
 	enricher := catalog.NewEnricher(catalog.EnrichDeps{Pool: pool, Settings: store, LLM: gateway})
 	sweepers = append(sweepers, enricher.Sweepers()...)
 	sweepers = append(sweepers, alerts.Sweepers(alertSvc)...)
+	reportSvc := reports.New(reports.Deps{Pool: pool, Settings: store, LLM: gateway})
+	sweepers = append(sweepers, reportSvc.Sweepers()...)
 	jobClient, err := jobs.New(jobs.Deps{
 		Pool:     pool,
 		Settings: store,
 		Sweepers: sweepers,
-		Workers:  []func(*river.Workers) error{backups.Registrar(), enricher.Registrar(), alertSvc.Registrar()},
+		Workers:  []func(*river.Workers) error{backups.Registrar(), enricher.Registrar(), alertSvc.Registrar(), reportSvc.Registrar()},
 		Periodic: []*river.PeriodicJob{alerts.PeriodicJob()},
 		Logger:   slog.Default(),
 	})
@@ -194,6 +197,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 
 	backups.Attach(jobClient)
 	enricher.Attach(jobClient)
+	reportSvc.Attach(jobClient)
 
 	adminSvc = admin.New(admin.Deps{
 		Pool:      pool,
@@ -222,6 +226,7 @@ func Serve(ctx context.Context, cfg config.Config) error {
 			Matcher:   catalog.Matcher{Pool: pool, Res: resolve.Resolver{}},
 			Alerts:    alertSvc,
 			FoodRules: inventory.NewRuleService(pool),
+			Reports:   reportSvc,
 		}),
 		httpapi.Options{
 			PublicURL:  cfg.PublicURL,
